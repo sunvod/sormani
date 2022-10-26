@@ -13,9 +13,14 @@ import sys
 import pathlib
 import fitz
 import time
-from contextlib import suppress
-from multiprocessing import set_start_method
+import datetime
 
+from pathlib import Path
+from argparse import Namespace
+from contextlib import suppress
+from multiprocessing import Pool
+from os import listdir
+from os.path import isfile, join
 from ocrmypdf import __version__
 from ocrmypdf._plugin_manager import get_parser_options_plugins
 from ocrmypdf._sync import run_pipeline
@@ -34,18 +39,37 @@ log = logging.getLogger('ocrmypdf')
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
-def get_files(name, root):
+def create_pdf(name, root):
+  file_pool = []
+  count_process = 0
+  path_pdf = root + '/' + name + '/pdf'
+  path_txt = root + '/' + name + '/pdf/txt'
+  Path(path_pdf + '/').mkdir(parents=True, exist_ok=True)
+  Path(path_txt + '/').mkdir(parents=True, exist_ok=True)
+  start_time = time.time()
+  print(f'Starting processing \'{name}\' at {str(datetime.datetime.now())}')
   for filedir, dirs, files in os.walk(root + '/' + name):
+    if filedir == path_pdf or filedir == path_txt:
+      continue
     for file in files:
       ext = pathlib.Path(file).suffix
       if ext == '.tif' or ext == '.tiff':
         _file = file[: len(file) - len(ext)]
-        if not _file + '.pdf' in files:
-          start_time = time.time()
-          print(f'Working on \'{file}\'.', end = '')
-          pdf_name = (to_pdfa(filedir + '/' + _file))
-          final_time = time.time()
-          print(f' Pdf/a is created with OCR. Creation takes {round(final_time - start_time)} seconds.')
+        pdffiles = [f for f in listdir(path_pdf) if isfile(join('pdf', f))]
+        if not _file + '.pdf' in pdffiles:
+          file_pool.append((filedir + '/' + _file, root + '/' + name))
+    if len(file_pool) > 0:
+      count_process += len(file_pool)
+      with Pool() as mp_pool:
+        pdf_name = mp_pool.map(to_pdfa, file_pool)
+        #pdf_name = mp_pool.imap_unordered(to_pdfa, file_pool)
+        final_time = time.time()
+  if count_process:
+    print(f' \'{name}\' are created with OCR. Creation of {count_process} process ends at {str(datetime.datetime.now())} and takes {round(final_time - start_time)} seconds.')
+  else:
+    print(f'Warning: There is no files to process for {name}.')
+
+
 
 def totext(filename):
     doc = fitz.open(filename)
@@ -58,8 +82,16 @@ def totext(filename):
     text = page.get_text('text')
     print(text)
 
-def to_pdfa(name):
+def to_pdfa(dirs):
   _parser, options, plugin_manager = get_parser_options_plugins(None)
+  name = dirs[0]
+  pdf_base = dirs[1]
+  options = Namespace()
+  dir_path = os.path.dirname(os.path.realpath(name))
+  file_name = os.path.basename(os.path.realpath(name))
+  options.input_file = name + '.tif'
+  options.output_file = pdf_base + '/pdf/' + file_name + '.pdf'
+  options.sidecar = pdf_base + '/pdf/txt/' + file_name + '.txt'
   options.author = None
   options.clean = False
   options.clean_final = False
@@ -67,7 +99,6 @@ def to_pdfa(name):
   options.fast_web_view = 1.0
   options.force_ocr = False
   options.image_dpi = 400
-  options.input_file = name + '.tif'
   options.jbig2_lossy = False
   options.jbig2_page_group_size = 0
   options.jobs = None
@@ -77,7 +108,6 @@ def to_pdfa(name):
   options.languages = {'ita'}
   options.max_image_mpixels = 1000.0
   options.optimize = 0
-  options.output_file = name + '.pdf'
   options.output_type = 'pdfa'
   options.oversample = 0
   options.pages = None
@@ -92,7 +122,6 @@ def to_pdfa(name):
   options.remove_vectors = False
   options.rotate_pages = False
   options.rotate_pages_threshold = 14.0
-  options.sidecar = None
   options.skip_big = None
   options.skip_text = False
   options.subject = None
@@ -140,6 +169,6 @@ def to_pdfa(name):
 
 
 if __name__ == '__main__':
-  new_pdf = get_files('La Stampa', '/mnt/storage01/sormani')
-  print(new_pdf)
+  create_pdf('La Stampa', '/mnt/storage01/sormani')
+
 
