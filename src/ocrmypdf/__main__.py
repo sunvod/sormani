@@ -14,7 +14,11 @@ import pathlib
 import fitz
 import time
 import datetime
+import multiprocessing
+import cv2
 
+from pathlib import Path
+from PIL import Image
 from pathlib import Path
 from argparse import Namespace
 from contextlib import suppress
@@ -39,36 +43,80 @@ log = logging.getLogger('ocrmypdf')
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
-def create_pdf(name, root):
+def get_files(name, root, ext, path_exclude = [], path_exist = None):
   file_pool = []
-  count_process = 0
+  for filedir, dirs, files in os.walk(root + '/' + name):
+    if filedir in path_exclude:
+      continue
+    for file in files:
+      if pathlib.Path(file).suffix == '.' + ext:
+        _file = file[: len(file) - len(ext) - 1]
+        if path_exist is not None:
+          files_exist = [f for f in listdir(path_exist)]
+        if path_exist is None or not _file + '.pdf' in files_exist:
+          file_pool.append([filedir + '/' + _file, root + '/' + name])
+  return file_pool
+
+# import cv2, os
+# base_path = "data/images/"
+# new_path = "data/ims/"
+# for infile in os.listdir(base_path):
+#     print ("file : " + infile)
+#     read = cv2.imread(base_path + infile)
+#     outfile = infile.split('.')[0] + '.jpg'
+#     cv2.imwrite(new_path+outfile,read,[int(cv2.IMWRITE_JPEG_QUALITY), 200])
+def convert_image(args):
+  base = args[0]
+  name = args[1]
+  ext = args[2]
+  converts = args[3]
+  file_name = os.path.basename(os.path.realpath(name))
+  try:
+    #im = cv2.imread(name + '.' + ext)
+    im = Image.open(name + '.' + ext)
+    for c in converts:
+      path_image = os.path.join(base, c[2])
+      Path(path_image + '/').mkdir(parents=True, exist_ok=True)
+      file = os.path.join(path_image, file_name) + '.' + c[1]
+      if not Path(file).is_file():
+        #cv2.imwrite(file, im, [int(cv2.IMWRITE_JPEG_QUALITY), c[3]])
+        #im.save(file, c[0], dpi=(c[3], c[3]))
+        im.thumbnail(im.size)
+        im.save(file, c[0], dpi=(c[3], c[3]), quality = 90)
+  except Exception:
+    #tb = sys.exc_info()
+    pass
+def convert_images(name, file_pool, ext, converts):
+  if converts is None:
+    return
+  image_pool = []
+  for file in file_pool:
+    image_pool.append([file[1], file[0], ext, converts])
+  start_time = time.time()
+  print(f'Starting converting images of \'{name}\' at {str(datetime.datetime.now())}')
+  if len(image_pool):
+    with Pool(processes=14) as mp_pool:
+      mp_pool.map(convert_image, image_pool)
+    print(f'Conversion of {len(file_pool)} images for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+  else:
+    print(f'Warning: There is no files to convert for \'{name}\'.')
+
+
+def create_files(name, root, ext = 'tif', converts = [('jpeg', 'jpg', 'jpg150', 150), ('jpeg', 'jpg', 'jpg300', 300)]):
   path_pdf = root + '/' + name + '/pdf'
   path_txt = root + '/' + name + '/pdf/txt'
   Path(path_pdf + '/').mkdir(parents=True, exist_ok=True)
   Path(path_txt + '/').mkdir(parents=True, exist_ok=True)
   start_time = time.time()
-  print(f'Starting processing \'{name}\' at {str(datetime.datetime.now())}')
-  for filedir, dirs, files in os.walk(root + '/' + name):
-    if filedir == path_pdf or filedir == path_txt:
-      continue
-    for file in files:
-      ext = pathlib.Path(file).suffix
-      if ext == '.tif' or ext == '.tiff':
-        _file = file[: len(file) - len(ext)]
-        pdffiles = [f for f in listdir(path_pdf) if isfile(join('pdf', f))]
-        if not _file + '.pdf' in pdffiles:
-          file_pool.append((filedir + '/' + _file, root + '/' + name))
-    if len(file_pool) > 0:
-      count_process += len(file_pool)
-      with Pool() as mp_pool:
-        pdf_name = mp_pool.map(to_pdfa, file_pool)
-        #pdf_name = mp_pool.imap_unordered(to_pdfa, file_pool)
-        final_time = time.time()
-  if count_process:
-    print(f' \'{name}\' are created with OCR. Creation of {count_process} process ends at {str(datetime.datetime.now())} and takes {round(final_time - start_time)} seconds.')
+  file_pool = get_files(name, root, ext, path_exclude = [path_pdf, path_txt], path_exist = path_pdf)
+  convert_images(name, get_files(name, root, ext, path_exclude = [path_pdf, path_txt]), 'tif', converts)
+  if len(file_pool):
+    print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
+    with Pool(processes=14) as mp_pool:
+      mp_pool.map(to_pdfa, file_pool)
+    print(f'Creation of {len(file_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
-    print(f'Warning: There is no files to process for {name}.')
-
+    print(f'Warning: There is no files to process for \'{name}\'.')
 
 
 def totext(filename):
@@ -78,7 +126,6 @@ def totext(filename):
     pix = page.get_pixmap()
     print(pix.height) # 4900x7088
     print(pix.width)
-    #pix.save("page-%i.png" % page.number)
     text = page.get_text('text')
     print(text)
 
@@ -169,6 +216,7 @@ def to_pdfa(dirs):
 
 
 if __name__ == '__main__':
-  create_pdf('La Stampa', '/mnt/storage01/sormani')
+  cpu = multiprocessing.cpu_count()
+  create_files('La Stampa', '/mnt/storage01/sormani')
 
 
