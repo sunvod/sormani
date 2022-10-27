@@ -43,18 +43,24 @@ log = logging.getLogger('ocrmypdf')
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
-def get_files(name, root, ext, path_exclude = [], path_exist = None):
+def get_files(name, root, ext, tiff_path = '/Tiff_images/', path_exclude = [], path_exist = 'pdf', force = False):
   file_pool = []
-  for filedir, dirs, files in os.walk(root + '/' + name):
+  for filedir, dirs, files in os.walk(root + tiff_path + name):
     if filedir in path_exclude:
       continue
     for file in files:
+      dir_in_filedir = filedir.split('/')
+      dir_in_filedir = list(map(lambda x: x.replace('Tiff_images', 'Jpeg_Pdf'), dir_in_filedir))
+      #dir_in_filedir.remove('Tiff_images')
       if pathlib.Path(file).suffix == '.' + ext:
         _file = file[: len(file) - len(ext) - 1]
-        if path_exist is not None:
-          files_exist = [f for f in listdir(path_exist)]
-        if path_exist is None or not _file + '.pdf' in files_exist:
-          file_pool.append([filedir + '/' + _file, root + '/' + name])
+        if path_exist is None:
+          path_exist = filedir
+        files_exist = None
+        if os.path.isdir(os.path.join(filedir, path_exist)):
+          files_exist = [f for f in listdir(os.path.join(filedir, path_exist))]
+        if files_exist is None or not _file + '.pdf' in files_exist or force:
+          file_pool.append([name, filedir + '/' + _file, '/'.join(dir_in_filedir), root])
   return file_pool
 
 # import cv2, os
@@ -91,7 +97,7 @@ def convert_images(name, file_pool, ext, converts):
     return
   image_pool = []
   for file in file_pool:
-    image_pool.append([file[1], file[0], ext, converts])
+    image_pool.append([file[2], file[1], ext, converts])
   start_time = time.time()
   print(f'Starting converting images of \'{name}\' at {str(datetime.datetime.now())}')
   if len(image_pool):
@@ -102,14 +108,12 @@ def convert_images(name, file_pool, ext, converts):
     print(f'Warning: There is no files to convert for \'{name}\'.')
 
 
-def create_files(name, root, ext = 'tif', converts = [('jpeg', 'jpg', 'jpg150', 150), ('jpeg', 'jpg', 'jpg300', 300)]):
-  path_pdf = root + '/' + name + '/pdf'
-  path_txt = root + '/' + name + '/pdf/txt'
-  Path(path_pdf + '/').mkdir(parents=True, exist_ok=True)
-  Path(path_txt + '/').mkdir(parents=True, exist_ok=True)
+def create_files(name, root, ext = 'tif', converts = [('jpeg', 'jpg', 'jpg150', 150, 90, 2000), ('jpeg', 'jpg', 'jpg300', 300, 90, 2000)]):
+  path_pdf = '/pdf'
+  path_txt = '/txt'
   start_time = time.time()
-  file_pool = get_files(name, root, ext, path_exclude = [path_pdf, path_txt], path_exist = path_pdf)
-  convert_images(name, get_files(name, root, ext, path_exclude = [path_pdf, path_txt]), 'tif', converts)
+  file_pool = get_files(name, root, ext)
+  convert_images(name, get_files(name, root, ext, force = True), 'tif', converts)
   if len(file_pool):
     print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
     with Pool(processes=14) as mp_pool:
@@ -132,13 +136,15 @@ def totext(filename):
 def to_pdfa(dirs):
   _parser, options, plugin_manager = get_parser_options_plugins(None)
   name = dirs[0]
-  pdf_base = dirs[1]
+  file_name = dirs[1]
+  pdf_base = dirs[2]
+  root = dirs[3]
   options = Namespace()
-  dir_path = os.path.dirname(os.path.realpath(name))
-  file_name = os.path.basename(os.path.realpath(name))
-  options.input_file = name + '.tif'
-  options.output_file = pdf_base + '/pdf/' + file_name + '.pdf'
-  options.sidecar = pdf_base + '/pdf/txt/' + file_name + '.txt'
+  Path(os.path.join(pdf_base, 'pdf')).mkdir(parents=True, exist_ok=True)
+  Path(os.path.join(root, 'txt', name)).mkdir(parents=True, exist_ok=True)
+  options.input_file = file_name + '.tif'
+  options.output_file = pdf_base + '/pdf/' + os.path.basename(os.path.realpath(file_name)) + '.pdf'
+  options.sidecar = os.path.join(root, 'txt', name, os.path.basename(os.path.realpath(file_name))) + '.txt'
   options.author = None
   options.clean = False
   options.clean_final = False
