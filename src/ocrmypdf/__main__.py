@@ -60,7 +60,7 @@ def get_files(name, root, ext, tiff_path = '/Tiff_images/', path_exclude = [], p
         if os.path.isdir(os.path.join(filedir, path_exist)):
           files_exist = [f for f in listdir(os.path.join(filedir, path_exist))]
         if files_exist is None or not _file + '.pdf' in files_exist or force:
-          file_pool.append([name, filedir + '/' + _file, '/'.join(dir_in_filedir), root])
+          file_pool.append([name, filedir + '/' + _file, '/'.join(dir_in_filedir), root, file])
   return file_pool
 
 # import cv2, os
