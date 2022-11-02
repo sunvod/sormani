@@ -40,14 +40,22 @@ from ocrmypdf.exceptions import (
 
 ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 700
+MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 
 log = logging.getLogger('ocrmypdf')
 
 class Page:
   def __init__(self, file_name, newspaper_name, original_image, pdf_path, jpg_path, txt_path):
     self.file_name = file_name
+    self.new_file_name = None
     self.newspaper_name = newspaper_name
     self.original_image = original_image
+    self.original_path = str(Path(original_image).parent.resolve())
+    dir_in_filedir = self.original_path.split('/')
+    self.year = int(dir_in_filedir[-3])
+    self.month = int(dir_in_filedir[-2])
+    self.month_text = MONTHS[self.month - 1]
+    self.day = int(dir_in_filedir[-1])
     self.pdf_path = pdf_path
     self.jpg_path = jpg_path
     self.txt_path = txt_path
@@ -59,6 +67,9 @@ class Page:
         self.conversions.append(conv)
     else:
       self.conversions.append(conversion)
+  def set_new_file_name(self):
+    new_file_name = self.file_name
+    self.new_file_name = new_file_name
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
     self.image_path = image_path
@@ -137,6 +148,8 @@ def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 15
     print(f'Warning: There is no files to process for \'{name}\'.')
   if converts is not None:
     page_pool = get_files(name, root, ext, force=True)
+    for page in page_pool:
+      page.set_new_file_name()
     convert_images(page_pool, converts)
 
 
