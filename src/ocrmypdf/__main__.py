@@ -15,6 +15,7 @@ import fitz
 import time
 import datetime
 import multiprocessing
+import ocrmypdf
 import cv2
 
 from pathlib import Path
@@ -39,28 +40,51 @@ from ocrmypdf.exceptions import (
 
 log = logging.getLogger('ocrmypdf')
 
+class Page:
+  def __init__(self, file_name, newspaper_name, original_image, pdf_path, jpg_path, txt_path):
+    self.file_name = file_name
+    self.newspaper_name = newspaper_name
+    self.original_image = original_image
+    self.pdf_path = pdf_path
+    self.jpg_path = jpg_path
+    self.txt_path = txt_path
+    self.conversions = []
+
+  def add_conversion(self, conversion):
+    if isinstance(conversion, list):
+      for conv in conversion:
+        self.conversions.append(conv)
+    else:
+      self.conversions.append(conversion)
+class Conversion:
+  def __init__(self, image_path, dpi, quality, x, y = None):
+    self.image_path = image_path
+    self.dpi = dpi
+    self.quality = quality
+    self.x = x
+    self.y = y
+
 
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
-def get_files(name, root, ext, tiff_path = '/Tiff_images/', path_exclude = [], path_exist = 'pdf', force = False):
+def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude = [], path_exist ='pdf', force = False):
   file_pool = []
-  for filedir, dirs, files in os.walk(root + tiff_path + name):
+  for filedir, dirs, files in os.walk(os.path.join(root, tiff_path, newspaper_name)):
     if filedir in path_exclude:
       continue
     for file in files:
       dir_in_filedir = filedir.split('/')
-      dir_in_filedir = list(map(lambda x: x.replace('Tiff_images', 'Jpeg_Pdf'), dir_in_filedir))
-      #dir_in_filedir.remove('Tiff_images')
+      dir_in_filedir = list(map(lambda x: x.replace(tiff_path, 'Jpg-Pdf'), dir_in_filedir))
       if pathlib.Path(file).suffix == '.' + ext:
         _file = file[: len(file) - len(ext) - 1]
-        if path_exist is None:
-          path_exist = filedir
-        files_exist = None
-        if os.path.isdir(os.path.join(filedir, path_exist)):
-          files_exist = [f for f in listdir(os.path.join(filedir, path_exist))]
-        if files_exist is None or not _file + '.pdf' in files_exist or force:
-          file_pool.append([name, filedir + '/' + _file, '/'.join(dir_in_filedir), root, file])
+        files_existing = None
+        if os.path.isdir(os.path.join('/'.join(dir_in_filedir), path_exist)):
+          files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
+        if force or files_existing is None or not _file + '.pdf' in files_existing:
+          file_name = Path(file).stem
+          page = Page(file_name, newspaper_name, filedir + '/' + file, '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          file_pool.append(page)
   return file_pool
 
 # import cv2, os
@@ -71,53 +95,46 @@ def get_files(name, root, ext, tiff_path = '/Tiff_images/', path_exclude = [], p
 #     read = cv2.imread(base_path + infile)
 #     outfile = infile.split('.')[0] + '.jpg'
 #     cv2.imwrite(new_path+outfile,read,[int(cv2.IMWRITE_JPEG_QUALITY), 200])
-def convert_image(args):
-  base = args[0]
-  name = args[1]
-  ext = args[2]
-  converts = args[3]
-  file_name = os.path.basename(os.path.realpath(name))
+def convert_image(page):
   try:
     #im = cv2.imread(name + '.' + ext)
-    im = Image.open(name + '.' + ext)
-    for c in converts:
-      path_image = os.path.join(base, c[2])
-      Path(path_image + '/').mkdir(parents=True, exist_ok=True)
-      file = os.path.join(path_image, file_name) + '.' + c[1]
+    im = Image.open(page.original_image)
+    for convert in page.conversions:
+      path_image = os.path.join(page.jpg_path, convert.image_path)
+      Path(path_image).mkdir(parents=True, exist_ok=True)
+      file = os.path.join(path_image, page.file_name) + '.jpg'
       if not Path(file).is_file():
         #cv2.imwrite(file, im, [int(cv2.IMWRITE_JPEG_QUALITY), c[3]])
         #im.save(file, c[0], dpi=(c[3], c[3]))
         im.thumbnail(im.size)
-        im.save(file, c[0], dpi=(c[3], c[3]), quality = 90)
+        im.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality = convert.quality)
   except Exception:
     #tb = sys.exc_info()
     pass
-def convert_images(name, file_pool, ext, converts):
+def convert_images(page_pool, converts):
   if converts is None:
     return
-  image_pool = []
-  for file in file_pool:
-    image_pool.append([file[2], file[1], ext, converts])
+  for page in page_pool:
+    page.add_conversion(converts)
   start_time = time.time()
-  print(f'Starting converting images of \'{name}\' at {str(datetime.datetime.now())}')
-  if len(image_pool):
+  print(f'Starting converting images of \'{page.newspaper_name}\' at {str(datetime.datetime.now())}')
+  if len(page_pool):
     with Pool(processes=14) as mp_pool:
-      mp_pool.map(convert_image, image_pool)
-    print(f'Conversion of {len(file_pool)} images for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+      mp_pool.map(convert_image, page_pool)
+    print(f'Conversion of {len(page_pool)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
-    print(f'Warning: There is no files to convert for \'{name}\'.')
+    print(f'Warning: There is no files to convert.')
 
 
-def create_files(name, root, ext = 'tif', converts = [('jpeg', 'jpg', 'jpg150', 150, 90, 2000), ('jpeg', 'jpg', 'jpg300', 300, 90, 2000)]):
-  path_pdf = '/pdf'
-  path_txt = '/txt'
+def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
   start_time = time.time()
   file_pool = get_files(name, root, ext)
-  convert_images(name, get_files(name, root, ext, force = True), 'tif', converts)
+  convert_images(get_files(name, root, ext, force = True), converts)
   if len(file_pool):
     print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
     with Pool(processes=14) as mp_pool:
       mp_pool.map(to_pdfa, file_pool)
+      #mp_pool.map(exec_ocrmypdf, file_pool)
     print(f'Creation of {len(file_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
     print(f'Warning: There is no files to process for \'{name}\'.')
@@ -133,18 +150,30 @@ def totext(filename):
     text = page.get_text('text')
     print(text)
 
-def to_pdfa(dirs):
-  _parser, options, plugin_manager = get_parser_options_plugins(None)
+
+def exec_ocrmypdf(dirs):
   name = dirs[0]
   file_name = dirs[1]
   pdf_base = dirs[2]
   root = dirs[3]
-  options = Namespace()
   Path(os.path.join(pdf_base, 'pdf')).mkdir(parents=True, exist_ok=True)
   Path(os.path.join(root, 'txt', name)).mkdir(parents=True, exist_ok=True)
-  options.input_file = file_name + '.tif'
-  options.output_file = pdf_base + '/pdf/' + os.path.basename(os.path.realpath(file_name)) + '.pdf'
-  options.sidecar = os.path.join(root, 'txt', name, os.path.basename(os.path.realpath(file_name))) + '.txt'
+  ocrmypdf.configure_logging(verbosity = -1)
+  ocrmypdf.ocr(
+    file_name + '.tif',
+    pdf_base + '/pdf/' + os.path.basename(os.path.realpath(file_name)) + '.pdf',
+    image_dpi = 400,
+    oversample = 600,
+    output_type = 'pdfa')
+
+def to_pdfa(page):
+  _parser, options, plugin_manager = get_parser_options_plugins(None)
+  options = Namespace()
+  Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
+  Path(os.path.join(page.txt_path, 'txt', page.newspaper_name)).mkdir(parents=True, exist_ok=True)
+  options.input_file = page.original_image
+  options.output_file = os.path.join(page.pdf_path, 'pdf', page.file_name) + '.pdf'
+  options.sidecar = os.path.join(page.txt_path, 'txt', page.newspaper_name, page.file_name) + '.txt'
   options.author = None
   options.clean = False
   options.clean_final = False
@@ -162,7 +191,7 @@ def to_pdfa(dirs):
   options.max_image_mpixels = 1000.0
   options.optimize = 0
   options.output_type = 'pdfa'
-  options.oversample = 0
+  options.oversample = 0 #700
   options.pages = None
   options.pdf_renderer = 'auto'
   options.pdfa_image_compression = 'auto'
@@ -217,7 +246,7 @@ def to_pdfa(dirs):
     return ExitCode.missing_dependency
   with suppress(AttributeError, OSError):
     signal.signal(signal.SIGBUS, sigbus)
-  result = run_pipeline(options=options, plugin_manager=plugin_manager)
+  result = run_pipeline(options=options, plugin_manager=None)
   return name + '.pdf'
 
 
