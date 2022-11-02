@@ -38,6 +38,9 @@ from ocrmypdf.exceptions import (
   MissingDependencyError,
 )
 
+ORIGINAL_DPI = 400
+UPSAMPLING_DPI = 700
+
 log = logging.getLogger('ocrmypdf')
 
 class Page:
@@ -57,12 +60,11 @@ class Page:
     else:
       self.conversions.append(conversion)
 class Conversion:
-  def __init__(self, image_path, dpi, quality, x, y = None):
+  def __init__(self, image_path, dpi, quality, resolution):
     self.image_path = image_path
     self.dpi = dpi
     self.quality = quality
-    self.x = x
-    self.y = y
+    self.resolution = resolution
 
 
 def sigbus(*args):
@@ -83,30 +85,26 @@ def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude 
           files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
         if force or files_existing is None or not _file + '.pdf' in files_existing:
           file_name = Path(file).stem
-          page = Page(file_name, newspaper_name, filedir + '/' + file, '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          page = Page(file_name, newspaper_name, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           file_pool.append(page)
   return file_pool
 
-# import cv2, os
-# base_path = "data/images/"
-# new_path = "data/ims/"
-# for infile in os.listdir(base_path):
-#     print ("file : " + infile)
-#     read = cv2.imread(base_path + infile)
-#     outfile = infile.split('.')[0] + '.jpg'
-#     cv2.imwrite(new_path+outfile,read,[int(cv2.IMWRITE_JPEG_QUALITY), 200])
 def convert_image(page):
   try:
-    #im = cv2.imread(name + '.' + ext)
     im = Image.open(page.original_image)
     for convert in page.conversions:
       path_image = os.path.join(page.jpg_path, convert.image_path)
       Path(path_image).mkdir(parents=True, exist_ok=True)
       file = os.path.join(path_image, page.file_name) + '.jpg'
       if not Path(file).is_file():
-        #cv2.imwrite(file, im, [int(cv2.IMWRITE_JPEG_QUALITY), c[3]])
-        #im.save(file, c[0], dpi=(c[3], c[3]))
-        im.thumbnail(im.size)
+        if im.size[0] < im.size[1]:
+          wpercent = (convert.resolution / float(im.size[1]))
+          xsize = int((float(im.size[0]) * float(wpercent)))
+          im = im.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
+        else:
+          wpercent = (convert.resolution / float(im.size[0]))
+          ysize = int((float(im.size[1]) * float(wpercent)))
+          im = im.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
         im.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality = convert.quality)
   except Exception:
     #tb = sys.exc_info()
@@ -128,16 +126,18 @@ def convert_images(page_pool, converts):
 
 def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
   start_time = time.time()
-  file_pool = get_files(name, root, ext)
-  convert_images(get_files(name, root, ext, force = True), converts)
-  if len(file_pool):
+  page_pool = get_files(name, root, ext)
+  if len(page_pool):
     print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
     with Pool(processes=14) as mp_pool:
-      mp_pool.map(to_pdfa, file_pool)
+      mp_pool.map(to_pdfa, page_pool)
       #mp_pool.map(exec_ocrmypdf, file_pool)
-    print(f'Creation of {len(file_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+    print(f'Creation of {len(page_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
     print(f'Warning: There is no files to process for \'{name}\'.')
+  if converts is not None:
+    page_pool = get_files(name, root, ext, force=True)
+    convert_images(page_pool, converts)
 
 
 def totext(filename):
@@ -162,8 +162,8 @@ def exec_ocrmypdf(dirs):
   ocrmypdf.ocr(
     file_name + '.tif',
     pdf_base + '/pdf/' + os.path.basename(os.path.realpath(file_name)) + '.pdf',
-    image_dpi = 400,
-    oversample = 600,
+    image_dpi = ORIGINAL_DPI,
+    oversample = UPSAMPLING_DPI,
     output_type = 'pdfa')
 
 def to_pdfa(page):
@@ -180,7 +180,7 @@ def to_pdfa(page):
   options.deskew = False
   options.fast_web_view = 1.0
   options.force_ocr = False
-  options.image_dpi = 400
+  options.image_dpi = ORIGINAL_DPI
   options.jbig2_lossy = False
   options.jbig2_page_group_size = 0
   options.jobs = None
@@ -191,7 +191,7 @@ def to_pdfa(page):
   options.max_image_mpixels = 1000.0
   options.optimize = 0
   options.output_type = 'pdfa'
-  options.oversample = 0 #700
+  options.oversample = UPSAMPLING_DPI
   options.pages = None
   options.pdf_renderer = 'auto'
   options.pdfa_image_compression = 'auto'
@@ -211,7 +211,7 @@ def to_pdfa(page):
   options.tesseract_oem = None
   options.tesseract_pagesegmode = None
   options.tesseract_thresholding = 0
-  options.tesseract_timeout = 180.0
+  options.tesseract_timeout = 360.0
   options.title = None
   options.unpaper_args = None
   options.use_threads = True
@@ -246,8 +246,7 @@ def to_pdfa(page):
     return ExitCode.missing_dependency
   with suppress(AttributeError, OSError):
     signal.signal(signal.SIGBUS, sigbus)
-  result = run_pipeline(options=options, plugin_manager=None)
-  return name + '.pdf'
+  run_pipeline(options=options, plugin_manager=None)
 
 
 if __name__ == '__main__':
