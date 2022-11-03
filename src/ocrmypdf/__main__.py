@@ -39,16 +39,16 @@ from ocrmypdf.exceptions import (
 )
 
 ORIGINAL_DPI = 400
-UPSAMPLING_DPI = 700
+UPSAMPLING_DPI = 400
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 
 log = logging.getLogger('ocrmypdf')
 
 class Page:
-  def __init__(self, file_name, newspaper_name, original_image, pdf_path, jpg_path, txt_path):
+  def __init__(self, file_name, newspaper_name, n_pages, n_page, original_image, pdf_path, jpg_path, txt_path):
+    self.original_file_name = file_name
     self.file_name = file_name
-    self.new_file_name = None
-    self.newspaper_name = newspaper_name
+    self.newspaper = Newspaper.create(newspaper_name, n_pages, n_page)
     self.original_image = original_image
     self.original_path = str(Path(original_image).parent.resolve())
     dir_in_filedir = self.original_path.split('/')
@@ -57,8 +57,10 @@ class Page:
     self.month_text = MONTHS[self.month - 1]
     self.day = int(dir_in_filedir[-1])
     self.pdf_path = pdf_path
+    self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
-    self.txt_path = txt_path
+    self.txt_path = os.path.join(txt_path, 'txt', self.newspaper.name)
+    self.txt_file_name = os.path.join(txt_path, 'txt', self.newspaper.name, self.file_name) + '.txt'
     self.conversions = []
 
   def add_conversion(self, conversion):
@@ -67,9 +69,17 @@ class Page:
         self.conversions.append(conv)
     else:
       self.conversions.append(conversion)
-  def set_new_file_name(self):
+  def set_file_name(self):
     new_file_name = self.file_name
-    self.new_file_name = new_file_name
+    self.file_name = file_name
+
+  def set_file_name(self):
+    self.file_name = self.newspaper.name.replace(' ', ' _') \
+                     + '_' + str(self.year) \
+                     + '_' + str(self.month_text) \
+                     + '_' + str(self.day if self.day >= 10 else '0' + str(self.day)) \
+                     + '_p' + str(self.newspaper.n_page if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
+                     # + '_p' + str(self.newspaper.n_page) #\
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
     self.image_path = image_path
@@ -77,16 +87,72 @@ class Conversion:
     self.quality = quality
     self.resolution = resolution
 
+class Page_pool(list):
+  def set_pages(self):
+    self.sort(key = self._file_pool_sort)
+    n_pages = len(self)
+    for n_page, page in enumerate(self):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.set_n_page(n_page)
+  def _file_pool_sort(self, page):
+    return page.original_file_name
+    #return os.path.getmtime(Path(page.original_image))
+  def n_page_sort(self):
+    return self.sort(key = self._n_page_sort)
+  def _n_page_sort(self, page):
+    return page.newspaper.n_page
+    #return os.path.getmtime(Path(page.original_image))
+
+class Newspaper():
+
+  @staticmethod
+  def create(name, n_pages, n_page):
+    if name == 'La Stampa':
+      newspaper = La_stampa(name)
+    elif name == 'Il Manifesto':
+      newspaper = Il_manifesto(name)
+    if name == 'Avvenire':
+      newspaper = Avvenire(name)
+    return newspaper
+  def __init__(self, name):
+    self.name = name
+
+class La_stampa(Newspaper):
+  def __init__(self, name):
+    Newspaper.__init__(self, name)
+  def set_n_page(self, n_page):
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+
+class Il_manifesto(Newspaper):
+  def __init__(self, name):
+    Newspaper.__init__(self, name)
+  def set_n_page(self, n_page):
+    self.n_page = n_page
+class Avvenire(Newspaper):
+  def __init__(self, name):
+    Newspaper.__init__(self, name)
+  def set_n_page(self, n_page):
+    self.n_page = n_page
 
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
 def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude = [], path_exist ='pdf', force = False):
-  file_pool = []
+  page_pool = Page_pool()
   for filedir, dirs, files in os.walk(os.path.join(root, tiff_path, newspaper_name)):
     if filedir in path_exclude:
       continue
-    for file in files:
+    n_pages = len(files)
+    for n_page, file in enumerate(files):
       dir_in_filedir = filedir.split('/')
       dir_in_filedir = list(map(lambda x: x.replace(tiff_path, 'Jpg-Pdf'), dir_in_filedir))
       if pathlib.Path(file).suffix == '.' + ext:
@@ -96,9 +162,11 @@ def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude 
           files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
         if force or files_existing is None or not _file + '.pdf' in files_existing:
           file_name = Path(file).stem
-          page = Page(file_name, newspaper_name, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
-          file_pool.append(page)
-  return file_pool
+          page = Page(file_name, newspaper_name, n_pages, n_page, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          page_pool.append(page)
+  page_pool.set_pages()
+  page_pool.n_page_sort()
+  return page_pool
 
 def convert_image(page):
   try:
@@ -120,20 +188,20 @@ def convert_image(page):
   except Exception:
     #tb = sys.exc_info()
     pass
+
 def convert_images(page_pool, converts):
   if converts is None:
     return
   for page in page_pool:
     page.add_conversion(converts)
   start_time = time.time()
-  print(f'Starting converting images of \'{page.newspaper_name}\' at {str(datetime.datetime.now())}')
+  print(f'Starting converting images of \'{page.newspaper.name}\' at {str(datetime.datetime.now())}')
   if len(page_pool):
     with Pool(processes=14) as mp_pool:
       mp_pool.map(convert_image, page_pool)
     print(f'Conversion of {len(page_pool)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
     print(f'Warning: There is no files to convert.')
-
 
 def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
   start_time = time.time()
@@ -146,12 +214,28 @@ def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 15
     print(f'Creation of {len(page_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
     print(f'Warning: There is no files to process for \'{name}\'.')
+  page_pool = get_files(name, root, ext, force=True)
+  set_files_name(page_pool)
   if converts is not None:
-    page_pool = get_files(name, root, ext, force=True)
-    for page in page_pool:
-      page.set_new_file_name()
     convert_images(page_pool, converts)
 
+def set_files_name(page_pool):
+  for page in page_pool:
+    # txt_path = os.path.join(page.txt_path, page.file_name) + '.txt'
+    # with open(txt_path, 'r') as txt:
+    #   pass
+    page.set_file_name()
+    new_file_name = page.txt_file_name.replace(page.original_file_name, page.file_name)
+    if Path(page.txt_file_name).is_file():
+      os.rename(page.txt_file_name, new_file_name)
+    new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
+    if Path(page.pdf_file_name).is_file():
+      os.rename(page.pdf_file_name, new_file_name)
+    new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
+    if Path(page.original_image).is_file():
+      os.rename(page.original_image, new_file_name)
+    page.txt_path = new_file_name
+  return
 
 def totext(filename):
     doc = fitz.open(filename)
@@ -183,10 +267,10 @@ def to_pdfa(page):
   _parser, options, plugin_manager = get_parser_options_plugins(None)
   options = Namespace()
   Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
-  Path(os.path.join(page.txt_path, 'txt', page.newspaper_name)).mkdir(parents=True, exist_ok=True)
+  Path(page.txt_path).mkdir(parents=True, exist_ok=True)
   options.input_file = page.original_image
-  options.output_file = os.path.join(page.pdf_path, 'pdf', page.file_name) + '.pdf'
-  options.sidecar = os.path.join(page.txt_path, 'txt', page.newspaper_name, page.file_name) + '.txt'
+  options.output_file = page.pdf_file_name
+  options.sidecar = page.txt_file_name
   options.author = None
   options.clean = False
   options.clean_final = False
@@ -260,6 +344,7 @@ def to_pdfa(page):
   with suppress(AttributeError, OSError):
     signal.signal(signal.SIGBUS, sigbus)
   run_pipeline(options=options, plugin_manager=None)
+  pass
 
 
 if __name__ == '__main__':
