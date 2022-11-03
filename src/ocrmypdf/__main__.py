@@ -39,7 +39,7 @@ from ocrmypdf.exceptions import (
 )
 
 ORIGINAL_DPI = 400
-UPSAMPLING_DPI = 400
+UPSAMPLING_DPI = 700
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 
 log = logging.getLogger('ocrmypdf')
@@ -62,7 +62,6 @@ class Page:
     self.txt_path = os.path.join(txt_path, 'txt', self.newspaper.name)
     self.txt_file_name = os.path.join(txt_path, 'txt', self.newspaper.name, self.file_name) + '.txt'
     self.conversions = []
-
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -70,16 +69,12 @@ class Page:
     else:
       self.conversions.append(conversion)
   def set_file_name(self):
-    new_file_name = self.file_name
-    self.file_name = file_name
-
-  def set_file_name(self):
     self.file_name = self.newspaper.name.replace(' ', ' _') \
                      + '_' + str(self.year) \
                      + '_' + str(self.month_text) \
                      + '_' + str(self.day if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + str(self.newspaper.n_page if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
-                     # + '_p' + str(self.newspaper.n_page) #\
+
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
     self.image_path = image_path
@@ -94,14 +89,12 @@ class Page_pool(list):
     for n_page, page in enumerate(self):
       page.newspaper.n_pages = n_pages
       page.newspaper.set_n_page(n_page)
+    self.sort(key=self._n_page_sort)
   def _file_pool_sort(self, page):
     return page.original_file_name
     #return os.path.getmtime(Path(page.original_image))
-  def n_page_sort(self):
-    return self.sort(key = self._n_page_sort)
   def _n_page_sort(self, page):
     return page.newspaper.n_page
-    #return os.path.getmtime(Path(page.original_image))
 
 class Newspaper():
 
@@ -165,7 +158,6 @@ def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude 
           page = Page(file_name, newspaper_name, n_pages, n_page, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           page_pool.append(page)
   page_pool.set_pages()
-  page_pool.n_page_sort()
   return page_pool
 
 def convert_image(page):
