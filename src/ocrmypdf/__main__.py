@@ -38,6 +38,7 @@ from ocrmypdf.exceptions import (
   MissingDependencyError,
 )
 
+N_PROCESSES = 14
 ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 400
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
@@ -139,12 +140,19 @@ class Avvenire(Newspaper):
 def sigbus(*args):
   raise InputFileError("Lost access to the input file")
 
-def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude = [], path_exist ='pdf', force = False):
-  page_pool = Page_pool()
+def create_files(newspaper_name,
+                 root,
+                 ext = 'tif',
+                 tiff_path ='Tiff_images',
+                 path_exclude = [],
+                 path_exist ='pdf',
+                 force = False,
+                 converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
   for filedir, dirs, files in os.walk(os.path.join(root, tiff_path, newspaper_name)):
-    if filedir in path_exclude:
-      continue
     n_pages = len(files)
+    if filedir in path_exclude or n_pages == 0:
+      continue
+    page_pool = Page_pool()
     for n_page, file in enumerate(files):
       dir_in_filedir = filedir.split('/')
       dir_in_filedir = list(map(lambda x: x.replace(tiff_path, 'Jpg-Pdf'), dir_in_filedir))
@@ -157,7 +165,19 @@ def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude 
           file_name = Path(file).stem
           page = Page(file_name, newspaper_name, n_pages, n_page, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           page_pool.append(page)
-  return page_pool
+    if len(page_pool):
+      start_time = time.time()
+      print(f'Starting creating pdf/a of \'{newspaper_name}\' at {str(datetime.datetime.now())}')
+      page_pool.set_pages()
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        mp_pool.map(to_pdfa, page_pool)
+        # mp_pool.map(exec_ocrmypdf, file_pool)
+      print(f'Creation of {len(page_pool)} pdf/a files for \'{newspaper_name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+      set_files_name(page_pool)
+      if converts is not None:
+        convert_images(newspaper_name, page_pool, converts)
+    else:
+      print(f'Warning: There is no files to process for \'{newspaper_name}\'.')
 
 def convert_image(page):
   try:
@@ -180,36 +200,35 @@ def convert_image(page):
     #tb = sys.exc_info()
     pass
 
-def convert_images(page_pool, converts):
+def convert_images(name, page_pool, converts):
   if converts is None:
     return
   for page in page_pool:
     page.add_conversion(converts)
-  start_time = time.time()
-  print(f'Starting converting images of \'{page.newspaper.name}\' at {str(datetime.datetime.now())}')
   if len(page_pool):
+    start_time = time.time()
+    print(f'Starting converting images of \'{page.newspaper.name}\' at {str(datetime.datetime.now())}')
     with Pool(processes=14) as mp_pool:
       mp_pool.map(convert_image, page_pool)
     print(f'Conversion of {len(page_pool)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
-    print(f'Warning: There is no files to convert.')
+    print(f'Warning: There is no files to convert for \'{name}\'.')
 
-def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
-  start_time = time.time()
-  page_pool = get_files(name, root, ext)
-  page_pool.set_pages()
-  if len(page_pool):
-    print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
-    with Pool(processes=14) as mp_pool:
-      mp_pool.map(to_pdfa, page_pool)
-      #mp_pool.map(exec_ocrmypdf, file_pool)
-    print(f'Creation of {len(page_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
-  else:
-    print(f'Warning: There is no files to process for \'{name}\'.')
-  #page_pool = get_files(name, root, ext, force=True)
-  set_files_name(page_pool)
-  if converts is not None:
-    convert_images(page_pool, converts)
+# def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
+#   page_pool = get_files(name, root, ext, converts)
+#   page_pool.set_pages()
+#   start_time = time.time()
+#   if len(page_pool):
+#     print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
+#     with Pool(processes = N_PROCESSES) as mp_pool:
+#       mp_pool.map(to_pdfa, page_pool)
+#       #mp_pool.map(exec_ocrmypdf, file_pool)
+#     print(f'Creation of {len(page_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+#   else:
+#     print(f'Warning: There is no files to process for \'{name}\'.')
+#   set_files_name(page_pool)
+#   if converts is not None:
+#     convert_images(name, page_pool, converts)
 
 def set_files_name(page_pool):
   for page in page_pool:
@@ -230,7 +249,6 @@ def set_files_name(page_pool):
       if Path(page.original_image).is_file():
         os.rename(page.original_image, new_file_name)
         page.original_image = new_file_name
-  return
 
 def totext(filename):
     doc = fitz.open(filename)
