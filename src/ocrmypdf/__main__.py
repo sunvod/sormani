@@ -39,7 +39,7 @@ from ocrmypdf.exceptions import (
 )
 
 ORIGINAL_DPI = 400
-UPSAMPLING_DPI = 700
+UPSAMPLING_DPI = 400
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 
 log = logging.getLogger('ocrmypdf')
@@ -72,8 +72,8 @@ class Page:
     self.file_name = self.newspaper.name.replace(' ', ' _') \
                      + '_' + str(self.year) \
                      + '_' + str(self.month_text) \
-                     + '_' + str(self.day if self.day >= 10 else '0' + str(self.day)) \
-                     + '_p' + str(self.newspaper.n_page if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
+                     + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
+                     + '_p' + (str(self.newspaper.n_page) if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
 
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
@@ -84,13 +84,13 @@ class Conversion:
 
 class Page_pool(list):
   def set_pages(self):
-    self.sort(key = self._file_pool_sort)
+    self.sort(key = self._set_pages_sort)
     n_pages = len(self)
     for n_page, page in enumerate(self):
       page.newspaper.n_pages = n_pages
       page.newspaper.set_n_page(n_page)
     self.sort(key=self._n_page_sort)
-  def _file_pool_sort(self, page):
+  def _set_pages_sort(self, page):
     return page.original_file_name
     #return os.path.getmtime(Path(page.original_image))
   def _n_page_sort(self, page):
@@ -157,7 +157,6 @@ def get_files(newspaper_name, root, ext, tiff_path ='Tiff_images', path_exclude 
           file_name = Path(file).stem
           page = Page(file_name, newspaper_name, n_pages, n_page, os.path.join(filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           page_pool.append(page)
-  page_pool.set_pages()
   return page_pool
 
 def convert_image(page):
@@ -198,6 +197,7 @@ def convert_images(page_pool, converts):
 def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 150, 90, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
   start_time = time.time()
   page_pool = get_files(name, root, ext)
+  page_pool.set_pages()
   if len(page_pool):
     print(f'Starting creating pdf/a of \'{name}\' at {str(datetime.datetime.now())}')
     with Pool(processes=14) as mp_pool:
@@ -206,7 +206,7 @@ def create_files(name, root, ext = 'tif', converts = [Conversion('jpg_small', 15
     print(f'Creation of {len(page_pool)} pdf/a files for \'{name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
   else:
     print(f'Warning: There is no files to process for \'{name}\'.')
-  page_pool = get_files(name, root, ext, force=True)
+  #page_pool = get_files(name, root, ext, force=True)
   set_files_name(page_pool)
   if converts is not None:
     convert_images(page_pool, converts)
@@ -217,16 +217,19 @@ def set_files_name(page_pool):
     # with open(txt_path, 'r') as txt:
     #   pass
     page.set_file_name()
-    new_file_name = page.txt_file_name.replace(page.original_file_name, page.file_name)
-    if Path(page.txt_file_name).is_file():
-      os.rename(page.txt_file_name, new_file_name)
-    new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
-    if Path(page.pdf_file_name).is_file():
-      os.rename(page.pdf_file_name, new_file_name)
-    new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
-    if Path(page.original_image).is_file():
-      os.rename(page.original_image, new_file_name)
-    page.txt_path = new_file_name
+    if page.original_file_name != page.file_name:
+      new_file_name = page.txt_file_name.replace(page.original_file_name, page.file_name)
+      if Path(page.txt_file_name).is_file():
+        os.rename(page.txt_file_name, new_file_name)
+        page.txt_path = new_file_name
+      new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
+      if Path(page.pdf_file_name).is_file():
+        os.rename(page.pdf_file_name, new_file_name)
+        page.pdf_file_name = new_file_name
+      new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
+      if Path(page.original_image).is_file():
+        os.rename(page.original_image, new_file_name)
+        page.original_image = new_file_name
   return
 
 def totext(filename):
