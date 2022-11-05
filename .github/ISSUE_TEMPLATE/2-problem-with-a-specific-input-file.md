@@ -16,7 +16,7 @@ A clear and concise description of what the bug is.
 What command line or API call were you trying to run?
 
 ```bash
-ocrmypdf  ...arguments... input.pdf output.pdf
+sormani  ...arguments... input.pdf output.pdf
 ```
 
 Run with verbosity or higher `-v1` to see more detailed logging. This information may be helpful.

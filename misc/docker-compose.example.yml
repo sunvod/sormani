@@ -5,7 +5,7 @@ version: "3.3"
 services:
   ocrmypdf:
     restart: always
-    container_name: ocrmypdf
+    container_name: sormani
     image: jbarlow83/ocrmypdf
     volumes:
       - "/media/scan:/input"

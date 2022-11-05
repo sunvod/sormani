@@ -271,7 +271,7 @@ jobs:
         run: echo "DOCKER_REPOSITORY=jbarlow83" >> $GITHUB_ENV
 
       - name: Set image name
-        run: echo "DOCKER_IMAGE_NAME=ocrmypdf" >> $GITHUB_ENV
+        run: echo "DOCKER_IMAGE_NAME=sormani" >> $GITHUB_ENV
 
       - uses: actions/checkout@v3
         with:

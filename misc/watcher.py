@@ -41,7 +41,7 @@ USE_POLLING = getenv_bool('OCR_USE_POLLING')
 LOGLEVEL = os.getenv('OCR_LOGLEVEL', 'INFO')
 PATTERNS = ['*.pdf', '*.PDF']
 
-log = logging.getLogger('ocrmypdf-watcher')
+log = logging.getLogger('sormani-watcher')
 
 
 def get_output_dir(root, basename):

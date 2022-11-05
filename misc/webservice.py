@@ -34,8 +34,8 @@ def allowed_file(filename):
 
 
 def do_ocrmypdf(file):
-    uploaddir = TemporaryDirectory(prefix="ocrmypdf-upload")
-    downloaddir = TemporaryDirectory(prefix="ocrmypdf-download")
+    uploaddir = TemporaryDirectory(prefix="sormani-upload")
+    downloaddir = TemporaryDirectory(prefix="sormani-download")
 
     filename = secure_filename(file.filename)
     up_file = os.path.join(uploaddir.name, filename)
@@ -47,7 +47,7 @@ def do_ocrmypdf(file):
     if "--sidecar" in cmd_args:
         return Response("--sidecar not supported", 501, mimetype='text/plain')
 
-    ocrmypdf_args = ["ocrmypdf", *cmd_args, up_file, down_file]
+    ocrmypdf_args = ["sormani", *cmd_args, up_file, down_file]
     proc = run(ocrmypdf_args, capture_output=True, encoding="utf-8")
     if proc.returncode != 0:
         stderr = proc.stderr

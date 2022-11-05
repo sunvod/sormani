@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2022 James R. Barlow
 # SPDX-License-Identifier: MPL-2.0
 
-name: ocrmypdf
+name: sormani
 title: OCRmyPDF
 base: core20
 version: git
@@ -23,7 +23,7 @@ environment:
 
 apps:
   ocrmypdf:
-    command: usr/bin/snapcraft-preload python3 -m ocrmypdf
+    command: usr/bin/snapcraft-preload python3 -m sormani
     plugs:
       - desktop
       - desktop-legacy

@@ -284,7 +284,7 @@ _ocrmypdf()
 
     return
 } &&
-complete -F _ocrmypdf ocrmypdf
+complete -F _ocrmypdf sormani
 
 set +o errexit
 

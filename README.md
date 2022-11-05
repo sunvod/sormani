@@ -14,7 +14,7 @@
 OCRmyPDF adds an OCR text layer to scanned PDF files, allowing them to be searched or copy-pasted.
 
 ```bash
-ocrmypdf                      # it's a scriptable command line program
+sormani                      # it's a scriptable command line program
    -l eng+fra                 # it supports multiple languages
    --rotate-pages             # it can fix pages that are misrotated
    --deskew                   # it can deskew crooked PDFs!
@@ -103,7 +103,7 @@ OCRmyPDF supports Tesseract 4.1.1+. It will automatically use whichever version 
 Once OCRmyPDF is installed, the built-in help which explains the command syntax and options can be accessed via:
 
 ```bash
-ocrmypdf --help
+sormani --help
 ```
 
 Our [documentation is served on Read the Docs](https://ocrmypdf.readthedocs.io/en/latest/index.html).

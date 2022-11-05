@@ -19,7 +19,7 @@ import time
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 timestamp = time.strftime("%Y-%m-%d-%H%M_")
-log_file = script_dir + '/' + timestamp + 'ocrmypdf.log'
+log_file = script_dir + '/' + timestamp + 'sormani.log'
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(message)s',
@@ -46,7 +46,7 @@ for dir_name, _subdirs, file_list in os.walk(start_dir):
             'run',
             '--rm',
             '-i',
-            'jbarlow83/ocrmypdf',
+            'jbarlow83/sormani',
             '--deskew',
             '-',
             '-',

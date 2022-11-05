@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2022 James R. Barlow
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
-# ocrmypdf documentation build configuration file, created by
+# sormani documentation build configuration file, created by
 # sphinx-quickstart on Sun Sep  4 14:29:43 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -44,7 +44,7 @@ extensions = [
 # Extension settings
 intersphinx_mapping = {'https://docs.python.org/': None}
 napoleon_use_rtype = False
-issues_github_path = "ocrmypdf/OCRmyPDF"
+issues_github_path = "sormani/OCRmyPDF"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -63,7 +63,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'ocrmypdf'
+project = 'sormani'
 copyright = (
     '2022, James R. Barlow. Licensed under Creative Commons Attribution-ShareAlike 4.0.'
 )
@@ -100,7 +100,7 @@ if on_rtd:
 
 
 # The full version, including alpha/beta/rc tags.
-release = package_version('ocrmypdf')
+release = package_version('sormani')
 version = '.'.join(release.split('.')[:2])
 
 
@@ -179,7 +179,7 @@ html_theme_options = {'display_version': False}
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = 'ocrmypdf v4.2'
+# html_title = 'sormani v4.2'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -302,7 +302,7 @@ latex_elements = {  # type: ignore
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ocrmypdf.tex', 'ocrmypdf Documentation', 'James R. Barlow', 'manual')
+    (master_doc, 'sormani.tex', 'sormani Documentation', 'James R. Barlow', 'manual')
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -342,7 +342,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, 'ocrmypdf', 'ocrmypdf Documentation', [author], 1)]
+man_pages = [(master_doc, 'sormani', 'sormani Documentation', [author], 1)]
 
 # If true, show URL addresses after external links.
 #
@@ -357,10 +357,10 @@ man_pages = [(master_doc, 'ocrmypdf', 'ocrmypdf Documentation', [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        'ocrmypdf',
-        'ocrmypdf Documentation',
+        'sormani',
+        'sormani Documentation',
         author,
-        'ocrmypdf',
+        'sormani',
         'One line description of project.',
         'Miscellaneous',
     )

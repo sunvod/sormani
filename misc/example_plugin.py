@@ -11,11 +11,11 @@ This plugin adds two new command line arguments
     --mono-page: converts pages all pages in the output file to black and white
 
 To use this from the command line:
-    ocrmypdf --plugin path/to/example_plugin.py --mono-page input.pdf output.pdf
+    sormani --plugin path/to/example_plugin.py --mono-page input.pdf output.pdf
 
 To use this as an API:
-    import ocrmypdf
-    ocrmypdf.ocr('input.pdf', 'output.pdf',
+    import sormani
+    sormani.ocr('input.pdf', 'output.pdf',
         plugins=['path/to/example_plugin.py'], mono_page=True
     )
 """
