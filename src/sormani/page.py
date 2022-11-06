@@ -22,7 +22,7 @@ from src.sormani.newspaper import Newspaper
 
 
 class Page:
-  def __init__(self, file_name, date, newspaper_name, original_image, pdf_path, jpg_path, txt_path):
+  def __init__(self, file_name, date, newspaper, original_image, pdf_path, jpg_path, txt_path):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -33,7 +33,7 @@ class Page:
     self.month = date.month
     self.month_text = MONTHS[self.month - 1]
     self.day = date.day
-    self.newspaper = Newspaper.create(original_image, newspaper_name, date)
+    self.newspaper = Newspaper.create(original_image, newspaper.name, date, newspaper.year, newspaper.number)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -59,6 +59,11 @@ class Page:
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + (str(self.newspaper.n_page) if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
     self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
+  def change_contrast(self, img, level):
+    factor = (259 * (level + 255)) / (255 * (259 - level))
+    def contrast(c):
+      return 128 + factor * (c - 128)
+    return img.point(contrast)
 
 class Page_pool(list):
   def __init__(self, newspaper_name, date, force = False):
@@ -77,15 +82,10 @@ class Page_pool(list):
     #return os.path.getmtime(Path(page.original_image))
   def _n_page_sort(self, page):
     return page.newspaper.n_page
-  def _change_contrast(self, img, level):
-    factor = (259 * (level + 255)) / (255 * (259 - level))
-    def contrast(c):
-      return 128 + factor * (c - 128)
-    return img.point(contrast)
   def change_contrast(self, contrast):
     for page in self:
       image = Image.open(page.original_image)
-      image = self._change_contrast(image, contrast)
+      image = page.change_contrast(image, contrast)
       image.save(page.original_image)
   def create_pdf(self):
     if len(self):
@@ -178,19 +178,19 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting changing contrasts of \'{self.newspaper_name}\' at {str(datetime.datetime.now())}')
+      print(f'Starting converting images of \'{self.newspaper_name}\' at {str(datetime.datetime.now())}')
       with Pool(processes=14) as mp_pool:
         mp_pool.map(self.convert_image, self)
-      print(
-        f'Changing contrasts of {len(self)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+        print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
     else:
-      print(f'Warning: There is no image to change contrast for \'{self.newspaper_name}\'.')
+      print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
 
 
 
 class Images_group():
 
-  def __init__(self, filedir, files):
+  def __init__(self,  newspaper_name, filedir, files, get_head = False):
+    self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
@@ -199,7 +199,8 @@ class Images_group():
     if year.isdigit() and month.isdigit() and day.isdigit():
       self.date = datetime.date(int(year), int(month), int(day))
     else:
-      self.date = datetime.datetime.now()
+      raise NotADirectoryError('Le directory non indicano una data.')
+    self.newspaper = Newspaper.create(os.path.join(filedir, files[0]), self.newspaper_name, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)
     for n_page, file in enumerate(self.files):
@@ -212,6 +213,6 @@ class Images_group():
           files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
         if force or files_existing is None or not _file + '.pdf' in files_existing:
           file_name = Path(file).stem
-          page = Page(file_name, self.date, newspaper_name, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          page = Page(file_name, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           page_pool.append(page)
     return page_pool

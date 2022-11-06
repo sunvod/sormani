@@ -71,7 +71,7 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   options.unpaper_args = None
   options.use_threads = True
   options.user_patterns = None
-  options.user_words = None
+  options.user_words = None # '//mnt/storage01/sormani/number_dictionary.txt'
   options.verbose = -1
   with suppress(AttributeError, PermissionError):
     os.nice(5)
