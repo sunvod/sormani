@@ -1,10 +1,5 @@
-
-
-
 from __future__ import annotations
 
-import os
-import sys
 import pathlib
 import time
 import datetime
@@ -17,7 +12,7 @@ from os import listdir
 from PyPDF2 import PdfFileMerger
 from ocrmypdf._plugin_manager import get_parser_options_plugins
 
-from src.sormani.const import MONTHS, N_PROCESSES, ORIGINAL_DPI, UPSAMPLING_DPI, exec_ocrmypdf
+from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
 
 
@@ -64,6 +59,19 @@ class Page:
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
+  def isAlreadySeen(self):
+    l = len(self.newspaper.name)
+    f = self.file_name
+    return f[: l] == self.newspaper.name.replace(' ', '_') and \
+        f[l] == '_' and\
+        f[l + 1: l + 5].isdigit() and \
+        f[l + 5] == '_' and\
+        f[l + 6: l + 9] in MONTHS and\
+        f[l + 9] == '_' and\
+        f[l + 10: l + 12].isdigit() and\
+        f[l+12] == '_' and\
+        f[l+13] == 'p' and\
+        f[l  + 14: l + 16].isdigit()
 
 class Page_pool(list):
   def __init__(self, newspaper_name, date, force = False):
@@ -82,20 +90,22 @@ class Page_pool(list):
     #return os.path.getmtime(Path(page.original_image))
   def _n_page_sort(self, page):
     return page.newspaper.n_page
-  def change_contrast(self, contrast):
+  def change_contrast(self, contrast, force = False):
     for page in self:
+      if not force and page.isAlreadySeen():
+        continue
+      contrast = contrast if contrast is not None else page.newspaper.contrast
       image = Image.open(page.original_image)
       image = page.change_contrast(image, contrast)
       image.save(page.original_image)
   def create_pdf(self):
     if len(self):
       start_time = time.time()
-      print(f'Starting creating pdf/a of \'{self.newspaper_name}\' at {str(datetime.datetime.now())}')
+      print(f'Starting creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       self.set_pages()
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-        # mp_pool.map(exec_ocrmypdf, file_pool)
-      print(f'Creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
@@ -178,10 +188,10 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting converting images of \'{self.newspaper_name}\' at {str(datetime.datetime.now())}')
+      print(f'Starting converting images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=14) as mp_pool:
         mp_pool.map(self.convert_image, self)
-        print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now())} and takes {round(time.time() - start_time)} seconds.')
+        print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
 

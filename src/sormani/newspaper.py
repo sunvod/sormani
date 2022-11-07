@@ -6,7 +6,7 @@ import datetime
 from PIL import Image
 from pathlib import Path
 
-from src.sormani.const import MONTHS, exec_ocrmypdf
+from src.sormani.system import MONTHS, exec_ocrmypdf
 
 
 class Newspaper():
@@ -23,6 +23,7 @@ class Newspaper():
     self.name = name
     self.file_name = file_name
     self.date = date
+    self.contrast = 50
     if year is not None:
       self.year = year
       self.number = number
@@ -65,9 +66,9 @@ class Newspaper():
     f = open("temp.txt", "r")
     x = f.read()
     x = x.replace("\n", "").strip()
-    os.remove('temp.tif')
-    os.remove('temp.pdf')
-    os.remove('temp.txt')
+    #os.remove('temp.tif')
+    #os.remove('temp.pdf')
+    #os.remove('temp.txt')
     return x
 
 class La_stampa(Newspaper):
@@ -77,6 +78,8 @@ class La_stampa(Newspaper):
     if super().set_n_page(n_page, date):
       self.n_page = n_page + 1
       return
+    #text1 = ''.join(filter(str.isdigit, super().crop(left=4200, top=150, right=4700, bottom=440)))
+    #text2 = ''.join(filter(str.isdigit, super().crop(left=100, top=150, right=600, bottom=440)))
     r = n_page % 4
     n = n_page // 4
     if r == 0:
