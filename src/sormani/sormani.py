@@ -74,6 +74,9 @@ class Sormani():
       return elements.sort(key = self._elements_sort)
   def divide_image(self, elements):
     some_modify = False
+    count = 0
+    start_time = time.time()
+    print(f'Starting dividing of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for image_group in elements:
       for file_name in image_group.files:
         file_path = os.path.join(image_group.filedir, file_name)
@@ -95,6 +98,11 @@ class Sormani():
         im2 = im.crop((left, top, right, bottom))
         im2.save(file_path[: len(file_path) - 4] + '-1.tif')
         os.remove(file_path)
+        count += 1
+    if count:
+      print(f'Dividing of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'No dividing is necessary for \'{self.newspaper_name}\'.')
     return some_modify
   def __len__(self):
     return len(self.elements)
@@ -148,25 +156,21 @@ class Sormani():
     selfforce = self.force
     self.force = True
     for page_pool in self:
-      for page in page_pool:
+      for i, page in enumerate(page_pool):
         page_number, images = page.extract_page()
-        #print(f'{page.file_name} has page number: {page_number}')
-        # if images is not None:
-        #   if isinstance(images, list):
-        #     for image in images:
-        #       # window = tk.Tk()
-        #       # # window.geometry("500x500")
-        #       # img = ImageTk.PhotoImage(image[0])
-        #       # lbl = tk.Label(window, image=img).pack()
-        #       # window.mainloop()
-        #       #image.show()
-        #       count += 1
-        #   else:
-        #     pass
-        #     # images.show()
+        if not i:
+          page_number = 1
+        print(f'{page.file_name} has page number: {page_number}')
+        count += 1
+        if page_number == '??' and images is not None:
+          if isinstance(images, list):
+            for image in images:
+              image.show()
+          else:
+            images.show()
     if count:
       print(f'Extracting page number from {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
-      print(f'Warning: There is no image to  extracting page number for \'{self.newspaper_name}\'.')
+      print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
 

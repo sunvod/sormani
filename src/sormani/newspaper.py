@@ -84,7 +84,7 @@ class Newspaper():
     temp2 = 255 - cv2.morphologyEx(image, cv2.MORPH_CLOSE, horizontal_kernel)
     temp3 = cv2.add(temp1, temp2)
     return cv2.add(temp3, image)
-  def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, count = 0):
+  def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, oem = 3, count = 0, remove_lines = False, old_y = None):
     image = Image.open(self.file_name)
     image = image.crop((left, top, right, bottom))
     if resize is not None:
@@ -94,7 +94,9 @@ class Newspaper():
     image.save('temp.tif')
     image = cv2.imread('temp.tif')
     image = self.erode(image, l = erode)
-    custom_config = r'-l ita --oem 3 --psm 4 --dpi ' + str(dpi)
+    if remove_lines:
+      image = self.remove_lines(image)
+    custom_config = r'-l ita --oem ' + str(oem) + ' --psm 4 --dpi ' + str(dpi)
     x = pytesseract.image_to_string(image, config = custom_config)
     x = x.replace("\n", "").strip()
     x = re.sub('[^0-9]+', ' ', x)
@@ -115,13 +117,23 @@ class Newspaper():
           resize = 1
         resize -= 0.1
         return self.crop(left, top, right, bottom, resize = resize, contrast = contrast, erode = erode, dpi = dpi, count = count)
+      else:
+        y = []
+    if len(y) == 1 and int(y[0]) >= 12 and int(y[0]) <= 20:
+      count += 1
+      if count < 2:
+        return self.crop(left, top, right, bottom, resize=resize, contrast=contrast, erode=erode, dpi=dpi, count=count, remove_lines = True, old_y = y)
+      elif old_y is not None:
+        y = old_y
     cv2.imwrite('temp.tif', image)
-    if len(y):
-      image = Image.open('temp.tif')
-      print(self.file_name, ls, ' => ', y)
-      image.show()
+    # if len(y):
+    #   image = Image.open('temp.tif')
+    #   print(self.file_name, ls, ' => ', y)
+    #   image.show()
+    dimension = os.path.getsize('temp.tif')
+    image = Image.open('temp.tif')
     os.remove('temp.tif')
-    return y, image
+    return y, image, dimension
   def get_number(self):
     dir = self.file_name
     folder_count = 0
@@ -167,14 +179,19 @@ class La_stampa(Newspaper):
     year = str(150 + self.date.year - 2016)
     return year, number
   def get_page(self):
-    text1, image1 = super().crop(left=4200, top=100, right=4900, bottom=500) # odd
+    text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=500) # odd
     n1 = ''.join(filter(str.isdigit, text1))
-    text2, image2 = super().crop(left=0, top=100, right=700, bottom=500) # pair
+    text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=500) # pair
     n2 = ''.join(filter(str.isdigit, text2))
+    if n1.isdigit() and n2.isdigit():
+      if dimension1 > dimension2:
+        return n1, [image1, image2]
+      else:
+        return n2, [image1, image2]
     if n1.isdigit():
-      return n1, image1
+      return n1, [image1, image2]
     elif n2.isdigit():
-      return n2, image2
+      return n2, [image1, image2]
     else:
       return '??', [image1, image2]
 
@@ -209,42 +226,3 @@ class Avvenire(Newspaper):
       self.n_page = n_page + 1
       return
     self.n_page = n_page + 1
-
-  def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, count = 0):
-    image = Image.open(self.file_name)
-    image = image.crop((left, top, right, bottom))
-    if resize is not None:
-      image = image.resize((int(image.size[0] * resize), int(image.size[1] * resize)), Image.Resampling.LANCZOS)
-    if contrast is not None:
-      image = self.change_contrast(image, contrast)
-    image.save('temp.tif')
-    # df = pytesseract.image_to_string('-l eng temp.tif') # , lang='eng', config='--psm 6'
-    # exec_ocrmypdf('temp.tif', oversample=200)
-    image = cv2.imread('temp.tif')
-    # image = self.get_grayscale(image)
-    # image = self.remove_noise(image, l = 3)
-    image = self.erode(image, l = erode)
-    # image = self.dilate(image, l = 3)
-    # image = self.erode(image, l = 2)
-    # image = self.remove_lines(image)
-    custom_config = r'-l ita --oem 3 --psm 4 --dpi ' + str(dpi)
-    x = pytesseract.image_to_string(image, config = custom_config)
-    x = x.replace("\n", "").strip()
-    x = re.sub('[^0-9]+', ' ', x)
-    ls = x.split(' ')
-    ls = [ r for r in ls if r.isdigit()]
-    y = [r for r in ls if len(r)]
-    y = [r for r in y if len(r) <= 2]
-    # elif len(ls) == 1 and len(ls[0]) > 2:
-    #   count += 1
-    #   if count < 5:
-    #     if resize is None:
-    #       resize = 1
-    #     resize -= 0.1
-    #     return self.crop(left, top, right, bottom, resize = resize, contrast = contrast, erode = erode, dpi = dpi, count = count)
-    cv2.imwrite('temp.tif', image)
-    image = Image.open('temp.tif')
-    print(self.file_name, ls, ' => ', y)
-    # image.show()
-    os.remove('temp.tif')
-    return y, image
