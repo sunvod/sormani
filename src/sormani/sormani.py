@@ -5,6 +5,7 @@ import os
 import tkinter as tk
 from PIL import Image, ImageTk
 from src.sormani.page import Images_group
+import numpy as np
 
 
 class Conversion:
@@ -149,19 +150,20 @@ class Sormani():
     for page_pool in self:
       for page in page_pool:
         page_number, images = page.extract_page()
-        print(f'{page.file_name} has page number: {page_number}')
-        if images is not None:
-          if isinstance(images, list):
-            for image in images:
-              # window = tk.Tk()
-              # # window.geometry("500x500")
-              # img = ImageTk.PhotoImage(image[0])
-              # lbl = tk.Label(window, image=img).pack()
-              # window.mainloop()
-              image.show()
-              count += 1
-          else:
-            images.show()
+        #print(f'{page.file_name} has page number: {page_number}')
+        # if images is not None:
+        #   if isinstance(images, list):
+        #     for image in images:
+        #       # window = tk.Tk()
+        #       # # window.geometry("500x500")
+        #       # img = ImageTk.PhotoImage(image[0])
+        #       # lbl = tk.Label(window, image=img).pack()
+        #       # window.mainloop()
+        #       #image.show()
+        #       count += 1
+        #   else:
+        #     pass
+        #     # images.show()
     if count:
       print(f'Extracting page number from {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
