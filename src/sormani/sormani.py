@@ -2,7 +2,8 @@ import time
 import datetime
 import os
 
-from PIL import Image
+import tkinter as tk
+from PIL import Image, ImageTk
 from src.sormani.page import Images_group
 
 
@@ -65,7 +66,7 @@ class Sormani():
       if filedir in self.path_exclude or n_pages == 0:
         continue
       files.sort()
-      elements.append(Images_group( self.newspaper_name, filedir, files, get_head = True))
+      elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
     if len(elements) == 1:
       return elements
     else:
@@ -112,11 +113,15 @@ class Sormani():
   def set_force(self, force):
     self.force = force
   def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
+    if not len(self.elements):
+      return
     for page_pool in self:
       page_pool.create_pdf()
       page_pool.set_files_name()
       page_pool.convert_images(converts)
   def change_all_contrasts(self, contrast = None, force = False):
+    if not len(self.elements):
+      return
     start_time = time.time()
     print(f'Starting changing contrasts of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
@@ -133,4 +138,33 @@ class Sormani():
   def create_jpg(self):
       for page_pool in self:
         page_pool.convert_images(converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)])
+  def extract_pages(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(f'Starting extracting page number from \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = True
+    for page_pool in self:
+      for page in page_pool:
+        page_number, images = page.extract_page()
+        print(f'{page.file_name} has page number: {page_number}')
+        if images is not None:
+          if isinstance(images, list):
+            for image in images:
+              # window = tk.Tk()
+              # # window.geometry("500x500")
+              # img = ImageTk.PhotoImage(image[0])
+              # lbl = tk.Label(window, image=img).pack()
+              # window.mainloop()
+              image.show()
+              count += 1
+          else:
+            images.show()
+    if count:
+      print(f'Extracting page number from {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no image to  extracting page number for \'{self.newspaper_name}\'.')
+    self.force = selfforce
 

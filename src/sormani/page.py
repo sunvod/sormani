@@ -28,7 +28,7 @@ class Page:
     self.month = date.month
     self.month_text = MONTHS[self.month - 1]
     self.day = date.day
-    self.newspaper = Newspaper.create(original_image, newspaper.name, date, newspaper.year, newspaper.number)
+    self.newspaper = Newspaper.create(newspaper.newspaper_base, original_image, newspaper.name, date, newspaper.year, newspaper.number)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -72,6 +72,8 @@ class Page:
         f[l+12] == '_' and\
         f[l+13] == 'p' and\
         f[l  + 14: l + 16].isdigit()
+  def extract_page(self):
+    return self.newspaper.get_page()
 
 class Page_pool(list):
   def __init__(self, newspaper_name, date, force = False):
@@ -199,7 +201,7 @@ class Page_pool(list):
 
 class Images_group():
 
-  def __init__(self,  newspaper_name, filedir, files, get_head = False):
+  def __init__(self,  newspaper_base, newspaper_name, filedir, files, get_head = False):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
@@ -210,19 +212,18 @@ class Images_group():
       self.date = datetime.date(int(year), int(month), int(day))
     else:
       raise NotADirectoryError('Le directory non indicano una data.')
-    self.newspaper = Newspaper.create(os.path.join(filedir, files[0]), self.newspaper_name, self.date)
+    self.newspaper = Newspaper.create(newspaper_base, os.path.join(filedir, files[0]), self.newspaper_name, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)
     for n_page, file in enumerate(self.files):
       dir_in_filedir = self.filedir.split('/')
       dir_in_filedir = list(map(lambda x: x.replace(image_path, 'Jpg-Pdf'), dir_in_filedir))
       if pathlib.Path(file).suffix == '.' + ext:
-        _file = file[: len(file) - len(ext) - 1]
+        _file = Path(file).stem
         files_existing = None
         if os.path.isdir(os.path.join('/'.join(dir_in_filedir), path_exist)):
           files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
         if force or files_existing is None or not _file + '.pdf' in files_existing:
-          file_name = Path(file).stem
-          page = Page(file_name, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          page = Page(_file, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
           page_pool.append(page)
     return page_pool

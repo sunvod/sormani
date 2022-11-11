@@ -65,7 +65,7 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   options.tesseract_config = []
   options.tesseract_oem = None
   options.tesseract_pagesegmode = None
-  options.tesseract_thresholding = 0
+  options.tesseract_thresholding = 14
   options.tesseract_timeout = 360.0
   options.title = None
   options.unpaper_args = None
