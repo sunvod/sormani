@@ -66,12 +66,20 @@ class Sormani():
       n_pages = len(files)
       if filedir in self.path_exclude or n_pages == 0:
         continue
-      files.sort()
+      files.sort(key = self._get_elements)
       elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
     if len(elements) == 1:
       return elements
     else:
       return elements.sort(key = self._elements_sort)
+  def _get_elements(self, n):
+    # n = e[:5]
+    n = ''.join(c for c in n if c.isdigit())
+    if not len(n):
+      n = '0'
+    r = ['0' for x in range(25 - len(n))]
+    r = ''.join(r) + n
+    return r
   def divide_image(self, elements):
     some_modify = False
     count = 0
@@ -124,8 +132,10 @@ class Sormani():
   def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
     if not len(self.elements):
       return
+    pages = self.extract_pages(range = (3, 4))
+    pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit else None
     for page_pool in self:
-      page_pool.create_pdf()
+      page_pool.create_pdf(pages)
       page_pool.set_files_name()
       page_pool.convert_images(converts)
   def change_all_contrasts(self, contrast = None, force = False):
@@ -137,8 +147,7 @@ class Sormani():
     selfforce = self.force
     self.force = force
     for page_pool in self:
-      count += len(page_pool)
-      page_pool.change_contrast(contrast, force)
+      count += page_pool.change_contrast(contrast, force)
     if count:
       print(f'Changing contrasts of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
@@ -147,30 +156,47 @@ class Sormani():
   def create_jpg(self):
       for page_pool in self:
         page_pool.convert_images(converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)])
-  def extract_pages(self):
+  def extract_pages(self, mute = True, image_mute = True, range = None):
     if not len(self.elements):
       return
+    if not isinstance(range, tuple):
+      if isinstance(range, int):
+        range = (0, range)
+      else:
+        print('Error: range is not a tuple nor a integer.')
+        return
     start_time = time.time()
-    print(f'Starting extracting page number from \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    if not mute:
+      print(f'Starting extracting page number from \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
+    pages = []
     for page_pool in self:
       for i, page in enumerate(page_pool):
+        if range is not None and i + 1 < range[0]:
+          continue
+        if range is not None and i + 1 >= range[1]:
+          break
         page_number, images = page.extract_page()
+        pages.append(page_number)
+        count += 1
+        if mute:
+          continue
         if not i:
           page_number = 1
         print(f'{page.file_name} has page number: {page_number}')
-        count += 1
-        if page_number == '??' and images is not None:
+        if not image_mute and page_number == '??' and images is not None:
           if isinstance(images, list):
             for image in images:
               image.show()
           else:
             images.show()
-    if count:
-      print(f'Extracting page number from {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
+    if not mute:
+      if count:
+        print(f'Extracting page number from {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      else:
+        print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
+    return pages
 

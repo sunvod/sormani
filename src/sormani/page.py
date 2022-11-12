@@ -32,8 +32,8 @@ class Page:
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
-    self.txt_path = os.path.join(txt_path, 'txt', self.newspaper.name)
-    self.txt_file_name = os.path.join(txt_path, 'txt', self.newspaper.name, self.file_name) + '.txt'
+    self.txt_path = txt_path
+    self.txt_file_name = os.path.join(txt_path, self.file_name) + '.txt'
     self.original_txt_file_name = self.txt_file_name
     self.conversions = []
   def add_conversion(self, conversion):
@@ -80,11 +80,12 @@ class Page_pool(list):
     self.newspaper_name = newspaper_name
     self.date = date
     self.force = force
-  def set_pages(self):
+  def set_pages(self, pages):
     self.sort(key = self._set_pages_sort)
-    n_pages = len(self)
+    n_pages = len(self) if pages is None or pages > len(self) else pages
     for n_page, page in enumerate(self):
       page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(self)
       page.newspaper.set_n_page(n_page, self.date)
     self.sort(key=self._n_page_sort)
   def _set_pages_sort(self, page):
@@ -93,6 +94,7 @@ class Page_pool(list):
   def _n_page_sort(self, page):
     return page.newspaper.n_page
   def change_contrast(self, contrast, force = False):
+    count = 0
     for page in self:
       if not force and page.isAlreadySeen():
         continue
@@ -100,11 +102,13 @@ class Page_pool(list):
       image = Image.open(page.original_image)
       image = page.change_contrast(image, contrast)
       image.save(page.original_image)
-  def create_pdf(self):
+      count += 1
+    return count
+  def create_pdf(self, pages = None):
     if len(self):
       start_time = time.time()
       print(f'Starting creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-      self.set_pages()
+      self.set_pages(pages)
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
       print(f'Creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -217,6 +221,7 @@ class Images_group():
     page_pool = Page_pool(newspaper_name, self.date, force)
     for n_page, file in enumerate(self.files):
       dir_in_filedir = self.filedir.split('/')
+      txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
       dir_in_filedir = list(map(lambda x: x.replace(image_path, 'Jpg-Pdf'), dir_in_filedir))
       if pathlib.Path(file).suffix == '.' + ext:
         _file = Path(file).stem
@@ -224,6 +229,6 @@ class Images_group():
         if os.path.isdir(os.path.join('/'.join(dir_in_filedir), path_exist)):
           files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
         if force or files_existing is None or not _file + '.pdf' in files_existing:
-          page = Page(_file, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), root)
+          page = Page(_file, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), '/'.join(txt_in_filedir))
           page_pool.append(page)
     return page_pool
