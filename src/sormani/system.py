@@ -3,6 +3,7 @@ import sys
 from argparse import Namespace
 from contextlib import suppress
 
+from PIL import Image
 import signal
 import sys
 from argparse import Namespace
@@ -101,4 +102,8 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
     return ExitCode.missing_dependency
   with suppress(AttributeError, OSError):
     signal.signal(signal.SIGBUS, sigbus)
-  run_pipeline(options=options, plugin_manager=None)
+  exit_code = run_pipeline(options=options, plugin_manager=None)
+  if exit_code == ExitCode.child_process_error or not os.path.isfile(output_file):
+    image = Image.open(input_file)
+    image.save(output_file, "PDF", resolution=70.0)
+    pass

@@ -93,6 +93,9 @@ class Page_pool(list):
     #return os.path.getmtime(Path(page.original_image))
   def _n_page_sort(self, page):
     return page.newspaper.n_page
+  def isAlreadySeen(self):
+    for page in self:
+      return page.isAlreadySeen()
   def change_contrast(self, contrast, force = False):
     count = 0
     for page in self:
@@ -104,14 +107,13 @@ class Page_pool(list):
       image.save(page.original_image)
       count += 1
     return count
-  def create_pdf(self, pages = None):
+  def create_pdf(self):
     if len(self):
       start_time = time.time()
-      print(f'Starting creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-      self.set_pages(pages)
+      print(f'Start creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-      print(f'Creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'The creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
@@ -122,6 +124,8 @@ class Page_pool(list):
     exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
     self.add_pdf_metadata(page)
   def add_pdf_metadata(self, page):
+    if not os.path.isfile(page.pdf_file_name):
+      return
     os.rename(page.pdf_file_name, page.pdf_file_name + '.2')
     file_in = open(page.pdf_file_name + '.2', 'rb')
     pdf_merger = PdfFileMerger()
@@ -153,16 +157,18 @@ class Page_pool(list):
     # metadata = pdf.get_metadata()
   def set_files_name(self):
     for page in self:
+      new_file_name = page.txt_file_name.replace(page.original_file_name, page.file_name)
+      if Path(page.original_txt_file_name).is_file():
+        os.rename(page.original_txt_file_name, new_file_name)
+        page.txt_path = new_file_name
+      new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
+      if Path(page.pdf_file_name).is_file():
+        os.rename(page.pdf_file_name, new_file_name)
+        page.pdf_file_name = new_file_name
+  def set_image_file_name(self):
+    for page in self:
       page.set_file_names()
       if page.original_file_name != page.file_name:
-        new_file_name = page.txt_file_name.replace(page.original_file_name, page.txt_file_name)
-        if Path(page.original_txt_file_name).is_file():
-          os.rename(page.original_txt_file_name, new_file_name)
-          page.txt_path = new_file_name
-        new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
-        if Path(page.pdf_file_name).is_file():
-          os.rename(page.pdf_file_name, new_file_name)
-          page.pdf_file_name = new_file_name
         new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
         if Path(page.original_image).is_file():
           os.rename(page.original_image, new_file_name)
@@ -194,13 +200,33 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting converting images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Starting converting images of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=14) as mp_pool:
         mp_pool.map(self.convert_image, self)
         print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
-
+  def extract_pages(self, range, mute = True, image_mute = True):
+    pages = []
+    for i, page in enumerate(self):
+      if range is not None and i + 1 < range[0]:
+        continue
+      if range is not None and i + 1 >= range[1]:
+        break
+      page_number, images = page.extract_page()
+      pages.append(page_number)
+      if mute:
+        continue
+      if not i:
+        page_number = 1
+      print(f'{page.file_name} has page number: {page_number}')
+      if not image_mute and page_number == '??' and images is not None:
+        if isinstance(images, list):
+          for image in images:
+            image.show()
+        else:
+          images.show()
+    return pages
 
 
 class Images_group():
@@ -219,16 +245,23 @@ class Images_group():
     self.newspaper = Newspaper.create(newspaper_base, os.path.join(filedir, files[0]), self.newspaper_name, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)
-    for n_page, file in enumerate(self.files):
-      dir_in_filedir = self.filedir.split('/')
-      txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
-      dir_in_filedir = list(map(lambda x: x.replace(image_path, 'Jpg-Pdf'), dir_in_filedir))
+    dir_in_filedir = self.filedir.split('/')
+    txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
+    dir_in_filedir = list(map(lambda x: x.replace(image_path, 'Jpg-Pdf'), dir_in_filedir))
+    dir_path = '/'.join(dir_in_filedir)
+    txt_path = '/'.join(txt_in_filedir)
+    filedir = os.path.join(dir_path, path_exist)
+    if os.path.isdir(filedir) and not force:
+      exists = True
+      for file in self.files:
+        if pathlib.Path(file).suffix == '.' + ext:
+          if not(Path(file).stem + '.pdf' in listdir(filedir)):
+            exists = False
+            break
+      if exists:
+        return page_pool
+    for file in self.files:
       if pathlib.Path(file).suffix == '.' + ext:
-        _file = Path(file).stem
-        files_existing = None
-        if os.path.isdir(os.path.join('/'.join(dir_in_filedir), path_exist)):
-          files_existing = [f for f in listdir(os.path.join('/'.join(dir_in_filedir), path_exist))]
-        if force or files_existing is None or not _file + '.pdf' in files_existing:
-          page = Page(_file, self.date, self.newspaper, os.path.join(self.filedir, file), '/'.join(dir_in_filedir), '/'.join(dir_in_filedir), '/'.join(txt_in_filedir))
-          page_pool.append(page)
+        page = Page(Path(file).stem, self.date, self.newspaper, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
+        page_pool.append(page)
     return page_pool

@@ -118,7 +118,10 @@ class Newspaper():
         resize -= 0.1
         return self.crop(left, top, right, bottom, resize = resize, contrast = contrast, erode = erode, dpi = dpi, count = count)
       else:
-        y = []
+        if len(y) > 0 and len(y[0]) == 3 and y[0][0] == '1':
+          y = [y[0][1:]]
+        else:
+          y = []
     if len(y) == 1 and int(y[0]) >= 12 and int(y[0]) <= 20:
       count += 1
       if count < 2:
