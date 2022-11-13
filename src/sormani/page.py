@@ -81,7 +81,7 @@ class Page_pool(list):
     self.date = date
     self.force = force
   def set_pages(self, pages):
-    self.sort(key = self._set_pages_sort)
+    # self.sort(key = self._set_pages_sort)
     n_pages = len(self) if pages is None or pages > len(self) else pages
     for n_page, page in enumerate(self):
       page.newspaper.n_pages = n_pages

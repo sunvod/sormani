@@ -68,10 +68,9 @@ class Sormani():
         continue
       files.sort(key = self._get_elements)
       elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
-    if len(elements) == 1:
-      return elements
-    else:
-      return elements.sort(key = self._elements_sort)
+    if len(elements) > 1:
+      elements.sort(key=self._elements_sort)
+    return elements
   def _get_elements(self, n):
     # n = e[:5]
     n = ''.join(c for c in n if c.isdigit())
@@ -81,6 +80,8 @@ class Sormani():
     r = ''.join(r) + n
     return r
   def divide_image(self, elements):
+    if not len(elements):
+      return
     some_modify = False
     count = 0
     start_time = time.time()
