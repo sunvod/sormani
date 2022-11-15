@@ -172,7 +172,8 @@ class Page_pool(list):
         new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
         if Path(page.original_image).is_file():
           os.rename(page.original_image, new_file_name)
-          page.original_image = new_file_name
+          page.file_name = new_file_name
+          page.newspaper.file_name = new_file_name
   def convert_image(self, page):
     try:
       image = Image.open(page.original_image)

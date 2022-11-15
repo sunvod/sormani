@@ -1,11 +1,7 @@
 import os
-import sys
-from argparse import Namespace
-from contextlib import suppress
-
-from PIL import Image
 import signal
 import sys
+from PIL import Image
 from argparse import Namespace
 from contextlib import suppress
 from ocrmypdf import __version__, ExitCode, BadArgsError, MissingDependencyError, InputFileError
@@ -15,9 +11,12 @@ from ocrmypdf._validation import check_options, log
 from ocrmypdf.api import Verbosity, configure_logging
 
 ORIGINAL_DPI = 400
-UPSAMPLING_DPI = 400
+UPSAMPLING_DPI = 600
 N_PROCESSES = 14
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
+
+# Create and configure logger
+sormani_log = open(r'sormani.log', 'a')
 
 
 def sigbus(self, *args):
@@ -106,4 +105,5 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   if exit_code == ExitCode.child_process_error or not os.path.isfile(output_file):
     image = Image.open(input_file)
     image.save(output_file, "PDF", resolution=70.0)
+    sormani_log.write(f'Warning: il pdf/a nominato \'{output_file}\' non ha l\'OCR\n')
     pass

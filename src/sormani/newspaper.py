@@ -141,7 +141,8 @@ class Newspaper():
     dir = self.file_name
     folder_count = 0
     for month in range(self.date.month):
-      input_path = os.path.join(self.newspaper_base, str(self.date.year), str(month + 1))
+      m = str(month + 1)
+      input_path = os.path.join(self.newspaper_base, str(self.date.year), m if len(m) == 2 else '0' + m)
       if os.path.exists(input_path):
         listdir = os.listdir(input_path)
         listdir = [x for x in listdir if x.isdigit()]

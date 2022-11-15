@@ -20,6 +20,30 @@ class Sormani():
                newspaper_name,
                root = '/mnt/storage01/sormani',
                year = None,
+               months = None,
+               days = None,
+               ext = 'tif',
+               image_path ='Tiff_images',
+               path_exclude = [],
+               path_exist ='pdf',
+               force = False):
+    if not isinstance(months, list):
+      months = [months]
+    if not isinstance(days, list):
+      days = [days]
+    elements = []
+    for month in months:
+      for day in days:
+        elements.append(self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force))
+    self.elements = []
+    for element in elements:
+      for e in element:
+        self.elements.append(e)
+    pass
+  def _init(self,
+               newspaper_name,
+               root = '/mnt/storage01/sormani',
+               year = None,
                month = None,
                day = None,
                ext = 'tif',
@@ -62,6 +86,8 @@ class Sormani():
     self.change_all_contrasts()
     self.divide_all_images()
     self.set_all_images_names()
+    self.elements = self.get_elements(root)
+    return self.elements
     pass
   def add_zero(self, n):
     if isinstance(n, int):
