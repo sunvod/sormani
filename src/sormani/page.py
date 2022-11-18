@@ -55,11 +55,25 @@ class Page:
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + page
     self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
-  def change_contrast(self, img, level):
+
+  def change_contrast(self, contrast, force=False):
+    if force or not self.isAlreadySeen():
+      contrast = contrast if contrast is not None else self.newspaper.contrast
+      image = Image.open(self.original_image)
+      image = self._change_contrast(image, contrast)
+      image.save(self.original_image)
+      return True
+    return False
+  def _change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
+  def save_pages_images(self):
+    if self.isAlreadySeen():
+
+      return True
+    return False
   def isAlreadySeen(self):
     l = len(self.newspaper.name)
     f = self.file_name
@@ -100,13 +114,14 @@ class Page_pool(list):
   def change_contrast(self, contrast, force = False):
     count = 0
     for page in self:
-      if not force and page.isAlreadySeen():
-        continue
-      contrast = contrast if contrast is not None else page.newspaper.contrast
-      image = Image.open(page.original_image)
-      image = page.change_contrast(image, contrast)
-      image.save(page.original_image)
-      count += 1
+      if page.change_contrast(contrast, force):
+        count += 1
+    return count
+  def save_pages_images(self):
+    count = 0
+    for page in self:
+      if page.save_pages_images():
+        count += 1
     return count
   def create_pdf(self):
     if len(self):

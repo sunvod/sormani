@@ -187,10 +187,15 @@ class La_stampa(Newspaper):
     number = self.get_number()
     year = str(150 + self.date.year - 2016)
     return year, number
+  def get_page_location(self):
+    left = [0, 100, 700, 500]
+    right = [4100, 100, 4850, 500]
+    return left, right
   def get_page(self):
-    text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=500) # odd
+    left, right = self.get_page_location()
+    text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
     n1 = ''.join(filter(str.isdigit, text1))
-    text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=500) # pair
+    text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
     n2 = ''.join(filter(str.isdigit, text2))
     if n1.isdigit() and n2.isdigit():
       if dimension1 > dimension2:
@@ -229,10 +234,15 @@ class Il_manifesto(Newspaper):
     number = self.get_number()
     year = str(46 + self.date.year - 2016)
     return year, number
+  def get_page_location(self):
+    left = [0, 100, 700, 500]
+    right =  [4100, 100, 4850, 500]
+    return left, right
   def get_page(self):
-    text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=500) # odd
+    left, right = self.get_page_location()
+    text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
     n1 = ''.join(filter(str.isdigit, text1))
-    text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=500) # pair
+    text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
     n2 = ''.join(filter(str.isdigit, text2))
     if n1.isdigit() and n2.isdigit():
       if dimension1 > dimension2:
@@ -290,11 +300,16 @@ class Milano_Finanza(Newspaper):
     number = self.get_number()
     year = str(150 + self.date.year - 2016)
     return year, number
+  def get_page_location(self):
+    left =  [4100, 100, 4850, 400]
+    right = [0, 100, 700, 400]
+    return [left, right]
   def get_page(self):
     return None, None
-    # text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=400) # odd
+    # left, right = self.get_page_location()
+    # text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
     # n1 = ''.join(filter(str.isdigit, text1))
-    # text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=400) # pair
+    # text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
     # n2 = ''.join(filter(str.isdigit, text2))
     # if n1.isdigit() and n2.isdigit():
     #   if dimension1 > dimension2:

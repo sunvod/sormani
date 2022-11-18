@@ -131,7 +131,10 @@ class Sormani():
     return elements
   def check_if_image(self, filedir, files):
     for file_name in files:
-      if not imghdr.what(os.path.join(filedir, file_name)):
+      try:
+        Image.open(os.path.join(filedir, file_name))
+      except:
+      #if not imghdr.what(os.path.join(filedir, file_name)):
         with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
           sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
         print(f'Not a valid image: {os.path.join(filedir, file_name)}')
@@ -266,7 +269,7 @@ class Sormani():
         print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
     return pages
-  def save_n_pages_images(self):
+  def save_pages_images(self):
     if not len(self.elements):
       return
     start_time = time.time()
@@ -274,9 +277,9 @@ class Sormani():
       f'Start extract pages images of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
-    self.force = force
+    self.force = True
     for page_pool in self:
-      count += page_pool.change_contrast(contrast, force)
+      count += page_pool.save_pages_images()
     if count:
       print(
         f'It has extracted pages images of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
