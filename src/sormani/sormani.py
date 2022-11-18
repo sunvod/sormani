@@ -1,6 +1,8 @@
 import time
 import datetime
 import os
+import imghdr
+import portalocker
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -26,7 +28,8 @@ class Sormani():
                image_path ='Tiff_images',
                path_exclude = [],
                path_exist ='pdf',
-               force = False):
+               force = False,
+               contrast = True):
     if not isinstance(months, list):
       months = [months]
     if not isinstance(days, list):
@@ -34,7 +37,7 @@ class Sormani():
     elements = []
     for month in months:
       for day in days:
-        elements.append(self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force))
+        elements.append(self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast))
     self.elements = []
     for element in elements:
       for e in element:
@@ -50,7 +53,8 @@ class Sormani():
                image_path ='Tiff_images',
                path_exclude = [],
                path_exist ='pdf',
-               force = False):
+               force = False,
+               contrast = True):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -59,22 +63,22 @@ class Sormani():
     self.add_zero_to_dir(root)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
-      return
+      return self.elements
     if year is not None:
       root = os.path.join(root, self.add_zero(year))
       if not os.path.exists(root):
         print(f'{newspaper_name} per l\'anno {year} non esiste in memoria.')
-        return
+        return self.elements
       if month is not None:
         root = os.path.join(root, self.add_zero(month))
         if not os.path.exists(root):
           print(f'{newspaper_name} per l\'anno {year} e per il mese {month} non esiste in memoria.')
-          return
+          return self.elements
         if day is not None:
           root = os.path.join(root, self.add_zero(day))
           if not os.path.exists(root):
             print(f'{newspaper_name} per l\'anno {year}, per il mese {month} e per il giorno {day} non esiste in memoria.')
-            return
+            return self.elements
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
@@ -83,12 +87,31 @@ class Sormani():
     self.converts = None
     self.elements = self.get_elements(root)
     self.new_root = root
-    self.change_all_contrasts()
+    if contrast:
+      self.change_all_contrasts()
     self.divide_all_images()
     self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
     pass
+  def count_pages(self):
+    count = 0
+    for element in self.elements:
+      count += len(element.files)
+    return count
+  def count_number(self):
+    if len(self.elements) == 0:
+      return 'ND'
+    page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
+    if not page_pool.isAlreadySeen():
+      pages = page_pool.extract_pages(range=(3, 4))
+      pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit() and int(
+        pages[0]) + 1 < len(page_pool) else len(page_pool)
+    else:
+      pages = len(page_pool)
+    page_pool.set_pages(pages)
+    self.i += 1
+    return page_pool[0].newspaper.number
   def add_zero(self, n):
     if isinstance(n, int):
       n = str(n)
@@ -110,10 +133,19 @@ class Sormani():
       if filedir in self.path_exclude or n_pages == 0:
         continue
       files.sort(key = self._get_elements)
-      elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
+      if self.check_if_image(filedir, files):
+        elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
     if len(elements) > 1:
       elements.sort(key=self._elements_sort)
     return elements
+  def check_if_image(self, filedir, files):
+    for file_name in files:
+      if not imghdr.what(os.path.join(filedir, file_name)):
+        with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
+          sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
+        print(f'Not a valid image: {os.path.join(filedir, file_name)}')
+        return False
+    return True
   def _get_elements(self, n):
     # n = e[:5]
     n = ''.join(c for c in n if c.isdigit())
@@ -164,8 +196,12 @@ class Sormani():
     if self.i < len(self.elements):
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
       if not page_pool.isAlreadySeen():
-        pages = page_pool.extract_pages(range=(3, 4))
-        pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) else len(page_pool)
+        if len(page_pool) > 0:
+          init_page = page_pool[0].newspaper.init_page = 3
+          pages = page_pool.extract_pages(range=(init_page, init_page + 1))
+          pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) else len(page_pool)
+        else:
+          pages = len(page_pool)
       else:
         pages = len(page_pool)
       page_pool.set_pages(pages)
@@ -198,7 +234,7 @@ class Sormani():
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Start changing the contrast of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = force
@@ -223,7 +259,7 @@ class Sormani():
         return
     start_time = time.time()
     if not mute:
-      print(f'Starting extracting page number from \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Starting extracting page number from \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True

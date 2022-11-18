@@ -23,7 +23,7 @@ class Newspaper():
     if name == 'Avvenire':
       newspaper = Avvenire(newspaper_base, file_name, date, year, number)
     return newspaper
-  def __init__(self, newspaper_base, name, file_name, date, year, number):
+  def __init__(self, newspaper_base, name, file_name, date, year, number, init_page):
     self.newspaper_base = newspaper_base
     self.name = name
     self.file_name = file_name
@@ -35,6 +35,7 @@ class Newspaper():
     else:
       self.year, self.number = self.get_head()
     self.page = None
+    self.init_page = init_page
   def check_n_page(self, n_page, date, pages = None):
     file_name = Path(self.file_name).stem
     l = len(self.name)
@@ -135,7 +136,7 @@ class Newspaper():
     #   image.show()
     dimension = os.path.getsize('temp.tif')
     image = Image.open('temp.tif')
-    os.remove('temp.tif')
+    #os.remove('temp.tif')
     return y, image, dimension
   def get_number(self):
     dir = self.file_name
@@ -160,7 +161,7 @@ class Newspaper():
 
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
-    Newspaper.__init__(self, newspaper_base, 'La Stampa', file_name, date, year, number)
+    Newspaper.__init__(self, newspaper_base, 'La Stampa', file_name, date, year, number,init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(n_page, date, pages):
       self.n_page = n_page + 1
@@ -205,9 +206,12 @@ class La_stampa(Newspaper):
 
 class Il_manifesto(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
-    Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_name, date, year, number)
+    Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_name, date, year, number, init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(n_page, date, pages):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
       self.n_page = n_page + 1
       return
     r = n_page % 4
@@ -220,14 +224,29 @@ class Il_manifesto(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
+    pass
   def get_head(self):
-    text = super().crop(left = 1250, top = 1450, right = 1500, bottom = 1550)
-    number = ''.join(filter(str.isdigit, text))
+    number = self.get_number()
     year = str(46 + self.date.year - 2016)
-    number = self.get_number(self.date, 0)
     return year, number
+  def get_page(self):
+    text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=500) # odd
+    n1 = ''.join(filter(str.isdigit, text1))
+    text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=500) # pair
+    n2 = ''.join(filter(str.isdigit, text2))
+    if n1.isdigit() and n2.isdigit():
+      if dimension1 > dimension2:
+        return n1, [image1, image2]
+      else:
+        return n2, [image1, image2]
+    if n1.isdigit():
+      return n1, [image1, image2]
+    elif n2.isdigit():
+      return n2, [image1, image2]
+    else:
+      return '??', [image1, image2]
 class Avvenire(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_name, date, year, number, init_page = 3):
     Newspaper.__init__(self, newspaper_base, 'Avvenire', file_name, date, year, number)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(n_page, date, pages):
