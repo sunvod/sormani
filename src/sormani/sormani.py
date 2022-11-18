@@ -188,9 +188,9 @@ class Sormani():
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
       if not page_pool.isAlreadySeen():
         if len(page_pool) > 0:
-          init_page = page_pool[0].newspaper.init_page = 3
+          init_page = page_pool[0].newspaper.init_page
           pages = page_pool.extract_pages(range=(init_page, init_page + 1))
-          pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) else len(page_pool)
+          pages = int(pages[0]) + 1 if isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) else len(page_pool)
         else:
           pages = len(page_pool)
       else:

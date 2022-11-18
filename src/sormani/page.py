@@ -43,16 +43,17 @@ class Page:
     else:
       self.conversions.append(conversion)
   def set_file_names(self):
+    page = ('000' + str(self.newspaper.n_page))[-len(str(self.newspaper.n_pages)) : ]
     self.file_name = self.newspaper.name.replace(' ', '_') \
                      + '_' + str(self.year) \
                      + '_' + str(self.month_text) \
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
-                     + '_p' + (str(self.newspaper.n_page) if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
+                     + '_p' + page
     txt_file_name = self.newspaper.name.replace(' ', '_') \
                      + '_' + str(self.year) \
                      + '_' + (str(self.month) if self.month >= 10 else '0' + str(self.month)) \
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
-                     + '_p' + (str(self.newspaper.n_page) if self.newspaper.n_page >= 10 else '0' + str(self.newspaper.n_page))
+                     + '_p' + page
     self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
   def change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))

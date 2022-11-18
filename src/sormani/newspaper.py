@@ -10,7 +10,7 @@ from PIL import Image, ImageOps
 import pytesseract
 from pathlib import Path
 
-from src.sormani.system import MONTHS, exec_ocrmypdf
+from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST
 
 
 class Newspaper():
@@ -20,15 +20,19 @@ class Newspaper():
       newspaper = La_stampa(newspaper_base, file_name, date, year, number)
     elif name == 'Il Manifesto':
       newspaper = Il_manifesto(newspaper_base, file_name, date, year, number)
-    if name == 'Avvenire':
+    elif name == 'Avvenire':
       newspaper = Avvenire(newspaper_base, file_name, date, year, number)
+    elif name == 'Milano Finanza':
+      newspaper = Milano_Finanza(newspaper_base, file_name, date, year, number)
+    else:
+      raise ValueError("Error: \'" + name + "\' is not defined in this application.")
     return newspaper
   def __init__(self, newspaper_base, name, file_name, date, year, number, init_page):
     self.newspaper_base = newspaper_base
     self.name = name
     self.file_name = file_name
     self.date = date
-    self.contrast = 50
+    self.contrast = CONTRAST
     if year is not None:
       self.year = year
       self.number = number
@@ -130,13 +134,9 @@ class Newspaper():
       elif old_y is not None:
         y = old_y
     cv2.imwrite('temp.tif', image)
-    # if len(y):
-    #   image = Image.open('temp.tif')
-    #   print(self.file_name, ls, ' => ', y)
-    #   image.show()
     dimension = os.path.getsize('temp.tif')
     image = Image.open('temp.tif')
-    os.remove('temp.tif')
+    #os.remove('temp.tif')
     return y, image, dimension
   def get_number(self):
     dir = self.file_name
@@ -253,3 +253,57 @@ class Avvenire(Newspaper):
       self.n_page = n_page + 1
       return
     self.n_page = n_page + 1
+
+class Milano_Finanza(Newspaper):
+  def __init__(self, newspaper_base, file_name, date, year, number):
+    Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_name, date, year, number,init_page = 5)
+  def set_n_page(self, n_page, date, pages = None):
+    if super().check_n_page(n_page, date, pages):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
+      self.n_page = n_page + 1
+      return
+    if n_page >= 2:
+      if (n_page - 2) % 4 == 0:
+        n_page += 1
+      elif (n_page - 3) % 4 == 0:
+        n_page += 1
+      elif (n_page - 4) % 4 == 0:
+        n_page -= 2
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+    #print(self.n_page, '  ', end='')
+    pass
+  def get_head(self):
+    #text = super().crop(left = 940, top = 1500, right = 1300, bottom = 1700)
+    # year = ''.join(filter(str.isdigit, text[4:9]))
+    #number = ''.join(filter(str.isdigit, text[12:14]))
+    number = self.get_number()
+    year = str(150 + self.date.year - 2016)
+    return year, number
+  def get_page(self):
+    return None, None
+    # text1, image1, dimension1 = super().crop(left=4100, top=100, right=4850, bottom=400) # odd
+    # n1 = ''.join(filter(str.isdigit, text1))
+    # text2, image2, dimension2 = super().crop(left=0, top=100, right=700, bottom=400) # pair
+    # n2 = ''.join(filter(str.isdigit, text2))
+    # if n1.isdigit() and n2.isdigit():
+    #   if dimension1 > dimension2:
+    #     return n1, [image1, image2]
+    #   else:
+    #     return n2, [image1, image2]
+    # if n1.isdigit():
+    #   return n1, [image1, image2]
+    # elif n2.isdigit():
+    #   return n2, [image1, image2]
+    # else:
+    #   return '??', [image1, image2]
