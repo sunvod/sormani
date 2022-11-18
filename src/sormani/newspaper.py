@@ -136,7 +136,7 @@ class Newspaper():
     #   image.show()
     dimension = os.path.getsize('temp.tif')
     image = Image.open('temp.tif')
-    #os.remove('temp.tif')
+    os.remove('temp.tif')
     return y, image, dimension
   def get_number(self):
     dir = self.file_name

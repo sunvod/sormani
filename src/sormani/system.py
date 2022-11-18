@@ -16,6 +16,9 @@ ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 600
 N_PROCESSES = 14
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
+JPG_PDF_PATH = 'JPG-PDF'
+IMAGE_PATH = 'TIFF'
+IMAGE_ROOT = '/mnt/storage01/sormani'
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")

@@ -248,7 +248,7 @@ class Images_group():
     page_pool = Page_pool(newspaper_name, self.date, force)
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
-    dir_in_filedir = list(map(lambda x: x.replace(image_path, 'Jpg-Pdf'), dir_in_filedir))
+    dir_in_filedir = list(map(lambda x: x.replace(image_path, JPG_PDF_PATH), dir_in_filedir))
     dir_path = '/'.join(dir_in_filedir)
     txt_path = '/'.join(txt_in_filedir)
     filedir = os.path.join(dir_path, path_exist)

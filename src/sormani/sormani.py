@@ -9,6 +9,8 @@ from PIL import Image, ImageTk
 from src.sormani.page import Images_group
 import numpy as np
 
+from src.sormani.system import IMAGE_PATH, IMAGE_ROOT
+
 
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
@@ -20,12 +22,12 @@ class Conversion:
 class Sormani():
   def __init__(self,
                newspaper_name,
-               root = '/mnt/storage01/sormani',
+               root = IMAGE_ROOT,
                year = None,
                months = None,
                days = None,
                ext = 'tif',
-               image_path ='Tiff_images',
+               image_path = IMAGE_PATH,
                path_exclude = [],
                path_exist ='pdf',
                force = False,
@@ -43,18 +45,7 @@ class Sormani():
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self,
-               newspaper_name,
-               root = '/mnt/storage01/sormani',
-               year = None,
-               month = None,
-               day = None,
-               ext = 'tif',
-               image_path ='Tiff_images',
-               path_exclude = [],
-               path_exist ='pdf',
-               force = False,
-               contrast = True):
+  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -160,7 +151,7 @@ class Sormani():
     some_modify = False
     count = 0
     start_time = time.time()
-    print(f'Starting division of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for image_group in elements:
       for file_name in image_group.files:
         file_path = os.path.join(image_group.filedir, file_name)
@@ -275,4 +266,21 @@ class Sormani():
         print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
     return pages
+  def save_n_pages_images(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(
+      f'Start extract pages images of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = force
+    for page_pool in self:
+      count += page_pool.change_contrast(contrast, force)
+    if count:
+      print(
+        f'It has extracted pages images of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
+    self.force = selfforce
 
