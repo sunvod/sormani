@@ -3,6 +3,7 @@ import datetime
 import os
 import imghdr
 import portalocker
+import cv2
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -133,6 +134,11 @@ class Sormani():
     for file_name in files:
       try:
         Image.open(os.path.join(filedir, file_name))
+        # img = cv2.imread(os.path.join(filedir, file_name))
+        # img[0, 0] = [64, 62, 22]
+        # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
+        # cv2.imwrite(os.path.join(filedir, file_name), img)
+        pass
       except:
       #if not imghdr.what(os.path.join(filedir, file_name)):
         with portalocker.Lock('sormani.log', timeout=120) as sormani_log:

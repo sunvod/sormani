@@ -24,6 +24,12 @@ class Newspaper():
       newspaper = Avvenire(newspaper_base, file_name, date, year, number)
     elif name == 'Milano Finanza':
       newspaper = Milano_Finanza(newspaper_base, file_name, date, year, number)
+    elif name == 'Il Fatto Quotidiano':
+      newspaper = Il_Fatto_Quotidiano(newspaper_base, file_name, date, year, number)
+    elif name == 'Italia Oggi':
+      newspaper = Italia_Oggi(newspaper_base, file_name, date, year, number)
+    elif name == 'Libero':
+      newspaper = Libero(newspaper_base, file_name, date, year, number)
     else:
       raise ValueError("Error: \'" + name + "\' is not defined in this application.")
     return newspaper
@@ -322,3 +328,105 @@ class Milano_Finanza(Newspaper):
     #   return n2, [image1, image2]
     # else:
     #   return '??', [image1, image2]
+class Il_Fatto_Quotidiano(Newspaper):
+  def __init__(self, newspaper_base, file_name, date, year, number):
+    Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_name, date, year, number,init_page = 5)
+  def set_n_page(self, n_page, date, pages = None):
+    if super().check_n_page(n_page, date, pages):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
+      self.n_page = n_page + 1
+      return
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+    pass
+  def get_head(self):
+    number = self.get_number()
+    year = str(150 + self.date.year - 2016)
+    return year, number
+  def get_page_location(self):
+    left =  [4100, 100, 4850, 400]
+    right = [0, 100, 700, 400]
+    return [left, right]
+  def get_page(self):
+    return None, None
+class Italia_Oggi(Newspaper):
+  def __init__(self, newspaper_base, file_name, date, year, number):
+    Newspaper.__init__(self, newspaper_base, 'Italia Oggi', file_name, date, year, number,init_page = 5)
+
+  def set_n_page(self, n_page, date, pages=None):
+    if super().check_n_page(n_page, date, pages):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
+      self.n_page = n_page + 1
+      return
+    if n_page >= 2:
+      if (n_page - 2) % 4 == 0:
+        n_page += 1
+      elif (n_page - 3) % 4 == 0:
+        n_page += 1
+      elif (n_page - 4) % 4 == 0:
+        n_page -= 2
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+    # print(self.n_page, '  ', end='')
+    pass
+  def get_head(self):
+    number = self.get_number()
+    year = str(150 + self.date.year - 2016)
+    return year, number
+  def get_page_location(self):
+    left =  [4100, 100, 4850, 400]
+    right = [0, 100, 700, 400]
+    return [left, right]
+  def get_page(self):
+    return None, None
+class Libero(Newspaper):
+  def __init__(self, newspaper_base, file_name, date, year, number):
+    Newspaper.__init__(self, newspaper_base, 'Libero', file_name, date, year, number,init_page = 5)
+  def set_n_page(self, n_page, date, pages = None):
+    if super().check_n_page(n_page, date, pages):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
+      self.n_page = n_page + 1
+      return
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+    pass
+  def get_head(self):
+    number = self.get_number()
+    year = str(150 + self.date.year - 2016)
+    return year, number
+  def get_page_location(self):
+    left =  [4100, 100, 4850, 400]
+    right = [0, 100, 700, 400]
+    return [left, right]
+  def get_page(self):
+    return None, None
