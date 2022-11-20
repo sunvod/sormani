@@ -8,6 +8,7 @@ import cv2
 import tkinter as tk
 from PIL import Image, ImageTk
 from src.sormani.page import Images_group
+from multiprocessing import Pool
 import numpy as np
 
 from src.sormani.system import IMAGE_PATH, IMAGE_ROOT
@@ -161,33 +162,37 @@ class Sormani():
     count = 0
     start_time = time.time()
     print(f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    for image_group in elements:
-      for file_name in image_group.files:
-        file_path = os.path.join(image_group.filedir, file_name)
-        im = Image.open(file_path)
-        width, height = im.size
-        if width < height:
-          continue
-        some_modify = True
-        left = 0
-        top = 0
-        right = width // 2
-        bottom = height
-        im1 = im.crop((left, top, right, bottom))
-        im1.save(file_path[: len(file_path) - 4] + '-2.tif')
-        left = width // 2 + 1
-        top = 0
-        right = width
-        bottom = height
-        im2 = im.crop((left, top, right, bottom))
-        im2.save(file_path[: len(file_path) - 4] + '-1.tif')
-        os.remove(file_path)
-        count += 1
+    with Pool(processes=14) as mp_pool:
+      count +=  mp_pool.map(self._divide_image, elements)
     if count:
       print(f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
     return some_modify
+  def _divide_image(self, image_group):
+    count = 0
+    for file_name in image_group.files:
+      file_path = os.path.join(image_group.filedir, file_name)
+      im = Image.open(file_path)
+      width, height = im.size
+      if width < height:
+        continue
+      some_modify = True
+      left = 0
+      top = 0
+      right = width // 2
+      bottom = height
+      im1 = im.crop((left, top, right, bottom))
+      im1.save(file_path[: len(file_path) - 4] + '-2.tif')
+      left = width // 2 + 1
+      top = 0
+      right = width
+      bottom = height
+      im2 = im.crop((left, top, right, bottom))
+      im2.save(file_path[: len(file_path) - 4] + '-1.tif')
+      os.remove(file_path)
+      count += 1
+    return count
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -199,7 +204,9 @@ class Sormani():
         if len(page_pool) > 0:
           init_page = page_pool[0].newspaper.init_page
           pages = page_pool.extract_pages(range=(init_page, init_page + 1))
-          pages = int(pages[0]) + 1 if isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) else len(page_pool)
+          pages = int(pages[0]) + 1 \
+            if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
+            else len(page_pool)
         else:
           pages = len(page_pool)
       else:

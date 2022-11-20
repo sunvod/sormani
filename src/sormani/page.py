@@ -56,20 +56,7 @@ class Page:
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + page
     self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
-
-  def change_contrast(self, contrast, force=False):
-    if force or not self.isAlreadySeen():
-      contrast = contrast if contrast is not None else self.newspaper.contrast
-      image = Image.open(self.original_image)
-      image = self._change_contrast(image, contrast)
-      image.save(self.original_image)
-      # img = cv2.imread(self.file_name)
-      # img[0, 0] = [64, 62, 22]
-      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-      # cv2.imwrite(self.file_name, img)
-      return True
-    return False
-  def _change_contrast(self, img, level):
+  def change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):
       return 128 + factor * (c - 128)
@@ -119,9 +106,24 @@ class Page_pool(list):
   def change_contrast(self, contrast, force = False):
     count = 0
     for page in self:
-      if page.change_contrast(contrast, force):
-        count += 1
+      page.contrast = contrast
+      page.force = force
+      count += 1
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      mp_pool.map(self._change_contrast, self)
     return count
+  def _change_contrast(self, page):
+    if page.force or not page.isAlreadySeen():
+      contrast = page.contrast if page.contrast is not None else page.newspaper.contrast
+      image = Image.open(page.original_image)
+      image = page.change_contrast(image, contrast)
+      image.save(page.original_image)
+      # img = cv2.imread(self.file_name)
+      # img[0, 0] = [64, 62, 22]
+      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
+      # cv2.imwrite(self.file_name, img)
+      return True
+    return False
   def save_pages_images(self):
     count = 0
     for page in self:
@@ -287,3 +289,4 @@ class Images_group():
         page = Page(Path(file).stem, self.date, self.newspaper, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
         page_pool.append(page)
     return page_pool
+
