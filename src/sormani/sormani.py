@@ -1,3 +1,4 @@
+import multiprocessing
 import time
 import datetime
 import os
@@ -11,8 +12,9 @@ from src.sormani.page import Images_group
 from multiprocessing import Pool
 import numpy as np
 
-from src.sormani.system import IMAGE_PATH, IMAGE_ROOT
+from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES
 
+global_count = multiprocessing.Value('I', 0)
 
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
@@ -82,7 +84,8 @@ class Sormani():
     self.new_root = root
     if contrast:
       self.change_all_contrasts()
-    self.divide_all_images()
+    self.divide_all_image()
+    self.elements = self.get_elements(root)
     self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
@@ -116,9 +119,6 @@ class Sormani():
       for dir in dirs:
         if dir.isdigit() and len(dir) == 1:
           os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
-  def divide_all_images(self):
-    if self.divide_image(self.elements):
-      self.elements = self.get_elements(self.new_root)
   def get_elements(self, root):
     elements = []
     for filedir, dirs, files in os.walk(root):
@@ -135,11 +135,6 @@ class Sormani():
     for file_name in files:
       try:
         Image.open(os.path.join(filedir, file_name))
-        # img = cv2.imread(os.path.join(filedir, file_name))
-        # img[0, 0] = [64, 62, 22]
-        # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-        # cv2.imwrite(os.path.join(filedir, file_name), img)
-        pass
       except:
       #if not imghdr.what(os.path.join(filedir, file_name)):
         with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
@@ -155,44 +150,6 @@ class Sormani():
     r = ['0' for x in range(25 - len(n))]
     r = ''.join(r) + n
     return r
-  def divide_image(self, elements):
-    if not len(elements):
-      return
-    some_modify = False
-    count = 0
-    start_time = time.time()
-    print(f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    with Pool(processes=14) as mp_pool:
-      count +=  mp_pool.map(self._divide_image, elements)
-    if count:
-      print(f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'No division is needed for \'{self.newspaper_name}\'.')
-    return some_modify
-  def _divide_image(self, image_group):
-    count = 0
-    for file_name in image_group.files:
-      file_path = os.path.join(image_group.filedir, file_name)
-      im = Image.open(file_path)
-      width, height = im.size
-      if width < height:
-        continue
-      some_modify = True
-      left = 0
-      top = 0
-      right = width // 2
-      bottom = height
-      im1 = im.crop((left, top, right, bottom))
-      im1.save(file_path[: len(file_path) - 4] + '-2.tif')
-      left = width // 2 + 1
-      top = 0
-      right = width
-      bottom = height
-      im2 = im.crop((left, top, right, bottom))
-      im2.save(file_path[: len(file_path) - 4] + '-1.tif')
-      os.remove(file_path)
-      count += 1
-    return count
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -228,7 +185,6 @@ class Sormani():
       if not len(page_pool):
         continue
       page_pool.create_pdf()
-      page_pool.set_files_name()
       page_pool.convert_images(converts)
   def set_all_images_names(self):
     if not len(self.elements):
@@ -242,16 +198,78 @@ class Sormani():
       return
     start_time = time.time()
     print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    count = 0
     selfforce = self.force
     self.force = force
-    for page_pool in self:
-      count += page_pool.change_contrast(contrast, force)
-    if count:
-      print(f'It has changed the contrast of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    global global_count
+    global_count.value = 0
+    self.contrast = contrast
+    self.force = force
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      mp_pool.map(self.change_contrast, self)
+    if global_count.value:
+      print()
+      print(f'It has changed the contrast of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
     self.force = selfforce
+  def change_contrast(self, page_pool):
+    global global_count
+    count = 0
+    #print(f'Changing contrast to \'{page_pool.newspaper_name}\' of {page_pool.date.strftime("%d/%m/%y")}')
+    for page in page_pool:
+      page.contrast = self.contrast
+      page.force = self.force
+      i = page.change_contrast()
+      count += i
+      with global_count.get_lock():
+        global_count.value += i
+    if count:
+      print(',', end='')
+
+  def divide_all_image(self):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(
+      f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    with Pool(processes=14) as mp_pool:
+      mp_pool.map(self.divide_image, self.elements)
+    if global_count.value:
+      print()
+      print(
+        f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'No division is needed for \'{self.newspaper_name}\'.')
+    return
+
+  def divide_image(self, image_group):
+    i = 0
+    for file_name in image_group.files:
+      file_path = os.path.join(image_group.filedir, file_name)
+      im = Image.open(file_path)
+      width, height = im.size
+      if width < height:
+        continue
+      left = 0
+      top = 0
+      right = width // 2
+      bottom = height
+      im1 = im.crop((left, top, right, bottom))
+      im1.save(file_path[: len(file_path) - 4] + '-2.tif')
+      left = width // 2 + 1
+      top = 0
+      right = width
+      bottom = height
+      im2 = im.crop((left, top, right, bottom))
+      im2.save(file_path[: len(file_path) - 4] + '-1.tif')
+      os.remove(file_path)
+      i += 1
+    if i:
+      print(',', end='')
+      with global_count.get_lock():
+        global_count.value += i
   def create_jpg(self):
       for page_pool in self:
         page_pool.convert_images(converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)])
@@ -294,9 +312,26 @@ class Sormani():
     for page_pool in self:
       count += page_pool.save_pages_images()
     if count:
-      print(
-        f'It has extracted pages images of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'It has extracted {count} page images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
+
+  def move_pdf_txt(self):
+    for filedir, dirs, files in os.walk('/mnt/storage01/sormani/TIFF'):
+      if len(files):
+        for file in files:
+          ext = pathlib.Path(file).suffix
+          if ext == '.pdf' or ext == '.txt':
+            dir_in_filedir = filedir.split('/')
+            new_filedir = list(
+              map(lambda x: x.replace('TIFF', 'txt' if ext == '.txt' else JPG_PDF_PATH), dir_in_filedir))
+            new_path = '/'.join(new_filedir)
+            if ext == '.pdf':
+              new_path = os.path.join(new_path, 'pdf')
+            new_file = os.path.join(new_path, file)
+            old_file = os.path.join(filedir, file)
+            os.rename(old_file, new_file)
+            pass
+
 

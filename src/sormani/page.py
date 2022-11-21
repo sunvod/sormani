@@ -4,6 +4,7 @@ import pathlib
 import time
 import datetime
 import cv2
+import re
 
 from PIL import Image
 from pathlib import Path
@@ -56,14 +57,36 @@ class Page:
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + page
     self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
-  def change_contrast(self, img, level):
+  def change_contrast(self):
+    if self.force or not self.isAlreadySeen():
+      contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
+      image = Image.open(self.original_image)
+      image = self._change_contrast(image, contrast)
+      pixel_map = image.load()
+      pixel_map[0, 0] = [64, 62, 22]
+      pixel_map[image.size[0] - 1, image.size[1] - 1] = [64, 62, 22]
+      image.save(self.original_image)
+      # img = cv2.imread(self.file_name)
+      # img[0, 0] = [64, 62, 22]
+      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
+      # cv2.imwrite(self.file_name, img)
+      return True
+    return False
+  def _change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
   def save_pages_images(self):
     if self.isAlreadySeen():
-
+      pos = self.newspaper.get_whole_page_location()
+      image = Image.open(self.original_image)
+      image = image.crop(pos)
+      image = image.resize(((int)(image.size[0] * 1.5), (int)(image.size[1] * 1.5)), Image.Resampling.LANCZOS)
+      n_files = sum(1 for _, _, files in os.walk(STORAGE_DL) for f in files)
+      file_count = str('00000000' + str(n_files))[-7:]
+      file_name = os.path.join(STORAGE_DL, file_count + '_' + self.file_name) + pathlib.Path(self.original_image).suffix
+      image.save(file_name)
       return True
     return False
   def isAlreadySeen(self):
@@ -103,27 +126,6 @@ class Page_pool(list):
   def isAlreadySeen(self):
     for page in self:
       return page.isAlreadySeen()
-  def change_contrast(self, contrast, force = False):
-    count = 0
-    for page in self:
-      page.contrast = contrast
-      page.force = force
-      count += 1
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self._change_contrast, self)
-    return count
-  def _change_contrast(self, page):
-    if page.force or not page.isAlreadySeen():
-      contrast = page.contrast if page.contrast is not None else page.newspaper.contrast
-      image = Image.open(page.original_image)
-      image = page.change_contrast(image, contrast)
-      image.save(page.original_image)
-      # img = cv2.imread(self.file_name)
-      # img[0, 0] = [64, 62, 22]
-      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-      # cv2.imwrite(self.file_name, img)
-      return True
-    return False
   def save_pages_images(self):
     count = 0
     for page in self:
@@ -178,21 +180,11 @@ class Page_pool(list):
     os.remove(page.pdf_file_name + '.2')
     # pdf = pdfx.PDFx(page.pdf_file_name)
     # metadata = pdf.get_metadata()
-  def set_files_name(self):
-    for page in self:
-      new_file_name = page.txt_file_name.replace(page.original_file_name, page.file_name)
-      if Path(page.original_txt_file_name).is_file():
-        os.rename(page.original_txt_file_name, new_file_name)
-        page.txt_path = new_file_name
-      new_file_name = page.pdf_file_name.replace(page.original_file_name, page.file_name)
-      if Path(page.pdf_file_name).is_file():
-        os.rename(page.pdf_file_name, new_file_name)
-        page.pdf_file_name = new_file_name
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
       if page.original_file_name != page.file_name:
-        new_file_name = page.original_image.replace(page.original_file_name, page.file_name)
+        new_file_name = os.path.join(page.original_path, page.file_name + pathlib.Path(page.original_image).suffix)
         if Path(page.original_image).is_file():
           os.rename(page.original_image, new_file_name)
           page.file_name = new_file_name
@@ -261,7 +253,9 @@ class Images_group():
     self.files = files
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
     month = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
-    day = ''.join(filter(str.isdigit, filedir.split('/')[-1]))
+    day_folder = filedir.split('/')[-1]
+    pos = re.search(r'[^0-9]', day_folder + 'a').start()
+    day = day_folder[ : pos]
     if year.isdigit() and month.isdigit() and day.isdigit():
       self.date = datetime.date(int(year), int(month), int(day))
     else:

@@ -193,6 +193,9 @@ class La_stampa(Newspaper):
     number = self.get_number()
     year = str(150 + self.date.year - 2016)
     return year, number
+  def get_whole_page_location(self):
+    whole = (0, 100, 5000, 500)
+    return whole
   def get_page_location(self):
     left = [0, 100, 700, 500]
     right = [4100, 100, 4850, 500]
@@ -244,6 +247,9 @@ class Il_manifesto(Newspaper):
     left = [0, 100, 700, 500]
     right =  [4100, 100, 4850, 500]
     return left, right
+  def get_whole_page_location(self):
+    whole = [0, 100, 4850, 500]
+    return whole
   def get_page(self):
     left, right = self.get_page_location()
     text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
@@ -310,6 +316,9 @@ class Milano_Finanza(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
+  def get_whole_page_location(self):
+    whole = [0, 100, 4850, 400]
+    return whole
   def get_page(self):
     return None, None
     # left, right = self.get_page_location()
@@ -357,6 +366,9 @@ class Il_Fatto_Quotidiano(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
+  def get_whole_page_location(self):
+    whole = [0, 100, 4850, 400]
+    return whole
   def get_page(self):
     return None, None
 class Italia_Oggi(Newspaper):
@@ -397,6 +409,9 @@ class Italia_Oggi(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
+  def get_whole_page_location(self):
+    whole = [0, 100, 4850, 400]
+    return whole
   def get_page(self):
     return None, None
 class Libero(Newspaper):
@@ -428,5 +443,8 @@ class Libero(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
+  def get_whole_page_location(self):
+    whole = [0, 100, 4850, 400]
+    return whole
   def get_page(self):
     return None, None
