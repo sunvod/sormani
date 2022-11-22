@@ -66,10 +66,10 @@ class Page:
       pixel_map[0, 0] = [64, 62, 22]
       pixel_map[image.size[0] - 1, image.size[1] - 1] = [64, 62, 22]
       image.save(self.original_image)
-      # img = cv2.imread(self.file_name)
-      # img[0, 0] = [64, 62, 22]
-      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-      # cv2.imwrite(self.file_name, img)
+      img = cv2.imread(self.file_name)
+      img[0, 0] = [64, 62, 22]
+      img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
+      cv2.imwrite(self.file_name, img)
       return True
     return False
   def _change_contrast(self, img, level):
