@@ -300,6 +300,22 @@ class Sormani():
         print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
     return pages
+  def add_pdf_metadata(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(
+      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = True
+    for page_pool in self:
+      count += page_pool.add_pdf_metadata()
+    if count:
+      print(f'It has redefined Metadata of {count} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
+    self.force = selfforce
   def save_pages_images(self):
     if not len(self.elements):
       return

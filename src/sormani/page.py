@@ -62,14 +62,14 @@ class Page:
       contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
       image = Image.open(self.original_image)
       image = self._change_contrast(image, contrast)
-      pixel_map = image.load()
-      pixel_map[0, 0] = [64, 62, 22]
-      pixel_map[image.size[0] - 1, image.size[1] - 1] = [64, 62, 22]
-      image.save(self.original_image)
-      img = cv2.imread(self.file_name)
-      img[0, 0] = [64, 62, 22]
-      img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-      cv2.imwrite(self.file_name, img)
+      # pixel_map = image.load()
+      # pixel_map[0, 0] = [64, 62, 22]
+      # pixel_map[image.size[0] - 1, image.size[1] - 1] = [64, 62, 22]
+      # image.save(self.original_image)
+      # img = cv2.imread(self.file_name)
+      # img[0, 0] = [64, 62, 22]
+      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
+      # cv2.imwrite(self.file_name, img)
       return True
     return False
   def _change_contrast(self, img, level):
@@ -104,7 +104,38 @@ class Page:
         f[l  + 14: l + 16].isdigit()
   def extract_page(self):
     return self.newspaper.get_page()
-
+  def add_pdf_metadata(self):
+    if not os.path.isfile(self.pdf_file_name):
+      return
+    os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
+    file_in = open(self.pdf_file_name + '.2', 'rb')
+    pdf_merger = PdfFileMerger()
+    pdf_merger.append(file_in)
+    pdf_merger.addMetadata({
+      '/Keywords': 'Nome del periodico:' + self.newspaper.name
+                   + ' ; Anno:' + str(self.year)
+                   + ' ; Mese:' + str(self.month)
+                   + ' ; Giorno:' + str(self.day)
+                   + ' ; Numero del quotidiano:' + self.newspaper.number
+                   + ' ; Anno del quotidiano:' + self.newspaper.year,
+      '/Title': self.newspaper.name,
+      '/Nome_del_periodico': self.newspaper.name,
+      '/Anno': str(self.year),
+      '/Mese': str(self.month),
+      '/Giorno': str(self.day),
+      '/Data': str(self.newspaper.date),
+      '/Pagina:': str(self.newspaper.n_page),
+      '/Numero_del_quotidiano': str(self.newspaper.number),
+      '/Anno_del_quotidiano': str(self.newspaper.year),
+      '/Producer': 'osi-servizi-informatici.cloud - Milano'
+    })
+    file_out = open(self.pdf_file_name, 'wb')
+    pdf_merger.write(file_out)
+    file_in.close()
+    file_out.close()
+    os.remove(self.pdf_file_name + '.2')
+    # pdf = pdfx.PDFx(page.pdf_file_name)
+    # metadata = pdf.get_metadata()
 class Page_pool(list):
   def __init__(self, newspaper_name, date, force = False):
     self.newspaper_name = newspaper_name
@@ -147,39 +178,13 @@ class Page_pool(list):
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
-    self.add_pdf_metadata(page)
-  def add_pdf_metadata(self, page):
-    if not os.path.isfile(page.pdf_file_name):
-      return
-    os.rename(page.pdf_file_name, page.pdf_file_name + '.2')
-    file_in = open(page.pdf_file_name + '.2', 'rb')
-    pdf_merger = PdfFileMerger()
-    pdf_merger.append(file_in)
-    pdf_merger.addMetadata({
-      '/Keywords': 'Nome del periodico:' + page.newspaper.name
-                   + ' ; Anno:' + str(page.year)
-                   + ' ; Mese:' + str(page.month)
-                   + ' ; Giorno:' + str(page.day)
-                   + ' ; Numero del quotidiano:' + page.newspaper.number
-                   + ' ; Anno del quotidiano:' + page.newspaper.year,
-      '/Title': page.newspaper.name,
-      '/Nome_del_periodico': page.newspaper.name,
-      '/Anno': str(page.year),
-      '/Mese': str(page.month),
-      '/Giorno': str(page.day),
-      '/Data': str(page.newspaper.date),
-      '/Pagina:': str(page.newspaper.n_page),
-      '/Numero_del_quotidiano': str(page.newspaper.number),
-      '/Anno_del_quotidiano': str(page.newspaper.year),
-      '/Producer': 'osi-servizi-informatici.cloud - Milano'
-    })
-    file_out = open(page.pdf_file_name, 'wb')
-    pdf_merger.write(file_out)
-    file_in.close()
-    file_out.close()
-    os.remove(page.pdf_file_name + '.2')
-    # pdf = pdfx.PDFx(page.pdf_file_name)
-    # metadata = pdf.get_metadata()
+    page.add_pdf_metadata()
+  def add_pdf_metadata(self):
+    count = 0
+    for page in self:
+      page.add_pdf_metadata()
+      count += 1
+    return count
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
