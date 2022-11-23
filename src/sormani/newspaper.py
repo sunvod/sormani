@@ -244,11 +244,11 @@ class Il_manifesto(Newspaper):
     year = str(46 + self.date.year - 2016)
     return year, number
   def get_page_location(self):
-    left = [0, 100, 700, 500]
-    right =  [4100, 100, 4850, 500]
+    left = [0, 100, 700, 600]
+    right =  [4100, 100, 4850, 600]
     return left, right
   def get_whole_page_location(self):
-    whole = [0, 100, 4850, 500]
+    whole = [0, 150, 4850, 380]
     return whole
   def get_page(self):
     left, right = self.get_page_location()

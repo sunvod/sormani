@@ -77,15 +77,15 @@ class Page:
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
-  def save_pages_images(self):
+  def save_pages_images(self, storage):
     if self.isAlreadySeen():
       pos = self.newspaper.get_whole_page_location()
       image = Image.open(self.original_image)
       image = image.crop(pos)
       image = image.resize(((int)(image.size[0] * 1.5), (int)(image.size[1] * 1.5)), Image.Resampling.LANCZOS)
-      n_files = sum(1 for _, _, files in os.walk(STORAGE_DL) for f in files)
+      n_files = sum(1 for _, _, files in os.walk(storage) for f in files)
       file_count = str('00000000' + str(n_files))[-7:]
-      file_name = os.path.join(STORAGE_DL, file_count + '_' + self.file_name) + pathlib.Path(self.original_image).suffix
+      file_name = os.path.join(storage, file_count + '_' + self.file_name) + pathlib.Path(self.original_image).suffix
       image.save(file_name)
       return True
     return False
@@ -126,10 +126,10 @@ class Page_pool(list):
   def isAlreadySeen(self):
     for page in self:
       return page.isAlreadySeen()
-  def save_pages_images(self):
+  def save_pages_images(self, storage):
     count = 0
     for page in self:
-      if page.save_pages_images():
+      if page.save_pages_images(storage):
         count += 1
     return count
   def create_pdf(self):

@@ -4,7 +4,7 @@ import datetime
 import os
 import imghdr
 import portalocker
-import cv2
+import pathlib
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -12,7 +12,7 @@ from src.sormani.page import Images_group
 from multiprocessing import Pool
 import numpy as np
 
-from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES
+from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES, STORAGE_DL, JPG_PDF_PATH
 
 global_count = multiprocessing.Value('I', 0)
 
@@ -309,14 +309,14 @@ class Sormani():
     count = 0
     selfforce = self.force
     self.force = True
+    image_path = os.path.join(STORAGE_DL, 'train')
     for page_pool in self:
-      count += page_pool.save_pages_images()
+      count += page_pool.save_pages_images(image_path)
     if count:
       print(f'It has extracted {count} page images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
-
   def move_pdf_txt(self):
     for filedir, dirs, files in os.walk('/mnt/storage01/sormani/TIFF'):
       if len(files):
