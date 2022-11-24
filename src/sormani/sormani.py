@@ -270,9 +270,9 @@ class Sormani():
       print(',', end='')
       with global_count.get_lock():
         global_count.value += i
-  def create_jpg(self):
+  def create_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
       for page_pool in self:
-        page_pool.convert_images(converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)])
+        page_pool.convert_images(converts = converts)
   def extract_pages(self, range = None, mute = True, image_mute = True):
     if not len(self.elements):
       return

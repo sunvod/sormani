@@ -5,7 +5,13 @@ from random import seed
 from random import randint
 import tensorflow as tf
 from PIL import Image
+from PIL import ImageChops
 from pathlib import Path
+from typing import Tuple
+from skimage import io, img_as_float
+import matplotlib.pyplot as plt
+import numpy as np
+
 import pathlib
 import pandas as pd
 from IPython.core.display import HTML
@@ -17,9 +23,9 @@ IMG_SIZE = (7500, 600)
 
 class cnn:
 
-  def __init__(self):
-    self.train_dir = os.path.join(STORAGE_DL, 'train')
-    self.validation_dir = os.path.join(STORAGE_DL, 'validation')
+  def __init__(self, name):
+    self.train_dir = os.path.join(STORAGE_DL, name, 'train')
+    self.validation_dir = os.path.join(STORAGE_DL, name, 'validation')
     self.train_dataset = tf.keras.utils.image_dataset_from_directory(self.train_dir,
                                                                      shuffle=True,
                                                                      batch_size=BATCH_SIZE,
@@ -31,14 +37,6 @@ class cnn:
     self.class_names = self.train_dataset.class_names
 
   def exec_cnn(self):
-    plt.figure(figsize=(10, 10))
-    for images, labels in self.train_dataset.take(1):
-      for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(images[i].numpy().astype("uint8"))
-        plt.title(self.class_names[labels[i]])
-        plt.axis("off")
-
     val_batches = tf.data.experimental.cardinality(self.validation_dataset)
     test_dataset = self.validation_dataset.take(val_batches // 5)
     self.validation_dataset = self.validation_dataset.skip(val_batches // 5)
@@ -52,19 +50,10 @@ class cnn:
     self.validation_dataset = self.validation_dataset.prefetch(buffer_size=AUTOTUNE)
     test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    data_augmentation = tf.keras.Sequential([
-      tf.keras.layers.RandomFlip('horizontal'),
-      tf.keras.layers.RandomRotation(0.2),
-    ])
-
-    for image, _ in self.train_dataset.take(1):
-      plt.figure(figsize=(10, 10))
-      first_image = image[0]
-      for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        augmented_image = data_augmentation(tf.expand_dims(first_image, 0))
-        plt.imshow(augmented_image[0] / 255)
-        plt.axis('off')
+    # data_augmentation = tf.keras.Sequential([
+    #   tf.keras.layers.RandomFlip('horizontal'),
+    #   tf.keras.layers.RandomRotation(0.2),
+    # ])
 
     preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
 
@@ -225,65 +214,108 @@ class cnn:
       plt.title(self.class_names[predictions[i]])
       plt.axis("off")
 
-def prepare_png():
-  image_path = os.path.join(STORAGE_DL, 'all')
-  train_path = os.path.join(STORAGE_DL, 'train')
+def prepare_png(name):
+  image_path = os.path.join(STORAGE_DL, name, 'all')
+  train_path = os.path.join(STORAGE_DL, name, 'train')
   for filedir, dirs, files in os.walk(image_path):
     files.sort()
     for file in files:
       image = Image.open(os.path.join(image_path, file))
       file_name = Path(file).stem + '.png'
       image.save(os.path.join(train_path, file_name), 'PNG', quality=100)
+  crop_png(name)
+
+def crop_png(name):
+  image_path = os.path.join(STORAGE_DL, name, 'train')
+  for filedir, dirs, files in os.walk(image_path):
+    files.sort()
+    for file in files:
+      image = Image.open(os.path.join(image_path, file))
+      w,h = image.size
+      image1 = image.crop((200, 0, 800, h))
+      image2 = image.crop((w - 800, 0, w - 200, h))
+      image = Image.new('RGB', (1200, h))
+      image.paste(image1, (0, 0))
+      image.paste(image2, (600, 0))
+      image.save(os.path.join(image_path, file), 'PNG', quality=100)
+    break
   pass
 
-def prepare_cnn(validation = 0.1, test = 0.1):
+
+def distribute_cnn(name, validation = 0.1, test = 0.1):
   seed(28362)
-  train_path = os.path.join(STORAGE_DL, 'train')
-  validation_path = os.path.join(STORAGE_DL, 'validation')
-  test_path = os.path.join(STORAGE_DL, 'test')
+  train_path = os.path.join(STORAGE_DL, name, 'train')
+  os.makedirs(train_path, exist_ok=True)
+  validation_path = os.path.join(STORAGE_DL, name, 'validation')
+  os.makedirs(validation_path, exist_ok=True)
+  test_path = os.path.join(STORAGE_DL, name, 'test')
+  os.makedirs(test_path, exist_ok=True)
   for filedir, dirs, files in os.walk(train_path):
     l = len(files)
-    m = l
     for i in range(int(l * validation)):
-      j = randint(0, m)
+      j = randint(0, len(files) - 1)
       file = files[j]
-      file_name = Path(file).stem + '.png'
+      os.rename(os.path.join(train_path, file), os.path.join(validation_path, file))
       files.remove(file)
-      os.rename(os.path.join(train_path, file_name), os.path.join(validation_path, file_name))
-      m -= 1
-  for filedir, dirs, files in os.walk(train_path):
-    m = len(files) - 1
     for i in range(int(l * test)):
-      j = randint(0, m)
+      j = randint(0, len(files) - 1)
       file = files[j]
-      file_name = Path(file).stem + '.png'
+      os.rename(os.path.join(train_path, file), os.path.join(test_path, file))
       files.remove(file)
-      os.rename(os.path.join(train_path, file_name), os.path.join(test_path, file_name))
-      m -= 1
   pass
 
+def _move_to_train(names, current_path):
+  for filedir, dirs, files in os.walk(current_path):
+    for file in files:
+      name = file.split('_')[1:]
+      for i in range(len(name)):
+        if name[i].isdigit():
+          break
+      name = ' '.join(name[:i])
+      new_path = os.path.join(STORAGE_DL, name, 'train')
+      os.makedirs(new_path, exist_ok=True)
+      os.rename(os.path.join(filedir, file), os.path.join(new_path, file))
+      if not name in names:
+        names.append(name)
+  to_delete = []
+  for filedir, dirs, files in os.walk(current_path):
+    if not len(files) and not len(dirs):
+      to_delete.append(filedir)
+  for dir in to_delete:
+    os.rmdir(dir)
+  return names
 def move_to_train():
-  train_path = os.path.join(STORAGE_DL, 'train')
-  validation_path = os.path.join(STORAGE_DL, 'validation')
-  test_path = os.path.join(STORAGE_DL, 'test')
-  for filedir, dirs, files in os.walk(validation_path):
-    for file in files:
-      file_name = Path(file).stem + '.png'
-      os.rename(os.path.join(validation_path, file_name), os.path.join(train_path, file_name))
-  for filedir, dirs, files in os.walk(test_path):
-    for file in files:
-      file_name = Path(file).stem + '.png'
-      os.rename(os.path.join(test_path, file_name), os.path.join(train_path, file_name))
+  names = list(next(os.walk(STORAGE_DL)))[1]
+  names.remove('all')
+  for name in names:
+    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'train'))
+    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'validation'))
+    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'test'))
+  return names
 
-def path_to_image_html(path):
-  return '<img src="' + path + '" width="60" >'
+def _move_to_class(current_path, name):
+  for filedir, dirs, files in os.walk(current_path):
+    if filedir.split('/')[-1] == name:
+      for file in files:
+        p = (''.join(' ' if not ch.isdigit() else ch for ch in file).strip()).split()[-1]
+        _current_path = os.path.join(current_path, p)
+        os.makedirs(_current_path, exist_ok=True)
+        os.rename(os.path.join(filedir, file), os.path.join(_current_path, file))
 
-def see_images():
-  for filedir, dirs, files in os.walk(STORAGE_DL):
-    for file in files:
-      files = files[:10]
-      df = pd.DataFrame(files, columns=['Page'])
-      df.to_html(escape=False, formatters=dict(Page=path_to_image_html))
-      HTML(df.to_html(escape=False, formatters=dict(Country=path_to_image_html)))
-      return
+def move_to_class(name):
+  _move_to_class(os.path.join(STORAGE_DL, name, 'train'), 'train')
+  _move_to_class(os.path.join(STORAGE_DL, name, 'validation'), 'validation')
+  _move_to_class(os.path.join(STORAGE_DL, name, 'test'), 'test')
 
+def prepare_cnn():
+  names = move_to_train()
+  # for name in names:
+  #   distribute_cnn(name)
+  #   move_to_class(name)
+
+# prepare_cnn()
+
+# cnn = cnn("La Stampa")
+# cnn.exec_cnn()
+
+crop_png("La Stampa")
