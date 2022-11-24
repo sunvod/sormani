@@ -19,6 +19,7 @@ MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 
 JPG_PDF_PATH = 'JPG-PDF'
 IMAGE_PATH = 'TIFF'
 IMAGE_ROOT = '/mnt/storage01/sormani'
+# IMAGE_ROOT = '/anno2016/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/'
 CONTRAST = 40
 
