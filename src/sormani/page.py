@@ -24,7 +24,6 @@ class Page:
     self.file_name = file_name
     self.original_image = original_image
     self.original_path = str(Path(original_image).parent.resolve())
-    dir_in_filedir = self.original_path.split('/')
     self.date = date
     self.year = date.year
     self.month = date.month
@@ -104,9 +103,11 @@ class Page:
         f[l  + 14: l + 16].isdigit()
   def extract_page(self):
     return self.newspaper.get_page()
-  def add_pdf_metadata(self):
+  def add_pdf_metadata(self, first_number = None):
     if not os.path.isfile(self.pdf_file_name):
       return
+    if first_number is None:
+      first_number = 0
     os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
     file_in = open(self.pdf_file_name + '.2', 'rb')
     pdf_merger = PdfFileMerger()
@@ -116,7 +117,7 @@ class Page:
                    + ' ; Anno:' + str(self.year)
                    + ' ; Mese:' + str(self.month)
                    + ' ; Giorno:' + str(self.day)
-                   + ' ; Numero del quotidiano:' + self.newspaper.number
+                   + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
                    + ' ; Anno del quotidiano:' + self.newspaper.year,
       '/Title': self.newspaper.name,
       '/Nome_del_periodico': self.newspaper.name,
@@ -163,8 +164,9 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
-  def create_pdf(self):
+  def create_pdf(self, number = None):
     if len(self):
+      self.number = number
       start_time = time.time()
       print(f'Start creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
@@ -178,13 +180,7 @@ class Page_pool(list):
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
-    page.add_pdf_metadata()
-  def add_pdf_metadata(self):
-    count = 0
-    for page in self:
-      page.add_pdf_metadata()
-      count += 1
-    return count
+    page.add_pdf_metadata(self.number)
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()

@@ -159,7 +159,7 @@ class Sormani():
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
       if not page_pool.isAlreadySeen():
         if len(page_pool) > 0:
-          init_page = page_pool[0].newspaper.init_page
+          init_page = page_pool[0].newspaper.number
           pages = page_pool.extract_pages(range=(init_page, init_page + 1))
           pages = int(pages[0]) + 1 \
             if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
@@ -178,13 +178,13 @@ class Sormani():
     return images_group.date
   def set_force(self, force):
     self.force = force
-  def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
+  def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None):
     if not len(self.elements):
       return
     for page_pool in self:
       if not len(page_pool):
         continue
-      page_pool.create_pdf()
+      page_pool.create_pdf(number)
       page_pool.convert_images(converts)
   def set_all_images_names(self):
     if not len(self.elements):
@@ -270,6 +270,31 @@ class Sormani():
       print(',', end='')
       with global_count.get_lock():
         global_count.value += i
+  def add_pdf_metadata(self, first_number = None):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(
+      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    selfforce = self.force
+    self.force = True
+    self.first_number = first_number
+    with Pool(processes=14) as mp_pool:
+      mp_pool.map(self._add_pdf_metadata, self)
+    if global_count.value:
+      print(f'It has redefined Metadata of {global_count.value} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
+    self.force = selfforce
+  def _add_pdf_metadata(self, page_pool):
+    count = 0
+    for page in page_pool:
+      page.add_pdf_metadata(self.first_number)
+      count += 1
+    with global_count.get_lock():
+      global_count.value += count
   def create_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
       for page_pool in self:
         page_pool.convert_images(converts = converts)
@@ -300,22 +325,6 @@ class Sormani():
         print(f'Warning: No extraction of page number are made for \'{self.newspaper_name}\'.')
     self.force = selfforce
     return pages
-  def add_pdf_metadata(self):
-    if not len(self.elements):
-      return
-    start_time = time.time()
-    print(
-      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    count = 0
-    selfforce = self.force
-    self.force = True
-    for page_pool in self:
-      count += page_pool.add_pdf_metadata()
-    if count:
-      print(f'It has redefined Metadata of {count} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
-    self.force = selfforce
   def save_pages_images(self):
     if not len(self.elements):
       return

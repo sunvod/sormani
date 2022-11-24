@@ -50,10 +50,10 @@ class cnn:
     self.validation_dataset = self.validation_dataset.prefetch(buffer_size=AUTOTUNE)
     test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    # data_augmentation = tf.keras.Sequential([
-    #   tf.keras.layers.RandomFlip('horizontal'),
-    #   tf.keras.layers.RandomRotation(0.2),
-    # ])
+    data_augmentation = tf.keras.Sequential([
+      tf.keras.layers.RandomFlip('horizontal'),
+      tf.keras.layers.RandomRotation(0.2),
+    ])
 
     preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
 
@@ -225,19 +225,26 @@ def prepare_png(name):
       image.save(os.path.join(train_path, file_name), 'PNG', quality=100)
   crop_png(name)
 
-def crop_png(name):
+def crop_png(name, limit = None):
   image_path = os.path.join(STORAGE_DL, name, 'train')
+  if limit is None:
+    limit = 1e10
   for filedir, dirs, files in os.walk(image_path):
     files.sort()
     for file in files:
       image = Image.open(os.path.join(image_path, file))
       w,h = image.size
+      if w < 2000:
+        continue
       image1 = image.crop((200, 0, 800, h))
       image2 = image.crop((w - 800, 0, w - 200, h))
       image = Image.new('RGB', (1200, h))
       image.paste(image1, (0, 0))
       image.paste(image2, (600, 0))
-      image.save(os.path.join(image_path, file), 'PNG', quality=100)
+      image.save(os.path.join(image_path, file), 'PNG', quality=80)
+      limit -= 1
+      if limit <= 0:
+        break
     break
   pass
 
