@@ -167,10 +167,19 @@ class Newspaper():
     if e.isdigit():
       return int(e)
     return 0
+  def get_head(self):
+    number = self.get_number()
+    year = self.init_year + self.date.year - 2016
+    if self.year_change is not None and \
+        (self.year_change[1] < self.date.month or \
+        (self.year_change[1] == self.date.month and self.year_change[0] <= self.date.day)):
+      year += 1
+    return str(year), number
 
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 150
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Stampa', file_name, date, year, number,init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -190,10 +199,6 @@ class La_stampa(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(str(self.init_year) + self.date.year - 2016)
-    return year, number
   def get_whole_page_location(self):
     whole = (0, 100, 5000, 500)
     return whole
@@ -222,6 +227,7 @@ class La_stampa(Newspaper):
 class Il_manifesto(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 46
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_name, date, year, number, init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -241,10 +247,6 @@ class Il_manifesto(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left = [0, 100, 700, 500]
     right =  [4100, 100, 4850, 500]
@@ -272,6 +274,7 @@ class Il_manifesto(Newspaper):
 class Milano_Finanza(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 27
+    self.year_change = [1, 9]
     Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -299,10 +302,6 @@ class Milano_Finanza(Newspaper):
       self.n_page = n * 2 + 2
     #print(self.n_page, '  ', end='')
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -331,6 +330,7 @@ class Milano_Finanza(Newspaper):
 class Il_Fatto_Quotidiano(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 8
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -350,10 +350,6 @@ class Il_Fatto_Quotidiano(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -366,6 +362,7 @@ class Il_Fatto_Quotidiano(Newspaper):
 class Italia_Oggi(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 25
+    self.year_change = [8, 8]
     Newspaper.__init__(self, newspaper_base, 'Italia Oggi', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages=None):
     if super().check_n_page(date):
@@ -393,10 +390,6 @@ class Italia_Oggi(Newspaper):
       self.n_page = n * 2 + 2
     # print(self.n_page, '  ', end='')
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -409,6 +402,7 @@ class Italia_Oggi(Newspaper):
 class Libero(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 51
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Libero', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -428,10 +422,6 @@ class Libero(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -444,6 +434,7 @@ class Libero(Newspaper):
 class Alias(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 19
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -463,10 +454,6 @@ class Alias(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -480,6 +467,7 @@ class Alias(Newspaper):
 class Alias_Domenica(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 6
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_name, date, year, number,init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -499,10 +487,6 @@ class Alias_Domenica(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -516,6 +500,7 @@ class Alias_Domenica(Newspaper):
 class Avvenire(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 49
+    self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_name, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
@@ -535,10 +520,6 @@ class Avvenire(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_head(self):
-    number = self.get_number()
-    year = str(self.init_year + self.date.year - 2016)
-    return year, number
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
