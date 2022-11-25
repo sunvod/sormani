@@ -4,7 +4,7 @@ from src.sormani.sormani import *
 if __name__ == '__main__':
   #sormani = Sormani('Il Manifesto', year=2016, months=[x for x in range(1,13)], days=None)
   #sormani = Sormani('Libero', year=2016, months=[x for x in range(1, 13)], days=None)
-  sormani = Sormani('Avvenire', year=2016, months=[11,12], days=None)
+  sormani = Sormani('Avvenire', year=2016, months=12, days=None)
   #sormani.change_all_contrasts(contrast=50, force=True)
   #sormani = Sormani('Il Fatto Quotidiano', year=2016, months=[x for x in range(6, 13)], days=None)
   #print(sormani.count_pages())

@@ -4,19 +4,19 @@ import os
 from random import seed
 from random import randint
 import tensorflow as tf
-from PIL import Image
-from PIL import ImageChops
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 from pathlib import Path
 from typing import Tuple
 from skimage import io, img_as_float
 import matplotlib.pyplot as plt
+import cv2
 import numpy as np
 
 import pathlib
 import pandas as pd
 from IPython.core.display import HTML
 
-from src.sormani.system import STORAGE_DL
+from src.sormani.system import STORAGE_DL, STORAGE_BASE
 
 BATCH_SIZE = 32
 IMG_SIZE = (7500, 600)
@@ -35,7 +35,77 @@ class cnn:
                                                                           batch_size=BATCH_SIZE,
                                                                           image_size=IMG_SIZE)
     self.class_names = self.train_dataset.class_names
+    self.file_paths =  self.train_dataset.file_paths
+    self.file_paths.sort()
 
+  def preprocessing(self, level = 50, limit = None):
+    self.change_contrast(level, limit)
+    self.eliminate_black_borders((limit))
+  def change_contrast(self, level = 50, limit = None):
+    for i, file in enumerate(self.file_paths):
+      image = Image.open(file)
+      image = self._change_contrast(image, level)
+      image.save(file)
+      if limit is not None and i >= limit - 1:
+        break
+  def _change_contrast(self, img, level):
+    factor = (259 * (level + 255)) / (255 * (259 - level))
+    def contrast(c):
+      return 128 + factor * (c - 128)
+    return img.point(contrast)
+  def eliminate_black_borders(self, limit=None):
+    for i, file in enumerate(self.file_paths):
+      self._eliminate_black_borders(file)
+      image = Image.open(file)
+      image.save(file)
+      if limit is not None and i >= limit - 1:
+        break
+  def _eliminate_black_borders(self, file):
+    img = cv2.imread(file, 0).T  # load image and transpose it(like rotate 90 degree)
+    # img = cv2.bitwise_not(img)
+    sens = 1.0  # (0-1]
+    meanofimg = np.mean(img) * sens  # get avarage brightness of img
+    w, h = img.shape  # get image's shape
+    for i in range(w):
+      for j in range(h):
+        if img[i, j] > 0:
+          img[i, j] = 255
+    # img = img.T
+    # cv2.imwrite(file, img)
+    # return
+    # for i in range(2, w - 2):  # for every horizontal line in transposed img(vertical line in normal)
+    #   if np.mean(img[i]) < meanofimg:  # check if this line darker than avarage
+    #     # img[i] = (img[i] + 255) % 256  # add 255 for every pixel and get mod 256 this for make zeros 255 and do not touch others
+    #     img[i]=(img[i]*0+255) #for makin all pixels in line white
+    img = img.T  # turn image to normal
+    # for i in range(h):  # every horizontal line in img
+    #   if np.mean(img[i]) < meanofimg:  # if line darker than avarage
+    #     # img[i] = (img[i] + 255) % 256  # do same thing
+    #     img[i] = (img[i] * 0 + 255)
+    for i in range(w):
+      for j in range(h):
+        if img[j, i] > 5:
+          img[j, i] = 255
+    # cv2.imwrite(file, img)
+    # return
+    d = 3
+    for i in range(w):
+      for j in range(d, h - d):
+        if img[j - d, i] == 255 and img[j + d, i] == 255:
+          img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
+    for i in range(d, w - d):
+      for j in range(h):
+        if img[j, i - d] == 255 and img[j, i + d] == 255:
+          img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
+    for i in range(w):
+      for j in range(d, h - d):
+        if img[j - d, i] == 255 and img[j + d, i] == 255:
+          img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
+    for i in range(d, w - d):
+      for j in range(h):
+        if img[j, i - d] == 255 and img[j, i + d] == 255:
+          img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
+    cv2.imwrite(file, img)
   def exec_cnn(self):
     val_batches = tf.data.experimental.cardinality(self.validation_dataset)
     test_dataset = self.validation_dataset.take(val_batches // 5)
@@ -215,8 +285,8 @@ class cnn:
       plt.axis("off")
 
 def prepare_png(name):
-  image_path = os.path.join(STORAGE_DL, name, 'all')
-  train_path = os.path.join(STORAGE_DL, name, 'train')
+  image_path = os.path.join(STORAGE_DL, 'all')
+  train_path = os.path.join(STORAGE_DL, 'all_png')
   for filedir, dirs, files in os.walk(image_path):
     files.sort()
     for file in files:
@@ -236,11 +306,11 @@ def crop_png(name, limit = None):
       w,h = image.size
       if w < 2000:
         continue
-      image1 = image.crop((200, 0, 800, h))
-      image2 = image.crop((w - 800, 0, w - 200, h))
-      image = Image.new('RGB', (1200, h))
+      image1 = image.crop((100, 0, 900, h))
+      image2 = image.crop((w - 900, 0, w - 100, h))
+      image = Image.new('RGB', (1600, h))
       image.paste(image1, (0, 0))
-      image.paste(image2, (600, 0))
+      image.paste(image2, (800, 0))
       image.save(os.path.join(image_path, file), 'PNG', quality=80)
       limit -= 1
       if limit <= 0:
@@ -293,11 +363,11 @@ def _move_to_train(names, current_path):
   return names
 def move_to_train():
   names = list(next(os.walk(STORAGE_DL)))[1]
-  names.remove('all')
   for name in names:
-    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'train'))
-    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'validation'))
-    names = _move_to_train(names, os.path.join(name, STORAGE_DL, name, 'test'))
+    names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'train'))
+    names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'validation'))
+    names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'test'))
+  _move_to_train(names, os.path.join(STORAGE_BASE, 'all_png'))
   return names
 
 def _move_to_class(current_path, name):
@@ -316,13 +386,35 @@ def move_to_class(name):
 
 def prepare_cnn():
   names = move_to_train()
-  # for name in names:
-  #   distribute_cnn(name)
-  #   move_to_class(name)
+  for name in names:
+    distribute_cnn(name)
+    move_to_class(name)
+
 
 # prepare_cnn()
 
-# cnn = cnn("La Stampa")
-# cnn.exec_cnn()
+def set_GPUs():
+  from numba import cuda
+  device = cuda.get_current_device()
+  device.reset()
+  gpus = tf.config.list_physical_devices('GPU')
+  if gpus:
+    try: # Currently, memory growth needs to be the same across GPUs
+      for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+      logical_gpus = tf.config.list_logical_devices('GPU')
+      #print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e: # Memory growth must be set before GPUs have been initialized
+      print(e)
+      exit(0)
 
-crop_png("La Stampa")
+
+set_GPUs()
+
+# cnn = cnn("La Stampa")
+# cnn.preprocessing(level = 200, limit = 3)
+#cnn.exec_cnn()
+
+# crop_png("La Stampa")
+
+prepare_png("La Stampa")

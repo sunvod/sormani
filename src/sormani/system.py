@@ -20,7 +20,8 @@ JPG_PDF_PATH = 'JPG-PDF'
 IMAGE_PATH = 'TIFF'
 IMAGE_ROOT = '/mnt/storage01/sormani'
 # IMAGE_ROOT = '/home/sormani/giornali'
-STORAGE_DL = '/home/sunvod/sormani_CNN/'
+STORAGE_BASE = '/home/sunvod/sormani_CNN/'
+STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
 CONTRAST = 40
 
 def sigbus(self, *args):

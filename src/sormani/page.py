@@ -50,25 +50,19 @@ class Page:
                      + '_' + str(self.month_text) \
                      + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
                      + '_p' + page
-    txt_file_name = self.newspaper.name.replace(' ', '_') \
-                     + '_' + str(self.year) \
-                     + '_' + (str(self.month) if self.month >= 10 else '0' + str(self.month)) \
-                     + '_' + (str(self.day) if self.day >= 10 else '0' + str(self.day)) \
-                     + '_p' + page
-    self.txt_file_name = os.path.join(self.txt_path, txt_file_name) + '.txt'
+    self.txt_file_name = os.path.join(self.txt_path, self.file_name) + '.txt'
   def change_contrast(self):
     if self.force or not self.isAlreadySeen():
       contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
       image = Image.open(self.original_image)
+      pixel_map = image.load()
+      if pixel_map[0, 0] == (64, 62, 22) and pixel_map[image.size[0] - 1, image.size[1] - 1] == (64, 62, 22):
+        return False
       image = self._change_contrast(image, contrast)
-      # pixel_map = image.load()
-      # pixel_map[0, 0] = [64, 62, 22]
-      # pixel_map[image.size[0] - 1, image.size[1] - 1] = [64, 62, 22]
-      # image.save(self.original_image)
-      # img = cv2.imread(self.file_name)
-      # img[0, 0] = [64, 62, 22]
-      # img[len(img) - 1, len(img[0]) - 1] = [64, 62, 22]
-      # cv2.imwrite(self.file_name, img)
+      pixel_map = image.load()
+      pixel_map[0, 0] = (64, 62, 22)
+      pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
+      image.save(self.original_image)
       return True
     return False
   def _change_contrast(self, img, level):

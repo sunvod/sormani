@@ -5,11 +5,13 @@ import os
 import imghdr
 import portalocker
 import pathlib
+import re
 
 import tkinter as tk
 from PIL import Image, ImageTk
 from src.sormani.page import Images_group
 from multiprocessing import Pool
+from pathlib import Path
 import numpy as np
 
 from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES, STORAGE_DL, JPG_PDF_PATH
@@ -55,7 +57,6 @@ class Sormani():
     self.i = 0
     self.elements = []
     root = os.path.join(root, image_path, newspaper_name)
-    self.add_zero_to_dir(root)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
@@ -74,6 +75,8 @@ class Sormani():
           if not os.path.exists(root):
             print(f'{newspaper_name} per l\'anno {year}, per il mese {month} e per il giorno {day} non esiste in memoria.')
             return self.elements
+    self.add_zero_to_dir(root)
+    self.rename_folder(root)
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
@@ -82,10 +85,10 @@ class Sormani():
     self.converts = None
     self.elements = self.get_elements(root)
     self.new_root = root
-    if contrast:
-      self.change_all_contrasts()
     self.divide_all_image()
     self.elements = self.get_elements(root)
+    if contrast:
+      self.change_all_contrasts()
     self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
@@ -117,7 +120,13 @@ class Sormani():
   def add_zero_to_dir(self, root):
     for filedir, dirs, files in os.walk(root):
       for dir in dirs:
-        if dir.isdigit() and len(dir) == 1:
+        p = re.search(r'[^0-9]', dir)
+        if p is not None:
+          p = p.start()
+        else:
+          p = len(dir)
+        n = dir[:p]
+        if n.isdigit() and len(n) == 1:
           os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
   def get_elements(self, root):
     elements = []
@@ -147,8 +156,8 @@ class Sormani():
     n = ''.join(c for c in n if c.isdigit())
     if not len(n):
       n = '0'
-    r = ['0' for x in range(25 - len(n))]
-    r = ''.join(r) + n
+    r = '000000000000000000000000000000' + n
+    r = r[-30:]
     return r
   def __len__(self):
     return len(self.elements)
@@ -159,11 +168,11 @@ class Sormani():
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
       if not page_pool.isAlreadySeen():
         if len(page_pool) > 0:
-          init_page = page_pool[0].newspaper.number
-          pages = page_pool.extract_pages(range=(init_page, init_page + 1))
-          pages = int(pages[0]) + 1 \
-            if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
-            else len(page_pool)
+          init_page = int(page_pool[0].newspaper.number)
+          pages = len(page_pool) # page_pool.extract_pages(range=(init_page, init_page + 1))
+          # pages = int(pages[0]) + 1 \
+          #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
+          #   else len(page_pool)
         else:
           pages = len(page_pool)
       else:
@@ -175,7 +184,8 @@ class Sormani():
       self.i = 0
       raise StopIteration
   def _elements_sort(self, images_group):
-    return images_group.date
+    e = images_group.filedir.split('/')[-1]
+    return e
   def set_force(self, force):
     self.force = force
   def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None):
@@ -246,24 +256,37 @@ class Sormani():
 
   def divide_image(self, image_group):
     i = 0
+    flag = False
     for file_name in image_group.files:
       file_path = os.path.join(image_group.filedir, file_name)
       im = Image.open(file_path)
       width, height = im.size
+      if width > height:
+        flag = True
+        break
+    for file_name in image_group.files:
+      file_path = os.path.join(image_group.filedir, file_name)
+      file_name_no_ext = Path(file_path).stem
+      file_path_no_ext = os.path.join(image_group.filedir, file_name_no_ext)
+      ext = Path(file_name).suffix
+      im = Image.open(file_path)
+      width, height = im.size
       if width < height:
+        if flag:
+          os.rename(file_path, file_path_no_ext + '-0' + ext)
         continue
       left = 0
       top = 0
       right = width // 2
       bottom = height
       im1 = im.crop((left, top, right, bottom))
-      im1.save(file_path[: len(file_path) - 4] + '-2.tif')
+      im1.save(file_path_no_ext + '-2' + ext)
       left = width // 2 + 1
       top = 0
       right = width
       bottom = height
       im2 = im.crop((left, top, right, bottom))
-      im2.save(file_path[: len(file_path) - 4] + '-1.tif')
+      im2.save(file_path_no_ext + '-1' + ext)
       os.remove(file_path)
       i += 1
     if i:
@@ -358,5 +381,23 @@ class Sormani():
             old_file = os.path.join(filedir, file)
             os.rename(old_file, new_file)
             pass
+  def rename_folder(self, root):
+    number = 1
+    for filedir, dirs, files in os.walk(root):
+      dirs.sort()
+      for dir in dirs:
+        if dir.isdigit():
+          number = 1
+          continue
+        p = re.search(r'[^0-9]', dir).start()
+        old_folder = os.path.join(filedir, dir)
+        new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
+        if old_folder != new_folder:
+          os.rename(old_folder, new_folder)
+        number += 1
+
+
+
+
 
 
