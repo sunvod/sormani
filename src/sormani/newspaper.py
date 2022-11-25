@@ -501,7 +501,7 @@ class Avvenire(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):
     self.init_year = 49
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_name, date, year, number, init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_name, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
