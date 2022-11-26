@@ -367,7 +367,7 @@ def move_to_train():
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'train'))
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'validation'))
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'test'))
-  _move_to_train(names, os.path.join(STORAGE_BASE, 'all_png'))
+  #_move_to_train(names, os.path.join(STORAGE_BASE, 'all_png'))
   return names
 
 def _move_to_class(current_path, name):
@@ -390,6 +390,11 @@ def prepare_cnn():
     distribute_cnn(name)
     move_to_class(name)
 
+def count_tiff():
+  count = 0
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF')):
+    count += len(files)
+  return count
 
 # prepare_cnn()
 
@@ -410,6 +415,7 @@ def set_GPUs():
 
 
 set_GPUs()
+crop_png('La Stampa')
 
 # cnn = cnn("La Stampa")
 # cnn.preprocessing(level = 200, limit = 3)
@@ -417,4 +423,4 @@ set_GPUs()
 
 # crop_png("La Stampa")
 
-prepare_png("La Stampa")
+#prepare_png("La Stampa")
