@@ -16,7 +16,7 @@ import pathlib
 import pandas as pd
 from IPython.core.display import HTML
 
-from src.sormani.system import STORAGE_DL, STORAGE_BASE
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
 
 BATCH_SIZE = 32
 IMG_SIZE = (7500, 600)
@@ -30,10 +30,10 @@ class cnn:
                                                                      shuffle=True,
                                                                      batch_size=BATCH_SIZE,
                                                                      image_size=IMG_SIZE)
-    self.validation_dataset = tf.keras.utils.image_dataset_from_directory(self.validation_dir,
-                                                                          shuffle=True,
-                                                                          batch_size=BATCH_SIZE,
-                                                                          image_size=IMG_SIZE)
+    # self.validation_dataset = tf.keras.utils.image_dataset_from_directory(self.validation_dir,
+    #                                                                       shuffle=True,
+    #                                                                       batch_size=BATCH_SIZE,
+    #                                                                       image_size=IMG_SIZE)
     self.class_names = self.train_dataset.class_names
     self.file_paths =  self.train_dataset.file_paths
     self.file_paths.sort()
@@ -417,10 +417,7 @@ def set_GPUs():
 set_GPUs()
 #crop_png('La Stampa')
 
-# cnn = cnn("La Stampa")
-# cnn.preprocessing(level = 200, limit = 3)
-#cnn.exec_cnn()
+cnn = cnn("La Stampa")
+cnn.preprocessing(level = 200, limit = 3)
 
-# crop_png("La Stampa")
 
-prepare_cnn()
