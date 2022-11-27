@@ -18,6 +18,8 @@ class Newspaper():
   def create(newspaper_base, file_name, name, date, year = None, number = None):
     if name == 'La Stampa':
       newspaper = La_stampa(newspaper_base, file_name, date, year, number)
+    elif name == 'Il Giornale':
+      newspaper = Il_Giornale(newspaper_base, file_name, date, year, number)
     elif name == 'Il Manifesto':
       newspaper = Il_manifesto(newspaper_base, file_name, date, year, number)
     elif name == 'Avvenire':
@@ -35,7 +37,8 @@ class Newspaper():
     elif name == 'Alias Domenica':
       newspaper = Alias_Domenica(newspaper_base, file_name, date, year, number)
     else:
-      raise ValueError("Error: \'" + name + "\' is not defined in this application.")
+      error = "Error: \'" + name + "\' is not defined in this application."
+      raise ValueError(error)
     return newspaper
   def __init__(self, newspaper_base, name, file_name, date, year, number, init_page):
     self.newspaper_base = newspaper_base
@@ -223,6 +226,39 @@ class La_stampa(Newspaper):
       return n2, [image1, image2]
     else:
       return '??', [image1, image2]
+
+class Il_Giornale(Newspaper):
+  def __init__(self, newspaper_base, file_name, date, year, number):
+    self.init_year = 150
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_name, date, year, number,init_page = 3)
+  def set_n_page(self, n_page, date, pages = None):
+    if super().check_n_page(date):
+      self.n_page = n_page + 1
+      return
+    if n_page >= self.n_pages:
+      self.n_page = n_page + 1
+      return
+    r = n_page % 4
+    n = n_page // 4
+    if r == 0:
+      self.n_page = n * 2 + 1
+    elif r == 1:
+      self.n_page = self.n_pages - n * 2
+    elif r == 2:
+      self.n_page = self.n_pages - n * 2 - 1
+    else:
+      self.n_page = n * 2 + 2
+    pass
+  def get_whole_page_location(self):
+    whole = (0, 100, 5000, 500)
+    return whole
+  def get_page_location(self):
+    left = [0, 100, 700, 500]
+    right = [4100, 100, 4850, 500]
+    return left, right
+  def get_page(self):
+    return None, None
 
 class Il_manifesto(Newspaper):
   def __init__(self, newspaper_base, file_name, date, year, number):

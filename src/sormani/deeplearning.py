@@ -415,7 +415,7 @@ def set_GPUs():
 
 
 set_GPUs()
-crop_png('La Stampa')
+#crop_png('La Stampa')
 
 # cnn = cnn("La Stampa")
 # cnn.preprocessing(level = 200, limit = 3)
@@ -423,4 +423,4 @@ crop_png('La Stampa')
 
 # crop_png("La Stampa")
 
-#prepare_png("La Stampa")
+prepare_cnn()

@@ -56,6 +56,7 @@ class Sormani():
     self.root = root
     self.i = 0
     self.elements = []
+    self.add_zero_to_dir(root)
     root = os.path.join(root, image_path, newspaper_name)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
@@ -75,8 +76,7 @@ class Sormani():
           if not os.path.exists(root):
             print(f'{newspaper_name} per l\'anno {year}, per il mese {month} e per il giorno {day} non esiste in memoria.')
             return self.elements
-    self.add_zero_to_dir(root)
-    self.rename_folder(root)
+    #self.rename_folder(root)
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
@@ -89,6 +89,7 @@ class Sormani():
     self.elements = self.get_elements(root)
     if contrast:
       self.change_all_contrasts()
+    self.elements = self.get_elements(root)
     self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
@@ -127,7 +128,10 @@ class Sormani():
           p = len(dir)
         n = dir[:p]
         if n.isdigit() and len(n) == 1:
-          os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
+          try:
+            os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
+          except:
+            pass
   def get_elements(self, root):
     elements = []
     for filedir, dirs, files in os.walk(root):
