@@ -11,6 +11,8 @@ from skimage import io, img_as_float
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+import keras_ocr
+import matplotlib.pyplot as plt
 
 import pathlib
 import pandas as pd
@@ -413,11 +415,44 @@ def set_GPUs():
       print(e)
       exit(0)
 
+def reduce_images(name):
+  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  filedir, dirs, files = next(os.walk(image_path))
+  for file in files:
+    image = Image.open(os.path.join(filedir, file))
+    w, h = image.size
+    image = image.resize((w // 2, h // 2), Image.Resampling.LANCZOS)
+    image.save(os.path.join(filedir, file))
+  pass
+
+def convert_images_to_rgb(name):
+  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  filedir, dirs, files = next(os.walk(image_path))
+  for file in files:
+    image = Image.open(os.path.join(filedir, file))
+    image = image.convert('RGB')
+    image.save(os.path.join(filedir, file))
+  pass
+def keras_ocr_test(name):
+  pipeline = keras_ocr.pipeline.Pipeline()
+  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  filedir, dirs, files = next(os.walk(image_path))
+  images = []
+  for file in files:
+    images.append(os.path.join(filedir, file))
+  images = [keras_ocr.tools.read(img) for img in images]
+  prediction_groups = pipeline.recognize(images)
+  pass
+
 
 set_GPUs()
 #crop_png('La Stampa')
 
-cnn = cnn("La Stampa")
-cnn.preprocessing(level = 200, limit = 3)
+# cnn = cnn("La Stampa")
+# cnn.preprocessing(level = 200, limit = None)
+
+
+#reduce_images("La Stampa")
+keras_ocr_test("La Stampa")
 
 

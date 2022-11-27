@@ -41,7 +41,9 @@ class Sormani():
                rename_only = False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
-        newspaper_names = newspaper_names.split()[:]
+        name = newspaper_names
+        newspaper_names = []
+        newspaper_names.append(name)
       else:
         newspaper_names = ['La Stampa', 'Il Giornale', 'Il Manifesto', 'Avvenire', 'Milano Finanza', 'Il Fatto Quotidiano', 'Italia Oggi', 'Libero', 'Alias', 'Alias Domenica']
         rename_only = True
