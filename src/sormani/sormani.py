@@ -27,7 +27,7 @@ class Conversion:
 
 class Sormani():
   def __init__(self,
-               newspaper_name,
+               newspaper_names,
                root = IMAGE_ROOT,
                year = None,
                months = None,
@@ -37,26 +37,38 @@ class Sormani():
                path_exclude = [],
                path_exist ='pdf',
                force = False,
-               contrast = True):
+               contrast = True,
+               rename_only = False):
+    if not isinstance(newspaper_names, list):
+      if newspaper_names is not None:
+        newspaper_names = newspaper_names.split()[:]
+      else:
+        newspaper_names = ['La Stampa', 'Il Giornale', 'Il Manifesto', 'Avvenire', 'Milano Finanza', 'Il Fatto Quotidiano', 'Italia Oggi', 'Libero', 'Alias', 'Alias Domenica']
+        rename_only = True
     if not isinstance(months, list):
       months = [months]
     if not isinstance(days, list):
       days = [days]
     elements = []
-    for month in months:
-      for day in days:
-        elements.append(self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast))
+    for newspaper_name in newspaper_names:
+      for month in months:
+        for day in days:
+          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast, rename_only)
+          if e is not None:
+            elements.append(e)
     self.elements = []
     for element in elements:
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast):
+  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast, rename_only):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
     self.elements = []
     self.add_zero_to_dir(root)
+    if rename_only:
+      return None
     root = os.path.join(root, image_path, newspaper_name)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
