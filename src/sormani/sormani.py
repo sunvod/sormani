@@ -67,28 +67,19 @@ class Sormani():
     self.i = 0
     self.elements = []
     self.add_zero_to_dir(root)
-    if rename_only:
-      return None
     root = os.path.join(root, image_path, newspaper_name)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
     if year is not None:
       root = os.path.join(root, self.add_zero(year))
-      if not os.path.exists(root):
-        print(f'{newspaper_name} per l\'anno {year} non esiste in memoria.')
-        return self.elements
       if month is not None:
         root = os.path.join(root, self.add_zero(month))
-        if not os.path.exists(root):
-          print(f'{newspaper_name} per l\'anno {year} e per il mese {month} non esiste in memoria.')
-          return self.elements
         if day is not None:
           root = os.path.join(root, self.add_zero(day))
-          if not os.path.exists(root):
-            print(f'{newspaper_name} per l\'anno {year}, per il mese {month} e per il giorno {day} non esiste in memoria.')
-            return self.elements
-    #self.rename_folder(root)
+    self.rename_folder(root)
+    if rename_only:
+      return None
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
