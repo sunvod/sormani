@@ -523,7 +523,7 @@ def get_contours(name):
         roi_nw = np.array([x for i in roi_gray for x in i if x > 5 and x < 225])
         if roi_nw.size > roi_gray.size / 3:
           continue
-        cv2.imwrite(os.path.join(filedir, 'result', file_name + '-' + str(i) + '.tif'), roi)
+        cv2.imwrite(os.path.join(filedir, 'result', file_name + '-' + str(x) + '.tif'), roi)
         cv2.rectangle(copy, (x, y), (x + w, y + h), (36, 255, 12), 2)
         i += 1
     cv2.imwrite(os.path.join(filedir, 'result', file), copy)
