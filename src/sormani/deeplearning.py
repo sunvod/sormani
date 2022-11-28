@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import keras_ocr
 import matplotlib.pyplot as plt
+import pytesseract
 
 import pathlib
 import pandas as pd
@@ -421,7 +422,7 @@ def reduce_images(name):
   for file in files:
     image = Image.open(os.path.join(filedir, file))
     w, h = image.size
-    image = image.resize((w // 2, h // 2), Image.Resampling.LANCZOS)
+    image = image.resize((640, 640), Image.Resampling.LANCZOS)
     image.save(os.path.join(filedir, file))
   pass
 
@@ -444,6 +445,93 @@ def keras_ocr_test(name):
   prediction_groups = pipeline.recognize(images)
   pass
 
+def tesserat_ocr(name, oem = 3, dpi = 100):
+  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  filedir, dirs, files = next(os.walk(image_path))
+  custom_config = r'-l ita --oem ' + str(oem) + ' --psm 4 --dpi ' + str(dpi)
+  for file in files:
+    files.sort()
+    image = Image.open(os.path.join(filedir, file))
+    text = pytesseract.image_to_string(image, config=custom_config)
+    text = ''.join([n for n in text if n.isdigit()])
+    print(text, ' : ', file)
+def _change_contrast_PIL(img, level):
+  factor = (259 * (level + 255)) / (255 * (259 - level))
+  def contrast(c):
+    return 128 + factor * (c - 128)
+  return img.point(contrast)
+def change_contrast(img):
+
+  # converting to LAB color space
+  lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+  l_channel, a, b = cv2.split(lab)
+
+  # Applying CLAHE to L-channel
+  # feel free to try different values for the limit and grid size:
+  clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
+  cl = clahe.apply(l_channel)
+
+  # merge the CLAHE enhanced L-channel with the a and b channel
+  limg = cv2.merge((cl, a, b))
+
+  # Converting image from LAB Color model to BGR color spcae
+  enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+  # Stacking the original image with the enhanced image
+  return enhanced_img
+def get_contours(name):
+  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  filedir, dirs, files = next(os.walk(image_path))
+  files.sort()
+  for file in files:
+    image = Image.open(os.path.join(filedir, file))
+    image.save(os.path.join(filedir, 'result', file))
+    img = cv2.imread(os.path.join(filedir, 'result', file))
+    img = change_contrast(img)
+
+    # convert to gray
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # get canny edges
+    edges = cv2.Canny(gray, 1, 50)
+
+    # apply morphology close to ensure they are closed
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+
+    # get contours
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    #contours = contours[0] if len(contours) == 2 else contours[1]
+
+    # filter contours to keep only large ones
+    copy = img.copy()
+    file_name = Path(file).stem
+    i = 1
+
+    result = img.copy()
+
+    for i, contour in enumerate(contours):
+      if hierarchy[0, i, 3] != -1:
+        continue
+      perimeter = cv2.arcLength(contour, True)
+      if perimeter > 250:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w < 15 or w > 80 or h < 80 or h > 160:
+          continue
+        roi = img[y:y + h, x:x + w]
+        roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        roi_nw = np.array([x for i in roi_gray for x in i if x > 5 and x < 225])
+        if roi_nw.size > roi_gray.size / 3:
+          continue
+        cv2.imwrite(os.path.join(filedir, 'result', file_name + '-' + str(i) + '.tif'), roi)
+        cv2.rectangle(copy, (x, y), (x + w, y + h), (36, 255, 12), 2)
+        i += 1
+    cv2.imwrite(os.path.join(filedir, 'result', file), copy)
+
+
+
+
+
 
 set_GPUs()
 #crop_png('La Stampa')
@@ -452,7 +540,7 @@ set_GPUs()
 # cnn.preprocessing(level = 200, limit = None)
 
 
-#reduce_images("La Stampa")
-keras_ocr_test("La Stampa")
+get_contours("La Stampa")
+#keras_ocr_test("La Stampa")
 
 
