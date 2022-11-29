@@ -10,40 +10,49 @@ from PIL import Image, ImageOps
 import pytesseract
 from pathlib import Path
 
-from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST
+from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL
 
 
 class Newspaper():
   @staticmethod
-  def create(newspaper_base, file_name, name, date, year = None, number = None):
+  def create(name, file_path, newspaper_base = None, date = None, year = None, number = None):
+    if date is None:
+      file_name = Path(file_path).stem
+      year = ''.join(filter(str.isdigit, file_name.split('_')[-4]))
+      month = MONTHS.index(file_name.split('_')[-3]) + 1
+      day = file_path.split('_')[-2]
+      if year.isdigit() and day.isdigit():
+        date = datetime.date(int(year), int(month), int(day))
+      else:
+        raise NotADirectoryError('Le directory non indicano una data.')
     if name == 'La Stampa':
-      newspaper = La_stampa(newspaper_base, file_name, date, year, number)
+      newspaper = La_stampa(newspaper_base, file_path, date, year, number)
     elif name == 'Il Giornale':
-      newspaper = Il_Giornale(newspaper_base, file_name, date, year, number)
+      newspaper = Il_Giornale(newspaper_base, file_path, date, year, number)
     elif name == 'Il Manifesto':
-      newspaper = Il_manifesto(newspaper_base, file_name, date, year, number)
+      newspaper = Il_manifesto(newspaper_base, file_path, date, year, number)
     elif name == 'Avvenire':
-      newspaper = Avvenire(newspaper_base, file_name, date, year, number)
+      newspaper = Avvenire(newspaper_base, file_path, date, year, number)
     elif name == 'Milano Finanza':
-      newspaper = Milano_Finanza(newspaper_base, file_name, date, year, number)
+      newspaper = Milano_Finanza(newspaper_base, file_path, date, year, number)
     elif name == 'Il Fatto Quotidiano':
-      newspaper = Il_Fatto_Quotidiano(newspaper_base, file_name, date, year, number)
+      newspaper = Il_Fatto_Quotidiano(newspaper_base, file_path, date, year, number)
     elif name == 'Italia Oggi':
-      newspaper = Italia_Oggi(newspaper_base, file_name, date, year, number)
+      newspaper = Italia_Oggi(newspaper_base, file_path, date, year, number)
     elif name == 'Libero':
-      newspaper = Libero(newspaper_base, file_name, date, year, number)
+      newspaper = Libero(newspaper_base, file_path, date, year, number)
     elif name == 'Alias':
-      newspaper = Alias(newspaper_base, file_name, date, year, number)
+      newspaper = Alias(newspaper_base, file_path, date, year, number)
     elif name == 'Alias Domenica':
-      newspaper = Alias_Domenica(newspaper_base, file_name, date, year, number)
+      newspaper = Alias_Domenica(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     return newspaper
-  def __init__(self, newspaper_base, name, file_name, date, year, number, init_page):
+  def __init__(self, newspaper_base, name, file_path, date, year, number, init_page):
     self.newspaper_base = newspaper_base
     self.name = name
-    self.file_name = file_name
+    self.file_path = file_path
     self.date = date
     self.contrast = CONTRAST
     if year is not None:
@@ -54,7 +63,7 @@ class Newspaper():
     self.page = None
     self.init_page = init_page
   def check_n_page(self, date):
-    file_name = Path(self.file_name).stem
+    file_name = Path(self.file_path).stem
     l = len(self.name)
     year = file_name[l + 1 : l + 5]
     month = file_name[l + 6 : l + 9]
@@ -103,7 +112,7 @@ class Newspaper():
     temp3 = cv2.add(temp1, temp2)
     return cv2.add(temp3, image)
   def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, oem = 3, count = 0, remove_lines = False, old_y = None):
-    image = Image.open(self.file_name)
+    image = Image.open(self.file_path)
     image = image.crop((left, top, right, bottom))
     if resize is not None:
       image = image.resize((int(image.size[0] * resize), int(image.size[1] * resize)), Image.Resampling.LANCZOS)
@@ -180,10 +189,10 @@ class Newspaper():
     return str(year), number
 
 class La_stampa(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 150
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'La Stampa', file_name, date, year, number,init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'La Stampa', file_path, date, year, number, init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -207,7 +216,7 @@ class La_stampa(Newspaper):
     return whole
   def get_page_location(self):
     left = [0, 100, 700, 500]
-    right = [4100, 100, 4850, 500]
+    right = [4100, 100, 4800, 500]
     return left, right
   def get_page(self):
     left, right = self.get_page_location()
@@ -226,12 +235,21 @@ class La_stampa(Newspaper):
       return n2, [image1, image2]
     else:
       return '??', [image1, image2]
+  def crop_page_numbers(self, image):
+    w, h = image.size
+    if w < 2000:
+      return image
+    image1 = image.crop((200, 100, 500, h - 100))
+    image2 = image.crop((w - 500, 100, w - 200, h - 100))
+    image = Image.new('RGB', (600, h))
+    image.paste(image1, (0, 0))
+    image.paste(image2, (300, 0))
 
 class Il_Giornale(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 150
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_name, date, year, number,init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_path, date, year, number, init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -261,10 +279,10 @@ class Il_Giornale(Newspaper):
     return None, None
 
 class Il_manifesto(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 46
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_name, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_path, date, year, number, init_page = 3)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -307,11 +325,23 @@ class Il_manifesto(Newspaper):
       return n2, [image1, image2]
     else:
       return '??', [image1, image2]
+  def crop_png(self, image):
+    w, h = image.size
+    if w < 2000:
+      return
+    file_name = Path(self.file_path).stem
+    n = (Path(file_name).stem).split('_')[-1][-1:]
+    if int(n) % 2 == 0:
+      image = image.crop((100, 0, 700, h))
+    else:
+      image = image.crop((w - 700, 0, w - 100, h))
+    return image
+
 class Milano_Finanza(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 27
     self.year_change = [1, 9]
-    Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -364,10 +394,10 @@ class Milano_Finanza(Newspaper):
     # else:
     #   return '??', [image1, image2]
 class Il_Fatto_Quotidiano(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 8
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -396,10 +426,10 @@ class Il_Fatto_Quotidiano(Newspaper):
   def get_page(self):
     return None, None
 class Italia_Oggi(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 25
     self.year_change = [8, 8]
-    Newspaper.__init__(self, newspaper_base, 'Italia Oggi', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Italia Oggi', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages=None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -436,10 +466,10 @@ class Italia_Oggi(Newspaper):
   def get_page(self):
     return None, None
 class Libero(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 51
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Libero', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Libero', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -468,10 +498,10 @@ class Libero(Newspaper):
   def get_page(self):
     return None, None
 class Alias(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 19
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Alias', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Alias', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -501,10 +531,10 @@ class Alias(Newspaper):
     return None, None
 
 class Alias_Domenica(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 6
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_name, date, year, number,init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1
@@ -534,10 +564,10 @@ class Alias_Domenica(Newspaper):
     return None, None
 
 class Avvenire(Newspaper):
-  def __init__(self, newspaper_base, file_name, date, year, number):
+  def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 49
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_name, date, year, number, init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_path, date, year, number, init_page = 5)
   def set_n_page(self, n_page, date, pages = None):
     if super().check_n_page(date):
       self.n_page = n_page + 1

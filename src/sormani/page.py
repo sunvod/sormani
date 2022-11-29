@@ -29,7 +29,7 @@ class Page:
     self.month = date.month
     self.month_text = MONTHS[self.month - 1]
     self.day = date.day
-    self.newspaper = Newspaper.create(newspaper.newspaper_base, original_image, newspaper.name, date, newspaper.year, newspaper.number)
+    self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -178,19 +178,19 @@ class Page_pool(list):
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
-      if page.original_file_name != page.file_name:
-        new_file_name = os.path.join(page.original_path, page.file_name + pathlib.Path(page.original_image).suffix)
+      if page.original_file_name != page.file_path:
+        new_file_name = os.path.join(page.original_path, page.file_path + pathlib.Path(page.original_image).suffix)
         if Path(page.original_image).is_file():
           os.rename(page.original_image, new_file_name)
-          page.file_name = new_file_name
-          page.newspaper.file_name = new_file_name
+          page.file_path = new_file_name
+          page.newspaper.file_path = new_file_name
   def convert_image(self, page):
     try:
       image = Image.open(page.original_image)
       for convert in page.conversions:
         path_image = os.path.join(page.jpg_path, convert.image_path)
         Path(path_image).mkdir(parents=True, exist_ok=True)
-        file = os.path.join(path_image, page.file_name) + '.jpg'
+        file = os.path.join(path_image, page.file_path) + '.jpg'
         if self.force or not Path(file).is_file():
           if image.size[0] < image.size[1]:
             wpercent = (convert.resolution / float(image.size[1]))
@@ -230,7 +230,7 @@ class Page_pool(list):
         continue
       if not i:
         page_number = 1
-      print(f'{page.file_name} has page number: {page_number}')
+      print(f'{page.file_path} has page number: {page_number}')
       if not image_mute and page_number == '??' and images is not None:
         if isinstance(images, list):
           for image in images:
@@ -255,7 +255,7 @@ class Images_group():
       self.date = datetime.date(int(year), int(month), int(day))
     else:
       raise NotADirectoryError('Le directory non indicano una data.')
-    self.newspaper = Newspaper.create(newspaper_base, os.path.join(filedir, files[0]), self.newspaper_name, self.date)
+    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)
     dir_in_filedir = self.filedir.split('/')

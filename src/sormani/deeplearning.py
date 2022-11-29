@@ -19,6 +19,7 @@ import pathlib
 import pandas as pd
 from IPython.core.display import HTML
 
+from src.sormani.newspaper import Newspaper
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
 
 BATCH_SIZE = 32
@@ -42,7 +43,7 @@ class cnn:
     self.file_paths.sort()
 
   def preprocessing(self, level = 50, limit = None):
-    self.change_contrast(level, limit)
+    #self.change_contrast(level, limit)
     self.eliminate_black_borders((limit))
   def change_contrast(self, level = 50, limit = None):
     for i, file in enumerate(self.file_paths):
@@ -56,59 +57,7 @@ class cnn:
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
-  def eliminate_black_borders(self, limit=None):
-    for i, file in enumerate(self.file_paths):
-      self._eliminate_black_borders(file)
-      image = Image.open(file)
-      image.save(file)
-      if limit is not None and i >= limit - 1:
-        break
-  def _eliminate_black_borders(self, file):
-    img = cv2.imread(file, 0).T  # load image and transpose it(like rotate 90 degree)
-    # img = cv2.bitwise_not(img)
-    sens = 1.0  # (0-1]
-    meanofimg = np.mean(img) * sens  # get avarage brightness of img
-    w, h = img.shape  # get image's shape
-    for i in range(w):
-      for j in range(h):
-        if img[i, j] > 0:
-          img[i, j] = 255
-    # img = img.T
-    # cv2.imwrite(file, img)
-    # return
-    # for i in range(2, w - 2):  # for every horizontal line in transposed img(vertical line in normal)
-    #   if np.mean(img[i]) < meanofimg:  # check if this line darker than avarage
-    #     # img[i] = (img[i] + 255) % 256  # add 255 for every pixel and get mod 256 this for make zeros 255 and do not touch others
-    #     img[i]=(img[i]*0+255) #for makin all pixels in line white
-    img = img.T  # turn image to normal
-    # for i in range(h):  # every horizontal line in img
-    #   if np.mean(img[i]) < meanofimg:  # if line darker than avarage
-    #     # img[i] = (img[i] + 255) % 256  # do same thing
-    #     img[i] = (img[i] * 0 + 255)
-    for i in range(w):
-      for j in range(h):
-        if img[j, i] > 5:
-          img[j, i] = 255
-    # cv2.imwrite(file, img)
-    # return
-    d = 3
-    for i in range(w):
-      for j in range(d, h - d):
-        if img[j - d, i] == 255 and img[j + d, i] == 255:
-          img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
-    for i in range(d, w - d):
-      for j in range(h):
-        if img[j, i - d] == 255 and img[j, i + d] == 255:
-          img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
-    for i in range(w):
-      for j in range(d, h - d):
-        if img[j - d, i] == 255 and img[j + d, i] == 255:
-          img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
-    for i in range(d, w - d):
-      for j in range(h):
-        if img[j, i - d] == 255 and img[j, i + d] == 255:
-          img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
-    cv2.imwrite(file, img)
+
   def exec_cnn(self):
     val_batches = tf.data.experimental.cardinality(self.validation_dataset)
     test_dataset = self.validation_dataset.take(val_batches // 5)
@@ -298,30 +247,6 @@ def prepare_png(name):
       image.save(os.path.join(train_path, file_name), 'PNG', quality=100)
   crop_png(name)
 
-def crop_png(name, limit = None):
-  image_path = os.path.join(STORAGE_DL, name, 'train')
-  if limit is None:
-    limit = 1e10
-  for filedir, dirs, files in os.walk(image_path):
-    files.sort()
-    for file in files:
-      image = Image.open(os.path.join(image_path, file))
-      w,h = image.size
-      if w < 2000:
-        continue
-      image1 = image.crop((100, 0, 900, h))
-      image2 = image.crop((w - 900, 0, w - 100, h))
-      image = Image.new('RGB', (1600, h))
-      image.paste(image1, (0, 0))
-      image.paste(image2, (800, 0))
-      image.save(os.path.join(image_path, file), 'PNG', quality=80)
-      limit -= 1
-      if limit <= 0:
-        break
-    break
-  pass
-
-
 def distribute_cnn(name, validation = 0.1, test = 0.1):
   seed(28362)
   train_path = os.path.join(STORAGE_DL, name, 'train')
@@ -377,7 +302,8 @@ def _move_to_class(current_path, name):
   for filedir, dirs, files in os.walk(current_path):
     if filedir.split('/')[-1] == name:
       for file in files:
-        p = (''.join(' ' if not ch.isdigit() else ch for ch in file).strip()).split()[-1]
+        #p = (''.join(' ' if not ch.isdigit() else ch for ch in file).strip()).split()[-1]
+        p = Path(file).stem.split('_')[-1]
         _current_path = os.path.join(current_path, p)
         os.makedirs(_current_path, exist_ok=True)
         os.rename(os.path.join(filedir, file), os.path.join(_current_path, file))
@@ -387,19 +313,11 @@ def move_to_class(name):
   _move_to_class(os.path.join(STORAGE_DL, name, 'validation'), 'validation')
   _move_to_class(os.path.join(STORAGE_DL, name, 'test'), 'test')
 
-def prepare_cnn():
-  names = move_to_train()
-  for name in names:
-    distribute_cnn(name)
-    move_to_class(name)
-
 def count_tiff():
   count = 0
   for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF')):
     count += len(files)
   return count
-
-# prepare_cnn()
 
 def set_GPUs():
   from numba import cuda
@@ -417,7 +335,7 @@ def set_GPUs():
       exit(0)
 
 def reduce_images(name):
-  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  image_path = os.path.join(STORAGE_DL, name, 'train')
   filedir, dirs, files = next(os.walk(image_path))
   for file in files:
     image = Image.open(os.path.join(filedir, file))
@@ -427,16 +345,17 @@ def reduce_images(name):
   pass
 
 def convert_images_to_rgb(name):
-  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  image_path = os.path.join(STORAGE_DL, name, 'train')
   filedir, dirs, files = next(os.walk(image_path))
   for file in files:
     image = Image.open(os.path.join(filedir, file))
     image = image.convert('RGB')
     image.save(os.path.join(filedir, file))
   pass
+
 def keras_ocr_test(name):
   pipeline = keras_ocr.pipeline.Pipeline()
-  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+  image_path = os.path.join(STORAGE_DL, name, 'train')
   filedir, dirs, files = next(os.walk(image_path))
   images = []
   for file in files:
@@ -455,92 +374,230 @@ def tesserat_ocr(name, oem = 3, dpi = 100):
     text = pytesseract.image_to_string(image, config=custom_config)
     text = ''.join([n for n in text if n.isdigit()])
     print(text, ' : ', file)
+
 def _change_contrast_PIL(img, level):
   factor = (259 * (level + 255)) / (255 * (259 - level))
   def contrast(c):
     return 128 + factor * (c - 128)
   return img.point(contrast)
-def change_contrast(img):
 
-  # converting to LAB color space
+def change_contrast_PIL(filedir, file, level):
+  image = Image.open(os.path.join(filedir, file))
+  image = _change_contrast_PIL(image, level)
+  image.save(os.path.join(filedir, 'temp.tif'))
+
+def change_contrast(img):
   lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
   l_channel, a, b = cv2.split(lab)
-
-  # Applying CLAHE to L-channel
-  # feel free to try different values for the limit and grid size:
   clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
   cl = clahe.apply(l_channel)
-
-  # merge the CLAHE enhanced L-channel with the a and b channel
   limg = cv2.merge((cl, a, b))
-
-  # Converting image from LAB Color model to BGR color spcae
   enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
-
-  # Stacking the original image with the enhanced image
   return enhanced_img
-def get_contours(name):
-  image_path = os.path.join(STORAGE_DL, name, 'train', '02')
+
+def cv2_resize(img, scale):
+  width = int(img.shape[1] * scale / 100)
+  height = int(img.shape[0] * scale / 100)
+  dim = (width, height)
+  img = cv2.resize(img, dim)
+  return img
+def delete_non_black(img):
+  min = np.array([20, 20, 20], np.uint8)
+  max = np.array([255, 255, 255], np.uint8)
+  mask = cv2.inRange(img, min, max)
+  img[mask > 0] = [255, 255, 255]
+  return img
+def get_contours(name, level = 200):
+  def _get_contours(e):
+    return e[0]
+  image_path = os.path.join(STORAGE_DL, name, 'train')
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   for file in files:
-    image = Image.open(os.path.join(filedir, file))
-    image.save(os.path.join(filedir, 'result', file))
-    img = cv2.imread(os.path.join(filedir, 'result', file))
+    if change_contrast_PIL(filedir, file, level):
+      img = cv2.imread(os.path.join(filedir, 'temp.tif'))
+      os.remove(os.path.join(filedir, 'temp.tff'))
+    else:
+      img = cv2.imread(os.path.join(filedir, file))
     img = change_contrast(img)
-
-    # convert to gray
+    img = cv2_resize(img, 200)
+    img = delete_non_black(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # get canny edges
     edges = cv2.Canny(gray, 1, 50)
-
-    # apply morphology close to ensure they are closed
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-
-    # get contours
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    #contours = contours[0] if len(contours) == 2 else contours[1]
-
-    # filter contours to keep only large ones
     copy = img.copy()
     file_name = Path(file).stem
-    i = 1
-
-    result = img.copy()
-
+    _images = []
     for i, contour in enumerate(contours):
       if hierarchy[0, i, 3] != -1:
         continue
       perimeter = cv2.arcLength(contour, True)
-      if perimeter > 250:
+      if perimeter > 100:  # 200 for La Stampa
         x, y, w, h = cv2.boundingRect(contour)
-        if w < 15 or w > 80 or h < 80 or h > 160:
-          continue
+        # if w < 24 or w > 80 or h < 100 or h > 120:
+        #   continue
         roi = img[y:y + h, x:x + w]
         roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         roi_nw = np.array([x for i in roi_gray for x in i if x > 5 and x < 225])
-        if roi_nw.size > roi_gray.size / 3:
-          continue
-        cv2.imwrite(os.path.join(filedir, 'result', file_name + '-' + str(x) + '.tif'), roi)
-        cv2.rectangle(copy, (x, y), (x + w, y + h), (36, 255, 12), 2)
+        # if roi_nw.size > roi_gray.size / 2.5:
+        #   continue
+        cv2.imwrite(os.path.join(filedir, 'tmp.tif'), roi)
+        file_size = os.path.getsize(os.path.join(filedir, 'tmp.tif'))
+        os.remove(os.path.join(filedir, 'tmp.tif'))
+        # if file_size / w < 100:
+        #   continue
+        n = ('0000' + str(x))[-4:]
+        _images.append((os.path.join(file_name + '-' + str(n)), roi))
+    _images.sort(key = _get_contours)
+    images = []
+    for i, (name, roi) in enumerate(_images):
+      roi = cv2.resize(roi, (16, 16))
+      images.append((os.path.join(name[:-5] + '_' + ('00' + str(i))[-3:] + '.tif'), roi))
+    if len(images) > 0:
+      extra = 'result'
+      if len(images) > 2:
+        extra = os.path.join('result', '??')
+      Path(os.path.join(filedir, extra)).mkdir(parents=True, exist_ok=True)
+      for name, roi in images:
+        cv2.imwrite(os.path.join(filedir, extra, name), roi)
+      extra = os.path.join('result', 'original')
+      Path(os.path.join(filedir, extra)).mkdir(parents=True, exist_ok=True)
+      cv2.imwrite(os.path.join(filedir, extra, file), copy)
+
+def set_pages_numbers(name):
+  def _get_file_name(file):
+    file_name = Path(file).stem
+    f = file_name.split('_')
+    file_name_cutted = '_'.join(f[:-1])
+    n = f[-2][1:]
+    r = []
+    ok = False
+    for i in range(len(n)):
+      if n[i] != '0':
+        ok = True
+      if ok:
+        r.append(n[i])
+    return file_name, file_name_cutted, np.array(r)
+  image_path = os.path.join(STORAGE_DL, name, 'result')
+  filedir, dirs, files = next(os.walk(image_path))
+  files.sort()
+  i = 0
+  file_name_before = None
+  n_before = 0
+  files = np.array(files)
+  Path(os.path.join(STORAGE_DL, name, 'renamed')).mkdir(parents=True, exist_ok=True)
+  while(i < len(files)):
+    file_name, file_name_cutted, ns = _get_file_name(files[i])
+    n = ns[0]
+    if file_name_before is not None and file_name_before == file_name_cutted:
+      n_before += 1
+      if n_before < len(ns):
+        n = ns[n_before]
+      else:
         i += 1
-    cv2.imwrite(os.path.join(filedir, 'result', file), copy)
+        continue
+    else:
+      n_before = 0
+    file_name_before = file_name_cutted
+    file_name += '_' + str(n)
+    os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_DL, name, 'renamed', file_name) + '.tif')
+    i += 1
 
+def set_X(name):
+  image_path = os.path.join(STORAGE_DL, name, 'X')
+  filedir, dirs, files = next(os.walk(image_path))
+  files.sort()
+  for file in files:
+    file_name = Path(file).stem + '_X'
+    os.rename(os.path.join(filedir, file), os.path.join(filedir, file_name) + '.tif')
 
+def eliminate_black_borders(name, limit=None):
+  image_path = os.path.join(STORAGE_DL, name, 'train')
+  filedir, dirs, files = next(os.walk(image_path))
+  files.sort()
+  for i, file in enumerate(files):
+    _eliminate_black_borders(os.path.join(filedir, file))
+    if limit is not None and i >= limit - 1:
+      break
 
+def _eliminate_black_borders(file):
+  if not os.path.isfile(file):
+    return
+  img = cv2.imread(file, 0).T
+  # img = cv2.bitwise_not(img)
+  sens = 1.0  # (0-1]
+  meanofimg = np.mean(img) * sens  # get avarage brightness of img
+  w, h = img.shape  # get image's shape
+  for i in range(w):
+    for j in range(h):
+      if img[i, j] > 0:
+        img[i, j] = 255
+  # img = img.T
+  # cv2.imwrite(file, img)
+  # return
+  # for i in range(2, w - 2):  # for every horizontal line in transposed img(vertical line in normal)
+  #   if np.mean(img[i]) < meanofimg:  # check if this line darker than avarage
+  #     # img[i] = (img[i] + 255) % 256  # add 255 for every pixel and get mod 256 this for make zeros 255 and do not touch others
+  #     img[i]=(img[i]*0+255) #for makin all pixels in line white
+  img = img.T  # turn image to normal
+  # for i in range(h):  # every horizontal line in img
+  #   if np.mean(img[i]) < meanofimg:  # if line darker than avarage
+  #     # img[i] = (img[i] + 255) % 256  # do same thing
+  #     img[i] = (img[i] * 0 + 255)
+  for i in range(w):
+    for j in range(h):
+      if img[j, i] > 5:
+        img[j, i] = 255
+  # cv2.imwrite(file, img)
+  # return
+  d = 3
+  for i in range(w):
+    for j in range(d, h - d):
+      if img[j - d, i] == 255 and img[j + d, i] == 255:
+        img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
+  for i in range(d, w - d):
+    for j in range(h):
+      if img[j, i - d] == 255 and img[j, i + d] == 255:
+        img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
+  for i in range(w):
+    for j in range(d, h - d):
+      if img[j - d, i] == 255 and img[j + d, i] == 255:
+        img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
+  for i in range(d, w - d):
+    for j in range(h):
+      if img[j, i - d] == 255 and img[j, i + d] == 255:
+        img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
+  cv2.imwrite(file, img)
 
-
+def crop_png(newspaper_name, limit = None):
+  image_path = os.path.join(STORAGE_DL, newspaper_name, 'train')
+  if limit is None:
+    limit = 1e10
+  for filedir, dirs, files in os.walk(image_path):
+    files.sort()
+    for file in files:
+      newspaper = Newspaper.create(newspaper_name, os.path.join(filedir, file))
+      image = Image.open(os.path.join(image_path, file))
+      image = newspaper.crop_png(image)
+      image.save(os.path.join(image_path, file), 'PNG', quality=80)
+      limit -= 1
+      if limit <= 0:
+        break
+    break
+  pass
+def prepare_cnn():
+  names = move_to_train()
+  for name in names:
+    distribute_cnn(name)
+    move_to_class(name)
 
 set_GPUs()
-#crop_png('La Stampa')
 
-# cnn = cnn("La Stampa")
-# cnn.preprocessing(level = 200, limit = None)
+get_contours("Il Manifesto")
 
 
-get_contours("La Stampa")
-#keras_ocr_test("La Stampa")
+
 
 

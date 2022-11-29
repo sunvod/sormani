@@ -141,7 +141,7 @@ class Sormani():
     elements = []
     for filedir, dirs, files in os.walk(root):
       n_pages = len(files)
-      if filedir in self.path_exclude or n_pages == 0:
+      if filedir in self.path_exclude or n_pages == 0 or len(dirs) > 0:
         continue
       files.sort(key = self._get_elements)
       if self.check_if_image(filedir, files):
