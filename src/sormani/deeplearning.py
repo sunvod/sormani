@@ -14,12 +14,14 @@ import numpy as np
 import keras_ocr
 import matplotlib.pyplot as plt
 import pytesseract
+import shutil
 
 import pathlib
 import pandas as pd
 from IPython.core.display import HTML
 
 from src.sormani.newspaper import Newspaper
+from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
 
 BATCH_SIZE = 32
@@ -466,7 +468,7 @@ def get_contours(name, level = 200):
       Path(os.path.join(filedir, extra)).mkdir(parents=True, exist_ok=True)
       cv2.imwrite(os.path.join(filedir, extra, file), copy)
 
-def set_pages_numbers(name):
+def set_pages_numbers():
   def _get_file_name(file):
     file_name = Path(file).stem
     f = file_name.split('_')
@@ -480,14 +482,14 @@ def set_pages_numbers(name):
       if ok:
         r.append(n[i])
     return file_name, file_name_cutted, np.array(r)
-  image_path = os.path.join(STORAGE_DL, name, 'result')
+  image_path = os.path.join(STORAGE_BASE, 'numbers_no_paged')
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   i = 0
   file_name_before = None
   n_before = 0
   files = np.array(files)
-  Path(os.path.join(STORAGE_DL, name, 'renamed')).mkdir(parents=True, exist_ok=True)
+  Path(os.path.join(STORAGE_BASE, 'numbers')).mkdir(parents=True, exist_ok=True)
   while(i < len(files)):
     file_name, file_name_cutted, ns = _get_file_name(files[i])
     n = ns[0]
@@ -501,75 +503,24 @@ def set_pages_numbers(name):
     else:
       n_before = 0
     file_name_before = file_name_cutted
+    # file_name = '_'.join(file_name.split('_')[:-1])
     file_name += '_' + str(n)
-    os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_DL, name, 'renamed', file_name) + '.tif')
+    shutil.copyfile(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
+    #os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_DL, 'numbers', file_name) + '.tif')
     i += 1
 
-def set_X(name):
-  image_path = os.path.join(STORAGE_DL, name, 'X')
-  filedir, dirs, files = next(os.walk(image_path))
-  files.sort()
-  for file in files:
-    file_name = Path(file).stem + '_X'
-    os.rename(os.path.join(filedir, file), os.path.join(filedir, file_name) + '.tif')
-
-def eliminate_black_borders(name, limit=None):
-  image_path = os.path.join(STORAGE_DL, name, 'train')
+def set_X(jump = 20):
+  image_path = os.path.join(STORAGE_BASE, 'no_numbers_no_paged')
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   for i, file in enumerate(files):
-    _eliminate_black_borders(os.path.join(filedir, file))
-    if limit is not None and i >= limit - 1:
-      break
-
-def _eliminate_black_borders(file):
-  if not os.path.isfile(file):
-    return
-  img = cv2.imread(file, 0).T
-  # img = cv2.bitwise_not(img)
-  sens = 1.0  # (0-1]
-  meanofimg = np.mean(img) * sens  # get avarage brightness of img
-  w, h = img.shape  # get image's shape
-  for i in range(w):
-    for j in range(h):
-      if img[i, j] > 0:
-        img[i, j] = 255
-  # img = img.T
-  # cv2.imwrite(file, img)
-  # return
-  # for i in range(2, w - 2):  # for every horizontal line in transposed img(vertical line in normal)
-  #   if np.mean(img[i]) < meanofimg:  # check if this line darker than avarage
-  #     # img[i] = (img[i] + 255) % 256  # add 255 for every pixel and get mod 256 this for make zeros 255 and do not touch others
-  #     img[i]=(img[i]*0+255) #for makin all pixels in line white
-  img = img.T  # turn image to normal
-  # for i in range(h):  # every horizontal line in img
-  #   if np.mean(img[i]) < meanofimg:  # if line darker than avarage
-  #     # img[i] = (img[i] + 255) % 256  # do same thing
-  #     img[i] = (img[i] * 0 + 255)
-  for i in range(w):
-    for j in range(h):
-      if img[j, i] > 5:
-        img[j, i] = 255
-  # cv2.imwrite(file, img)
-  # return
-  d = 3
-  for i in range(w):
-    for j in range(d, h - d):
-      if img[j - d, i] == 255 and img[j + d, i] == 255:
-        img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
-  for i in range(d, w - d):
-    for j in range(h):
-      if img[j, i - d] == 255 and img[j, i + d] == 255:
-        img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
-  for i in range(w):
-    for j in range(d, h - d):
-      if img[j - d, i] == 255 and img[j + d, i] == 255:
-        img[j - d : j + d, i] = (img[j - d : j + d, i] * 0 + 255)
-  for i in range(d, w - d):
-    for j in range(h):
-      if img[j, i - d] == 255 and img[j, i + d] == 255:
-        img[j, i - d : i + d] = (img[j, i - d : i + d] * 0 + 255)
-  cv2.imwrite(file, img)
+    if i % jump != 0:
+      continue
+    file_name = Path(file).stem
+    # file_name = '_'.join(file_name.split('_')[:-1])
+    file_name += '_X'
+    shutil.copyfile(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
+    #os.rename(os.path.join(filedir, file), os.path.join(filedir, file_name) + '.tif')
 
 def crop_png(newspaper_name, limit = None):
   image_path = os.path.join(STORAGE_DL, newspaper_name, 'train')
@@ -595,9 +546,33 @@ def prepare_cnn():
 
 set_GPUs()
 
-get_contours("Il Manifesto")
+def get_max_box():
+  filedir, dirs, files = next(os.walk('/home/sunvod/sormani_CNN/giornali/La Stampa/train'))
+  min_w = None
+  max_w = None
+  min_h = None
+  max_h = None
+  for file in files:
+    image = Image.open(os.path.join(filedir, file))
+    w, h = image.size
+    min_w = min_w if min_w is not None and min_w < w else w
+    max_w = max_w if max_w is not None and max_w > w else w
+    min_h = min_h if min_h is not None and min_h < h else h
+    max_h = max_h if max_h is not None and max_h > h else h
+  print(min_w, max_w, min_h, max_h)
 
+def save_page_numbers(name):
+  sormani = Sormani(name, year=2016, months=11, days=None)
+  imagess = sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
+  # Path(os.path.join(STORAGE_BASE, 'tmp')).mkdir(parents=True, exist_ok=True)
+  # for images in imagess:
+  #   for imgs in images:
+  #     for img in imgs:
+  #       image = Image.fromarray(img[1])
+  #       image.save(os.path.join(STORAGE_BASE, 'tmp'))
 
+# set_pages_numbers()
+# set_X()
 
-
+save_page_numbers('Avvenire')
 

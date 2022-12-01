@@ -5,8 +5,9 @@ import time
 import datetime
 import cv2
 import re
+import numpy as np
 
-from PIL import Image
+from PIL import Image, ImageOps
 from pathlib import Path
 from argparse import Namespace
 from multiprocessing import Pool
@@ -82,6 +83,95 @@ class Page:
       image.save(file_name)
       return True
     return False
+  def convert_from_cv2_to_image(self, img: np.ndarray) -> Image:
+    # return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    return Image.fromarray(img)
+  def convert_from_image_to_cv2(self, img: Image) -> np.ndarray:
+    # return cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
+    return np.asarray(img)
+  def _change_contrast_PIL(self, img, level):
+    factor = (259 * (level + 255)) / (255 * (259 - level))
+    def contrast(c):
+      return 128 + factor * (c - 128)
+    return img.point(contrast)
+  def change_contrast_PIL(self, image, level):
+    image = self._change_contrast_PIL(image, level)
+    return self.convert_from_image_to_cv2(image)
+  def change_contrast_cv2(self, img):
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l_channel, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
+    cl = clahe.apply(l_channel)
+    limg = cv2.merge((cl, a, b))
+    enhanced_img = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    return enhanced_img
+  def cv2_resize(self, img, scale):
+    width = int(img.shape[1] * scale / 100)
+    height = int(img.shape[0] * scale / 100)
+    dim = (width, height)
+    img = cv2.resize(img, dim)
+    return img
+  def delete_non_black(self, img):
+    min = np.array([20, 20, 20], np.uint8)
+    max = np.array([255, 255, 255], np.uint8)
+    mask = cv2.inRange(img, min, max)
+    img[mask > 0] = [255, 255, 255]
+    return img
+
+  def get_boxes(self, image, level=200, no_resize=False):
+    def _get_contours(e):
+      return e[0]
+    img = self.change_contrast_PIL(image, level)
+    img = self.change_contrast_cv2(img)
+    np = self.newspaper.get_parameters()
+    img = self.cv2_resize(img, np.scale)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)[1]
+    cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    for c in cnts:
+      if cv2.contourArea(c) < 50:
+        cv2.drawContours(img, [c], -1, (0, 0, 0), -1)
+    img = 255 - img
+    edges = cv2.Canny(img, 1, 50)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+    # image = self.convert_from_cv2_to_image(img)
+    # image = ImageOps.grayscale(image)
+    # image.save(os.path.join(STORAGE_BASE, self.file_name) + '_' + '.tif')
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    file_name = Path(self.file_name).stem
+    images = []
+    for i, contour in enumerate(contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      if hierarchy[0, i, 3] == -1 and cv2.arcLength(contour, True) > np.max_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
+          roi = img[y:y + h, x:x + w]
+          name = os.path.join(file_name + '-' + ('0000' + str(x))[-4:])[:-5] + '_' + ('00' + str(i))[-3:]
+          if not no_resize:
+            roi = cv2.resize(roi, (16, 16))
+          images.append((name, roi))
+    images.sort(key=_get_contours)
+    return images, img
+  def get_pages_numbers(self, no_resize = False, filedir = None):
+    if self.isAlreadySeen():
+      image = Image.open(self.original_image)
+      cropped = self.newspaper.crop_png(image)
+      images, img = self.get_boxes(cropped, no_resize = no_resize)
+      if filedir is not None:
+        for img in images:
+          image = Image.fromarray(img[1])
+          Path(filedir).mkdir(parents=True, exist_ok=True)
+          image.save(os.path.join(filedir, img[0] + '.tif'))
+        images = None
+      return images
+    return None
+  def get_head(self):
+    if self.isAlreadySeen():
+      image = Image.open(self.original_image)
+      cropped = self.newspaper.crop_png(image)
+      file_name = Path(self.original_image).stem
+      return [[file_name, cropped]]
+    return None
   def isAlreadySeen(self):
     l = len(self.newspaper.name)
     f = self.file_name
@@ -158,6 +248,18 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
+  def get_pages_numbers(self, no_resize = False, filedir = None):
+    images = []
+    for page in self:
+      image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir)
+      if image is not None:
+        images.append(image)
+    return images
+  def get_head(self):
+    images = []
+    for page in self:
+      images.append(page.get_head())
+    return images
   def create_pdf(self, number = None):
     if len(self):
       self.number = number
@@ -178,11 +280,11 @@ class Page_pool(list):
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
-      if page.original_file_name != page.file_path:
-        new_file_name = os.path.join(page.original_path, page.file_path + pathlib.Path(page.original_image).suffix)
+      if page.original_file_name != page.file_name:
+        new_file_name = os.path.join(page.original_path, page.file_name + pathlib.Path(page.original_image).suffix)
         if Path(page.original_image).is_file():
           os.rename(page.original_image, new_file_name)
-          page.file_path = new_file_name
+          page.file_name = new_file_name
           page.newspaper.file_path = new_file_name
   def convert_image(self, page):
     try:
@@ -190,7 +292,7 @@ class Page_pool(list):
       for convert in page.conversions:
         path_image = os.path.join(page.jpg_path, convert.image_path)
         Path(path_image).mkdir(parents=True, exist_ok=True)
-        file = os.path.join(path_image, page.file_path) + '.jpg'
+        file = os.path.join(path_image, page.file_name) + '.jpg'
         if self.force or not Path(file).is_file():
           if image.size[0] < image.size[1]:
             wpercent = (convert.resolution / float(image.size[1]))
@@ -242,7 +344,7 @@ class Page_pool(list):
 
 class Images_group():
 
-  def __init__(self,  newspaper_base, newspaper_name, filedir, files, get_head = False):
+  def __init__(self,  newspaper_base, newspaper_name, filedir, files):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files

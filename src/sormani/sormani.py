@@ -37,7 +37,6 @@ class Sormani():
                path_exclude = [],
                path_exist ='pdf',
                force = False,
-               contrast = True,
                rename_only = False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
@@ -55,7 +54,7 @@ class Sormani():
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
-          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast, rename_only)
+          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -63,7 +62,7 @@ class Sormani():
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, contrast, rename_only):
+  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -92,9 +91,9 @@ class Sormani():
     self.new_root = root
     self.divide_all_image()
     self.elements = self.get_elements(root)
-    if contrast:
-      self.change_all_contrasts()
-    self.elements = self.get_elements(root)
+    # if contrast:
+    #   self.change_all_contrasts()
+    # self.elements = self.get_elements(root)
     self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
@@ -145,7 +144,7 @@ class Sormani():
         continue
       files.sort(key = self._get_elements)
       if self.check_if_image(filedir, files):
-        elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, get_head = True))
+        elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
     if len(elements) > 1:
       elements.sort(key=self._elements_sort)
     return elements
@@ -197,9 +196,11 @@ class Sormani():
     return e
   def set_force(self, force):
     self.force = force
-  def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None):
+  def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None, contrast = True):
     if not len(self.elements):
       return
+    if contrast:
+      self.change_all_contrasts()
     for page_pool in self:
       if not len(page_pool):
         continue
@@ -218,11 +219,10 @@ class Sormani():
     start_time = time.time()
     print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
-    self.force = force
     global global_count
     global_count.value = 0
     self.contrast = contrast
-    self.force = force
+    self.force = True
     with Pool(processes=N_PROCESSES) as mp_pool:
       mp_pool.map(self.change_contrast, self)
     if global_count.value:
@@ -234,7 +234,6 @@ class Sormani():
   def change_contrast(self, page_pool):
     global global_count
     count = 0
-    #print(f'Changing contrast to \'{page_pool.newspaper_name}\' of {page_pool.date.strftime("%d/%m/%y")}')
     for page in page_pool:
       page.contrast = self.contrast
       page.force = self.force
@@ -374,6 +373,48 @@ class Sormani():
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
+  def get_pages_numbers(self, no_resize = False, filedir = None):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(
+      f'Start extract pages numbers of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = True
+    images = []
+    for page_pool in self:
+      image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir)
+      if image is not None:
+        images.append(image)
+      print('.', end='')
+    print()
+    if len(images):
+      print(f'Extracting numbers from {len(images)} newspapers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no pages numbers to extract for \'{self.newspaper_name}\'.')
+    self.force = selfforce
+    return images
+  def get_head(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(
+      f'Start extract pages head of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = True
+    images = []
+    for page_pool in self:
+      images.append(page_pool.get_head())
+      print('.', end='')
+    print()
+    if len(images):
+      print(f'Extracting head from {len(images)} newspapers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no pages head to extract for \'{self.newspaper_name}\'.')
+    self.force = selfforce
+    return images
   def move_pdf_txt(self):
     for filedir, dirs, files in os.walk('/mnt/storage01/sormani/TIFF'):
       if len(files):

@@ -12,6 +12,12 @@ from pathlib import Path
 
 from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL
 
+class Newspaper_parameters():
+  def __init__(self, scale, max_perimeter, min_w, max_w, min_h, max_h, ts ):
+    self.scale = scale
+    self.max_perimeter = max_perimeter
+    self.box = (min_w, max_w, min_h, max_h)
+    self.ts = ts
 
 class Newspaper():
   @staticmethod
@@ -74,14 +80,6 @@ class Newspaper():
       file_date = datetime.date(int(year), int(month), int(day))
       return date == file_date
     return False
-  # def get_number(self, date, week_day = None):
-  #   start = datetime.date(date.year, 1, 1)
-  #   num_weeks, remainder = divmod((date - start).days, 7)
-  #   num_days = (date - start).days + 1
-  #   if week_day is not None and (week_day - start.weekday()) % 7 < remainder:
-  #     num_weeks += 1
-  #   num_days -= num_weeks
-  #   return num_days
   def change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):
@@ -211,8 +209,9 @@ class La_stampa(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_whole_page_location(self):
-    whole = (0, 100, 5000, 500)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 100, w, 500)
     return whole
   def get_page_location(self):
     left = [0, 100, 700, 500]
@@ -235,15 +234,23 @@ class La_stampa(Newspaper):
       return n2, [image1, image2]
     else:
       return '??', [image1, image2]
-  def crop_page_numbers(self, image):
-    w, h = image.size
-    if w < 2000:
-      return image
-    image1 = image.crop((200, 100, 500, h - 100))
-    image2 = image.crop((w - 500, 100, w - 200, h - 100))
-    image = Image.new('RGB', (600, h))
-    image.paste(image1, (0, 0))
-    image.paste(image2, (300, 0))
+  # def crop_png(self, image):
+  #   # whole = (0, 100, 5000, 500)
+  #   w, h = image.size
+  #   if w < 2000:
+  #     return image
+  #   image = image.crop(self.get_whole_page_location(image))
+  #   image1 = image.crop((200, 100, 500, h - 100))
+  #   image2 = image.crop((w - 500, 100, w - 200, h - 100))
+  #   image = Image.new('RGB', (600, h))
+  #   image.paste(image1, (0, 0))
+  #   image.paste(image2, (300, 0))
+  #   return image
+  def crop_png(self, image):
+    image = image.crop(self.get_whole_page_location(image))
+    return image
+  def get_parameters(self):
+    return 200, 200, 20, 120, 60, 170, 64
 
 class Il_Giornale(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -268,7 +275,7 @@ class Il_Giornale(Newspaper):
     else:
       self.n_page = n * 2 + 2
     pass
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = (0, 100, 5000, 500)
     return whole
   def get_page_location(self):
@@ -305,7 +312,7 @@ class Il_manifesto(Newspaper):
     left = [0, 100, 700, 500]
     right =  [4100, 100, 4850, 500]
     return left, right
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 150, 4850, 450]
     return whole
   def get_page(self):
@@ -325,17 +332,24 @@ class Il_manifesto(Newspaper):
       return n2, [image1, image2]
     else:
       return '??', [image1, image2]
+  # def crop_png(self, image):
+  #   image = image.crop(self.get_whole_page_location(image))
+  #   return image
   def crop_png(self, image):
     w, h = image.size
     if w < 2000:
       return
+    box = self.get_whole_page_location(image)
     file_name = Path(self.file_path).stem
     n = (Path(file_name).stem).split('_')[-1][-1:]
     if int(n) % 2 == 0:
-      image = image.crop((100, 0, 700, h))
+      image = image.crop((box[0] + 100, box[1], box[0] + 700, box[3]))
     else:
-      image = image.crop((w - 700, 0, w - 100, h))
+      image = image.crop((box[2] - 700, box[1], box[2] - 100, box[3]))
     return image
+  def get_parameters(self):
+    # return 100, 20, 60, 55, 70
+    return 200, 100, 5, 100, 20, 100, 64
 
 class Milano_Finanza(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -372,7 +386,7 @@ class Milano_Finanza(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -420,7 +434,7 @@ class Il_Fatto_Quotidiano(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -460,7 +474,7 @@ class Italia_Oggi(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -492,7 +506,7 @@ class Libero(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -524,7 +538,7 @@ class Alias(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -557,7 +571,7 @@ class Alias_Domenica(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
+  def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
   def get_page(self):
@@ -590,8 +604,15 @@ class Avvenire(Newspaper):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
     return [left, right]
-  def get_whole_page_location(self):
-    whole = [0, 100, 4850, 400]
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 100, w, 800)
     return whole
   def get_page(self):
     return None, None
+  def crop_png(self, image):
+    image = image.crop(self.get_whole_page_location(image))
+    return image
+  def get_parameters(self):
+    return Newspaper_parameters(200, 200, 100, 400, 100, 400, 16)
+    # return 200, 200, 100, 400, 200, 400, 16
