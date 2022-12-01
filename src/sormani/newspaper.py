@@ -615,4 +615,4 @@ class Avvenire(Newspaper):
     return image
   def get_parameters(self):
     return Newspaper_parameters(200, 200, 100, 400, 100, 400, 16)
-    # return 200, 200, 100, 400, 200, 400, 16
+
