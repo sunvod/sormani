@@ -37,7 +37,8 @@ class Sormani():
                path_exclude = [],
                path_exist ='pdf',
                force = False,
-               rename_only = False):
+               rename_only = False,
+               rename_file_names =  True):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -54,7 +55,7 @@ class Sormani():
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
-          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only)
+          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -62,12 +63,12 @@ class Sormani():
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only):
+  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
     self.elements = []
-    self.add_zero_to_dir(root)
+    # self.add_zero_to_dir(root)
     root = os.path.join(root, image_path, newspaper_name)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
@@ -78,7 +79,7 @@ class Sormani():
         root = os.path.join(root, self.add_zero(month))
         if day is not None:
           root = os.path.join(root, self.add_zero(day))
-    self.rename_folder(root)
+    #self.rename_folder(root)
     if rename_only:
       return None
     self.ext = ext
@@ -94,7 +95,8 @@ class Sormani():
     # if contrast:
     #   self.change_all_contrasts()
     # self.elements = self.get_elements(root)
-    self.set_all_images_names()
+    if rename_file_names:
+      self.set_all_images_names()
     self.elements = self.get_elements(root)
     return self.elements
     pass
@@ -281,20 +283,20 @@ class Sormani():
       width, height = im.size
       if width < height:
         if flag:
-          os.rename(file_path, file_path_no_ext + '-0' + ext)
+          os.rename(file_path, file_path_no_ext + '_0' + ext)
         continue
       left = 0
       top = 0
       right = width // 2
       bottom = height
       im1 = im.crop((left, top, right, bottom))
-      im1.save(file_path_no_ext + '-2' + ext)
+      im1.save(file_path_no_ext + '_2' + ext)
       left = width // 2 + 1
       top = 0
       right = width
       bottom = height
       im2 = im.crop((left, top, right, bottom))
-      im2.save(file_path_no_ext + '-1' + ext)
+      im2.save(file_path_no_ext + '_1' + ext)
       os.remove(file_path)
       i += 1
     if i:

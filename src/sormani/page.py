@@ -227,13 +227,11 @@ class Page_pool(list):
     self.date = date
     self.force = force
   def set_pages(self, pages):
-    # self.sort(key = self._set_pages_sort)
     n_pages = len(self) if pages is None or pages > len(self) else pages
-    for n_page, page in enumerate(self):
-      page.newspaper.n_pages = n_pages
-      page.newspaper.n_real_pages = len(self)
-      page.newspaper.set_n_page(n_page, self.date)
-    self.sort(key=self._n_page_sort)
+    if n_pages > 0:
+      page = self[0]
+      page.newspaper.set_n_pages(self, n_pages)
+      self.sort(key=self._n_page_sort)
   def _set_pages_sort(self, page):
     return page.original_file_name
     #return os.path.getmtime(Path(page.original_image))

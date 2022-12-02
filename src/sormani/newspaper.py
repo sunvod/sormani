@@ -191,7 +191,7 @@ class La_stampa(Newspaper):
     self.init_year = 150
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Stampa', file_path, date, year, number, init_page = 3)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -208,7 +208,11 @@ class La_stampa(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 500)
@@ -218,22 +222,23 @@ class La_stampa(Newspaper):
     right = [4100, 100, 4800, 500]
     return left, right
   def get_page(self):
-    left, right = self.get_page_location()
-    text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
-    n1 = ''.join(filter(str.isdigit, text1))
-    text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
-    n2 = ''.join(filter(str.isdigit, text2))
-    if n1.isdigit() and n2.isdigit():
-      if dimension1 > dimension2:
-        return n1, [image1, image2]
-      else:
-        return n2, [image1, image2]
-    if n1.isdigit():
-      return n1, [image1, image2]
-    elif n2.isdigit():
-      return n2, [image1, image2]
-    else:
-      return '??', [image1, image2]
+    return None, None
+    # left, right = self.get_page_location()
+    # text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
+    # n1 = ''.join(filter(str.isdigit, text1))
+    # text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
+    # n2 = ''.join(filter(str.isdigit, text2))
+    # if n1.isdigit() and n2.isdigit():
+    #   if dimension1 > dimension2:
+    #     return n1, [image1, image2]
+    #   else:
+    #     return n2, [image1, image2]
+    # if n1.isdigit():
+    #   return n1, [image1, image2]
+    # elif n2.isdigit():
+    #   return n2, [image1, image2]
+    # else:
+    #   return '??', [image1, image2]
   # def crop_png(self, image):
   #   # whole = (0, 100, 5000, 500)
   #   w, h = image.size
@@ -257,7 +262,7 @@ class Il_Giornale(Newspaper):
     self.init_year = 150
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_path, date, year, number, init_page = 3)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -274,7 +279,11 @@ class Il_Giornale(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_whole_page_location(self, image):
     whole = (0, 100, 5000, 500)
     return whole
@@ -290,7 +299,7 @@ class Il_manifesto(Newspaper):
     self.init_year = 46
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_path, date, year, number, init_page = 3)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -307,7 +316,11 @@ class Il_manifesto(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left = [0, 100, 700, 500]
     right =  [4100, 100, 4850, 500]
@@ -316,25 +329,23 @@ class Il_manifesto(Newspaper):
     whole = [0, 150, 4850, 450]
     return whole
   def get_page(self):
-    left, right = self.get_page_location()
-    text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
-    n1 = ''.join(filter(str.isdigit, text1))
-    text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
-    n2 = ''.join(filter(str.isdigit, text2))
-    if n1.isdigit() and n2.isdigit():
-      if dimension1 > dimension2:
-        return n1, [image1, image2]
-      else:
-        return n2, [image1, image2]
-    if n1.isdigit():
-      return n1, [image1, image2]
-    elif n2.isdigit():
-      return n2, [image1, image2]
-    else:
-      return '??', [image1, image2]
-  # def crop_png(self, image):
-  #   image = image.crop(self.get_whole_page_location(image))
-  #   return image
+    return None, None
+    # left, right = self.get_page_location()
+    # text1, image1, dimension1 = super().crop(left=right[0], top=right[1], right=right[2], bottom=right[3])
+    # n1 = ''.join(filter(str.isdigit, text1))
+    # text2, image2, dimension2 = super().crop(left=left[0], top=left[1], right=left[2], bottom=left[3])
+    # n2 = ''.join(filter(str.isdigit, text2))
+    # if n1.isdigit() and n2.isdigit():
+    #   if dimension1 > dimension2:
+    #     return n1, [image1, image2]
+    #   else:
+    #     return n2, [image1, image2]
+    # if n1.isdigit():
+    #   return n1, [image1, image2]
+    # elif n2.isdigit():
+    #   return n2, [image1, image2]
+    # else:
+    #   return '??', [image1, image2]
   def crop_png(self, image):
     w, h = image.size
     if w < 2000:
@@ -356,7 +367,7 @@ class Milano_Finanza(Newspaper):
     self.init_year = 27
     self.year_change = [1, 9]
     Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -381,7 +392,11 @@ class Milano_Finanza(Newspaper):
     else:
       self.n_page = n * 2 + 2
     #print(self.n_page, '  ', end='')
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -412,7 +427,7 @@ class Il_Fatto_Quotidiano(Newspaper):
     self.init_year = 8
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -429,7 +444,11 @@ class Il_Fatto_Quotidiano(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -469,7 +488,11 @@ class Italia_Oggi(Newspaper):
     else:
       self.n_page = n * 2 + 2
     # print(self.n_page, '  ', end='')
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -484,7 +507,7 @@ class Libero(Newspaper):
     self.init_year = 51
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Libero', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -501,7 +524,11 @@ class Libero(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -516,7 +543,7 @@ class Alias(Newspaper):
     self.init_year = 19
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -533,7 +560,11 @@ class Alias(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -549,7 +580,7 @@ class Alias_Domenica(Newspaper):
     self.init_year = 6
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias Domenica', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -566,7 +597,11 @@ class Alias_Domenica(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      self.set_n_page(n_page, page_pool.date)
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -582,7 +617,7 @@ class Avvenire(Newspaper):
     self.init_year = 49
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Avvenire', file_path, date, year, number, init_page = 5)
-  def set_n_page(self, n_page, date, pages = None):
+  def set_n_page(self, n_page, date):
     if super().check_n_page(date):
       self.n_page = n_page + 1
       return
@@ -599,7 +634,35 @@ class Avvenire(Newspaper):
       self.n_page = self.n_pages - n * 2 - 1
     else:
       self.n_page = n * 2 + 2
-    pass
+  def set_n_pages(self, page_pool, n_pages):
+    f = 1
+    l = n_pages
+    r = 2
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      n = Path(page.file_name).stem.split('_')[-1]
+      if n != '0':
+        if r == 2:
+          page.newspaper.n_page = f
+          f += 1
+          r = -1
+        elif r == -1:
+          page.newspaper.n_page = l
+          l -= 1
+          r = -2
+        elif r == -2:
+          page.newspaper.n_page = l
+          l -= 1
+          r = 1
+        elif r == 1:
+          page.newspaper.n_page = f
+          f += 1
+          r = 2
+      else:
+        page.newspaper.n_page = f
+        f += 1
+        r = 2
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
