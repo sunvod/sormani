@@ -110,12 +110,13 @@ class Sormani():
   def __next__(self):
     if self.i < len(self.elements):
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
-      init_page = int(page_pool[0].newspaper.number)
-      pages = len(page_pool)  # page_pool.extract_pages(range=(init_page, init_page + 1))
-      # pages = int(pages[0]) + 1 \
-      #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
-      #   else len(page_pool)
-      page_pool.set_pages(pages)
+      if len(page_pool):
+        init_page = int(page_pool[0].newspaper.number)
+        pages = len(page_pool)  # page_pool.extract_pages(range=(init_page, init_page + 1))
+        # pages = int(pages[0]) + 1 \
+        #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
+        #   else len(page_pool)
+        page_pool.set_pages(pages)
       self.i += 1
       return page_pool
     else:
