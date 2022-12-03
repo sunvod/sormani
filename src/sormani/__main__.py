@@ -3,8 +3,7 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
   #sormani = Sormani('Il Manifesto', year=2016, months=1, days=None)
-  # sormani = Sormani('Avvenire', year=2016, months=[x for x in range(1,11)], days=None, contrast = False)
-  sormani = Sormani('Avvenire', year=2016, months=1, days=2)
+  sormani = Sormani('Avvenire', year=2016, months=[x for x in range(1,11)], days=None)
   #print(sormani.count_pages())
   #print(sormani.count_number())
   #sormani.get_pages_numbers()
