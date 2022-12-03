@@ -12,12 +12,16 @@ from pathlib import Path
 
 from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL
 
+import warnings
+warnings.filterwarnings("ignore")
+
 class Newspaper_parameters():
-  def __init__(self, scale, max_perimeter, min_w, max_w, min_h, max_h, ts ):
+  def __init__(self, scale, max_perimeter, min_w, max_w, min_h, max_h, ts, exclude = [1] ):
     self.scale = scale
     self.max_perimeter = max_perimeter
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
+    self.exclude = exclude
 
 class Newspaper():
   @staticmethod
@@ -677,5 +681,5 @@ class Avvenire(Newspaper):
     image = image.crop(self.get_whole_page_location(image))
     return image
   def get_parameters(self):
-    return Newspaper_parameters(200, 200, 100, 400, 100, 400, 16)
+    return Newspaper_parameters(200, 200, 50, 400, 100, 400, 16)
 

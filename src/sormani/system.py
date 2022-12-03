@@ -12,9 +12,13 @@ from ocrmypdf._validation import check_options, log
 from ocrmypdf.api import Verbosity, configure_logging
 from pathlib import Path
 
+import warnings
+warnings.filterwarnings("ignore")
+
 ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 600
 N_PROCESSES = 14
+N_PROCESSES_SHORT = 4
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 JPG_PDF_PATH = 'JPG-PDF'
 IMAGE_PATH = 'TIFF'

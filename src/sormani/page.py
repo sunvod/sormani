@@ -18,6 +18,8 @@ from ocrmypdf._plugin_manager import get_parser_options_plugins
 from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
 
+import warnings
+warnings.filterwarnings("ignore")
 
 class Page:
   def __init__(self, file_name, date, newspaper, original_image, pdf_path, jpg_path, txt_path):
@@ -54,17 +56,20 @@ class Page:
     self.txt_file_name = os.path.join(self.txt_path, self.file_name) + '.txt'
   def change_contrast(self):
     if self.force or not self.isAlreadySeen():
-      contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
-      image = Image.open(self.original_image)
-      pixel_map = image.load()
-      if pixel_map[0, 0] == (64, 62, 22) and pixel_map[image.size[0] - 1, image.size[1] - 1] == (64, 62, 22):
-        return False
-      image = self._change_contrast(image, contrast)
-      pixel_map = image.load()
-      pixel_map[0, 0] = (64, 62, 22)
-      pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
-      image.save(self.original_image)
-      return True
+      try:
+        contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
+        image = Image.open(self.original_image)
+        pixel_map = image.load()
+        if pixel_map[0, 0] == (64, 62, 22) and pixel_map[image.size[0] - 1, image.size[1] - 1] == (64, 62, 22):
+          return False
+        image = self._change_contrast(image, contrast)
+        pixel_map = image.load()
+        pixel_map[0, 0] = (64, 62, 22)
+        pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
+        image.save(self.original_image)
+        return True
+      except:
+        pass
     return False
   def _change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
@@ -124,6 +129,12 @@ class Page:
     img = self.change_contrast_PIL(image, level)
     img = self.change_contrast_cv2(img)
     np = self.newspaper.get_parameters()
+    p = self.file_name.split('_')[-1][1:]
+    for exclude in np.exclude:
+      if int(p) == exclude:
+        return None, img
+    if int(p) != 7:
+      return None, img
     img = self.cv2_resize(img, np.scale)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)[1]
@@ -144,7 +155,7 @@ class Page:
     images = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if hierarchy[0, i, 3] == -1 and cv2.arcLength(contour, True) > np.max_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
+      if hierarchy[0, i, 3] == -1: # and cv2.arcLength(contour, True) > np.max_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
           roi = img[y:y + h, x:x + w]
           name = os.path.join(file_name + '-' + ('0000' + str(x))[-4:])[:-5] + '_' + ('00' + str(i))[-3:]
           if not no_resize:
@@ -157,7 +168,7 @@ class Page:
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped, no_resize = no_resize)
-      if filedir is not None:
+      if filedir is not None and images is not None:
         for img in images:
           image = Image.fromarray(img[1])
           Path(filedir).mkdir(parents=True, exist_ok=True)
@@ -232,6 +243,16 @@ class Page_pool(list):
       page = self[0]
       page.newspaper.set_n_pages(self, n_pages)
       self.sort(key=self._n_page_sort)
+  def set_pages_already_seen(self, pages):
+    n_pages = len(self) if pages is None or pages > len(self) else pages
+    for page in self:
+      try:
+        n_page = page.file_name.split('_')[-1][1:]
+        page.newspaper.n_pages = n_pages
+        page.newspaper.n_real_pages = len(self)
+        page.newspaper.n_page = int(n_page)
+      except:
+        pass
   def _set_pages_sort(self, page):
     return page.original_file_name
     #return os.path.getmtime(Path(page.original_image))

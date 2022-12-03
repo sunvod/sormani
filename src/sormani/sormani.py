@@ -14,7 +14,10 @@ from multiprocessing import Pool
 from pathlib import Path
 import numpy as np
 
-from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES, STORAGE_DL, JPG_PDF_PATH
+from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES, STORAGE_DL, JPG_PDF_PATH, N_PROCESSES_SHORT
+
+import warnings
+warnings.filterwarnings("ignore")
 
 global_count = multiprocessing.Value('I', 0)
 
@@ -68,8 +71,8 @@ class Sormani():
     self.root = root
     self.i = 0
     self.elements = []
-    # self.add_zero_to_dir(root)
     root = os.path.join(root, image_path, newspaper_name)
+    self.add_zero_to_dir(root)
     if not os.path.exists(root):
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
@@ -79,7 +82,7 @@ class Sormani():
         root = os.path.join(root, self.add_zero(month))
         if day is not None:
           root = os.path.join(root, self.add_zero(day))
-    #self.rename_folder(root)
+    self.rename_folder(root)
     if rename_only:
       return None
     self.ext = ext
@@ -100,6 +103,24 @@ class Sormani():
     self.elements = self.get_elements(root)
     return self.elements
     pass
+  def __len__(self):
+    return len(self.elements)
+  def __iter__(self):
+    return self
+  def __next__(self):
+    if self.i < len(self.elements):
+      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
+      init_page = int(page_pool[0].newspaper.number)
+      pages = len(page_pool)  # page_pool.extract_pages(range=(init_page, init_page + 1))
+      # pages = int(pages[0]) + 1 \
+      #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
+      #   else len(page_pool)
+      page_pool.set_pages(pages)
+      self.i += 1
+      return page_pool
+    else:
+      self.i = 0
+      raise StopIteration
   def count_pages(self):
     count = 0
     for element in self.elements:
@@ -126,6 +147,7 @@ class Sormani():
     return n
   def add_zero_to_dir(self, root):
     for filedir, dirs, files in os.walk(root):
+      dirs.sort()
       for dir in dirs:
         p = re.search(r'[^0-9]', dir)
         if p is not None:
@@ -155,7 +177,6 @@ class Sormani():
       try:
         Image.open(os.path.join(filedir, file_name))
       except:
-      #if not imghdr.what(os.path.join(filedir, file_name)):
         with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
           sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
         print(f'Not a valid image: {os.path.join(filedir, file_name)}')
@@ -169,30 +190,6 @@ class Sormani():
     r = '000000000000000000000000000000' + n
     r = r[-30:]
     return r
-  def __len__(self):
-    return len(self.elements)
-  def __iter__(self):
-    return self
-  def __next__(self):
-    if self.i < len(self.elements):
-      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
-      if not page_pool.isAlreadySeen():
-        if len(page_pool) > 0:
-          init_page = int(page_pool[0].newspaper.number)
-          pages = len(page_pool) # page_pool.extract_pages(range=(init_page, init_page + 1))
-          # pages = int(pages[0]) + 1 \
-          #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
-          #   else len(page_pool)
-        else:
-          pages = len(page_pool)
-      else:
-        pages = len(page_pool)
-      page_pool.set_pages(pages)
-      self.i += 1
-      return page_pool
-    else:
-      self.i = 0
-      raise StopIteration
   def _elements_sort(self, images_group):
     e = images_group.filedir.split('/')[-1]
     return e
@@ -214,18 +211,28 @@ class Sormani():
     for page_pool in self:
       if not len(page_pool):
         continue
-      page_pool.set_image_file_name()
+      else:
+        if not page_pool.isAlreadySeen():
+          init_page = int(page_pool[0].newspaper.number)
+          pages = len(page_pool) # page_pool.extract_pages(range=(init_page, init_page + 1))
+          # pages = int(pages[0]) + 1 \
+          #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
+          #   else len(page_pool)
+          page_pool.set_pages(pages)
+          page_pool.set_image_file_name()
+        else:
+          page_pool.set_pages_already_seen(len(page_pool))
   def change_all_contrasts(self, contrast = None, force = False):
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     global global_count
     global_count.value = 0
     self.contrast = contrast
     self.force = True
-    with Pool(processes=N_PROCESSES) as mp_pool:
+    with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
       mp_pool.map(self.change_contrast, self)
     if global_count.value:
       print()
@@ -236,6 +243,7 @@ class Sormani():
   def change_contrast(self, page_pool):
     global global_count
     count = 0
+    end = 0
     for page in page_pool:
       page.contrast = self.contrast
       page.force = self.force
@@ -243,8 +251,10 @@ class Sormani():
       count += i
       with global_count.get_lock():
         global_count.value += i
-    if count:
-      print(',', end='')
+        if count:
+          print(',', end='')
+          if global_count.value % 100 == 0:
+            print()
 
   def divide_all_image(self):
     if not len(self.elements):
@@ -254,7 +264,7 @@ class Sormani():
     start_time = time.time()
     print(
       f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    with Pool(processes=14) as mp_pool:
+    with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
       mp_pool.map(self.divide_image, self.elements)
     if global_count.value:
       print()
@@ -274,35 +284,50 @@ class Sormani():
       if width > height:
         flag = True
         break
+    if flag:
+      for file_name in image_group.files:
+        last = file_name.split('_')[-1]
+        if last == '0' or last == '1' or last == '2':
+          error = '\'' + file_name + '\' into folder \'' + image_group.filedir + '\' seems to be inconsistent because images into the folder are only partially divided.' \
+                                                                                 '\nIt is necessary reload all the folder from backup data in order to have consistency again.'
+          raise ValueError(error)
     for file_name in image_group.files:
-      file_path = os.path.join(image_group.filedir, file_name)
-      file_name_no_ext = Path(file_path).stem
-      file_path_no_ext = os.path.join(image_group.filedir, file_name_no_ext)
-      ext = Path(file_name).suffix
-      im = Image.open(file_path)
-      width, height = im.size
-      if width < height:
-        if flag:
-          os.rename(file_path, file_path_no_ext + '_0' + ext)
-        continue
-      left = 0
-      top = 0
-      right = width // 2
-      bottom = height
-      im1 = im.crop((left, top, right, bottom))
-      im1.save(file_path_no_ext + '_2' + ext)
-      left = width // 2 + 1
-      top = 0
-      right = width
-      bottom = height
-      im2 = im.crop((left, top, right, bottom))
-      im2.save(file_path_no_ext + '_1' + ext)
-      os.remove(file_path)
-      i += 1
+      try:
+        file_path = os.path.join(image_group.filedir, file_name)
+        file_name_no_ext = Path(file_path).stem
+        file_path_no_ext = os.path.join(image_group.filedir, file_name_no_ext)
+        ext = Path(file_name).suffix
+        im = Image.open(file_path)
+        width, height = im.size
+        if width < height:
+          if flag:
+            os.rename(file_path, file_path_no_ext + '_0' + ext)
+          continue
+        left = 0
+        top = 0
+        right = width // 2
+        bottom = height
+        im1 = im.crop((left, top, right, bottom))
+        im1.save(file_path_no_ext + '_2' + ext)
+        left = width // 2 + 1
+        top = 0
+        right = width
+        bottom = height
+        im2 = im.crop((left, top, right, bottom))
+        im2.save(file_path_no_ext + '_1' + ext)
+        os.remove(file_path)
+        i += 1
+      except:
+        with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
+          sormani_log.write('No valid Image: ' + file_path + '\n')
+        print(f'Not a valid image: {file_path}')
     if i:
       print(',', end='')
       with global_count.get_lock():
         global_count.value += i
+        if global_count.value % 100 == 0:
+          print()
+
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
