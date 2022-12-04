@@ -16,11 +16,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Newspaper_parameters():
-  def __init__(self, scale, max_perimeter, min_w, max_w, min_h, max_h, ts, exclude = [1] ):
+  def __init__(self, scale, min_perimeter, min_w, max_w, min_h, max_h, ts, min_mean = None, max_mean = None, min_area = 100, exclude = [1]):
     self.scale = scale
-    self.max_perimeter = max_perimeter
+    self.min_perimeter = min_perimeter
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
+    self.min_mean = min_mean
+    self.max_mean = max_mean
+    self.min_area = min_area
     self.exclude = exclude
 
 class Newspaper():
@@ -681,5 +684,13 @@ class Avvenire(Newspaper):
     image = image.crop(self.get_whole_page_location(image))
     return image
   def get_parameters(self):
-    return Newspaper_parameters(200, 200, 50, 400, 100, 400, 16)
-
+    return Newspaper_parameters(scale = 200,
+                                min_perimeter = 200,
+                                min_w = 92 - 50,    # 92
+                                max_w = 204 + 50,   # 204
+                                min_h = 257 - 50,   # 257
+                                max_h = 303 + 50,   # 303
+                                ts = 170,
+                                min_mean = 186.8 - 50,  # 186.8
+                                max_mean = 217.5 + 50,  # 217.5
+                                min_area = 100)

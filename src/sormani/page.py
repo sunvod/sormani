@@ -133,35 +133,43 @@ class Page:
     for exclude in np.exclude:
       if int(p) == exclude:
         return None, img
-    if int(p) != 7:
-      return None, img
+    # if int(p) != 7:
+    #   return None, img
     img = self.cv2_resize(img, np.scale)
+    bimg = img.copy()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.threshold(gray, 60, 255, cv2.THRESH_BINARY_INV)[1]
+    img = cv2.threshold(gray, np.ts, 255, cv2.THRESH_BINARY_INV)[1]
     cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     for c in cnts:
-      if cv2.contourArea(c) < 50:
+      if cv2.contourArea(c) < 100:
         cv2.drawContours(img, [c], -1, (0, 0, 0), -1)
     img = 255 - img
     edges = cv2.Canny(img, 1, 50)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-    # image = self.convert_from_cv2_to_image(img)
-    # image = ImageOps.grayscale(image)
-    # image.save(os.path.join(STORAGE_BASE, self.file_name) + '_' + '.tif')
-    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    for c in contours:
+      x, y, w, h = cv2.boundingRect(c)
+      cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
-    images = []
+    images = [(self.file_name + '_000', bimg)]
+    _contours = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if hierarchy[0, i, 3] == -1: # and cv2.arcLength(contour, True) > np.max_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
+      _contours.append((x, contour))
+    _contours.sort(key = _get_contours)
+    for i, (_, contour) in enumerate(_contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      if hierarchy[0, i, 3] == -1 and cv2.arcLength(contour, True) > np.min_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
           roi = img[y:y + h, x:x + w]
-          name = os.path.join(file_name + '-' + ('0000' + str(x))[-4:])[:-5] + '_' + ('00' + str(i))[-3:]
-          if not no_resize:
-            roi = cv2.resize(roi, (16, 16))
-          images.append((name, roi))
-    images.sort(key=_get_contours)
+          mean = roi.mean()
+          if mean >= np.min_mean and mean <= np.max_mean:
+            name = os.path.join(file_name + '-' + ('0000' + str(x))[-4:])[:-5] + '_' + ('00' + str(i))[-3:]
+            if not no_resize:
+              roi = cv2.resize(roi, (32, 32))
+            images.append((name, roi))
+    #images.sort(key=_get_contours)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
     if self.isAlreadySeen():

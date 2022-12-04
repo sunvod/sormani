@@ -546,23 +546,28 @@ def prepare_cnn():
 
 set_GPUs()
 
-def get_max_box():
-  filedir, dirs, files = next(os.walk('/home/sunvod/sormani_CNN/giornali/La Stampa/train'))
+def get_max_box(name):
+  filedir, dirs, files = next(os.walk('/home/sunvod/sormani_CNN/no_numbers_' + name.lower()))
   min_w = None
   max_w = None
   min_h = None
   max_h = None
+  min_ts = None
+  max_ts = None
   for file in files:
     image = Image.open(os.path.join(filedir, file))
     w, h = image.size
+    ts = np.asarray(image).mean()
     min_w = min_w if min_w is not None and min_w < w else w
     max_w = max_w if max_w is not None and max_w > w else w
     min_h = min_h if min_h is not None and min_h < h else h
     max_h = max_h if max_h is not None and max_h > h else h
-  print(min_w, max_w, min_h, max_h)
+    min_ts = min_ts if min_ts is not None and min_ts < ts else ts
+    max_ts = max_ts if max_ts is not None and max_ts > ts else ts
+  print(min_w, max_w, min_h, max_h, min_ts, max_ts)
 
 def save_page_numbers(name):
-  sormani = Sormani(name, year=2016, months=1, days=2)
+  sormani = Sormani(name, year=2016, months=2, days=None)
   imagess = sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
   # Path(os.path.join(STORAGE_BASE, 'tmp')).mkdir(parents=True, exist_ok=True)
   # for images in imagess:
