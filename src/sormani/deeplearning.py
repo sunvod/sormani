@@ -568,13 +568,7 @@ def get_max_box(name):
 
 def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
-  imagess = sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
-  # Path(os.path.join(STORAGE_BASE, 'tmp')).mkdir(parents=True, exist_ok=True)
-  # for images in imagess:
-  #   for imgs in images:
-  #     for img in imgs:
-  #       image = Image.fromarray(img[1])
-  #       image.save(os.path.join(STORAGE_BASE, 'tmp'))
+  sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
 
 # set_pages_numbers()
 # set_X()

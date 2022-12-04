@@ -159,6 +159,9 @@ class Sormani():
         if n.isdigit() and len(n) == 1:
           try:
             os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
+            if len(files):
+              dirs.remove(dir)
+              dirs.append('0' + dir)
           except:
             pass
   def get_elements(self, root):

@@ -130,11 +130,12 @@ class Page:
     img = self.change_contrast_cv2(img)
     np = self.newspaper.get_parameters()
     p = self.file_name.split('_')[-1][1:]
-    for exclude in np.exclude:
-      if int(p) == exclude:
+    if np.include is not None:
+      if not int(p) in np.include:
         return None, img
-    # if int(p) != 7:
-    #   return None, img
+    if np.exclude is not None:
+      if int(p) in np.exclude:
+        return None, img
     img = self.cv2_resize(img, np.scale)
     bimg = img.copy()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -169,7 +170,6 @@ class Page:
             if not no_resize:
               roi = cv2.resize(roi, (32, 32))
             images.append((name, roi))
-    #images.sort(key=_get_contours)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
     if self.isAlreadySeen():

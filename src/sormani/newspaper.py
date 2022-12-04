@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Newspaper_parameters():
-  def __init__(self, scale, min_perimeter, min_w, max_w, min_h, max_h, ts, min_mean = None, max_mean = None, min_area = 100, exclude = [1]):
+  def __init__(self, scale, min_perimeter, min_w, max_w, min_h, max_h, ts, min_mean = None, max_mean = None, min_area = 100, include = None, exclude = [1]):
     self.scale = scale
     self.min_perimeter = min_perimeter
     self.box = (min_w, max_w, min_h, max_h)
@@ -24,6 +24,7 @@ class Newspaper_parameters():
     self.min_mean = min_mean
     self.max_mean = max_mean
     self.min_area = min_area
+    self.include = include
     self.exclude = exclude
 
 class Newspaper():
