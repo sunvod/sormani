@@ -238,16 +238,6 @@ class cnn:
       plt.title(self.class_names[predictions[i]])
       plt.axis("off")
 
-def prepare_png(name):
-  image_path = os.path.join(STORAGE_DL, 'all')
-  train_path = os.path.join(STORAGE_DL, 'all_png')
-  for filedir, dirs, files in os.walk(image_path):
-    files.sort()
-    for file in files:
-      image = Image.open(os.path.join(image_path, file))
-      file_name = Path(file).stem + '.png'
-      image.save(os.path.join(train_path, file_name), 'PNG', quality=100)
-  crop_png(name)
 
 def distribute_cnn(name, validation = 0.1, test = 0.1):
   seed(28362)
@@ -274,14 +264,14 @@ def distribute_cnn(name, validation = 0.1, test = 0.1):
 def _move_to_train(names, current_path):
   for filedir, dirs, files in os.walk(current_path):
     for file in files:
-      name = file.split('_')[1:]
+      name = file.split('_')
       for i in range(len(name)):
         if name[i].isdigit():
           break
       name = ' '.join(name[:i])
       new_path = os.path.join(STORAGE_DL, name, 'train')
       os.makedirs(new_path, exist_ok=True)
-      os.rename(os.path.join(filedir, file), os.path.join(new_path, file))
+      shutil.copyfile(os.path.join(filedir, file), os.path.join(new_path, file))
       if not name in names:
         names.append(name)
   to_delete = []
@@ -291,13 +281,14 @@ def _move_to_train(names, current_path):
   for dir in to_delete:
     os.rmdir(dir)
   return names
+
 def move_to_train():
   names = list(next(os.walk(STORAGE_DL)))[1]
   for name in names:
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'train'))
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'validation'))
     names = _move_to_train(names, os.path.join(STORAGE_DL, name, 'test'))
-  #_move_to_train(names, os.path.join(STORAGE_BASE, 'all_png'))
+  _move_to_train(names, os.path.join(STORAGE_BASE, 'numbers'))
   return names
 
 def _move_to_class(current_path, name):
@@ -409,66 +400,8 @@ def delete_non_black(img):
   mask = cv2.inRange(img, min, max)
   img[mask > 0] = [255, 255, 255]
   return img
-def get_contours(name, level = 200):
-  def _get_contours(e):
-    return e[0]
-  image_path = os.path.join(STORAGE_DL, name, 'train')
-  filedir, dirs, files = next(os.walk(image_path))
-  files.sort()
-  for file in files:
-    if change_contrast_PIL(filedir, file, level):
-      img = cv2.imread(os.path.join(filedir, 'temp.tif'))
-      os.remove(os.path.join(filedir, 'temp.tff'))
-    else:
-      img = cv2.imread(os.path.join(filedir, file))
-    img = change_contrast(img)
-    img = cv2_resize(img, 200)
-    img = delete_non_black(img)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    edges = cv2.Canny(gray, 1, 50)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    copy = img.copy()
-    file_name = Path(file).stem
-    _images = []
-    for i, contour in enumerate(contours):
-      if hierarchy[0, i, 3] != -1:
-        continue
-      perimeter = cv2.arcLength(contour, True)
-      if perimeter > 100:  # 200 for La Stampa
-        x, y, w, h = cv2.boundingRect(contour)
-        # if w < 24 or w > 80 or h < 100 or h > 120:
-        #   continue
-        roi = img[y:y + h, x:x + w]
-        roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-        roi_nw = np.array([x for i in roi_gray for x in i if x > 5 and x < 225])
-        # if roi_nw.size > roi_gray.size / 2.5:
-        #   continue
-        cv2.imwrite(os.path.join(filedir, 'tmp.tif'), roi)
-        file_size = os.path.getsize(os.path.join(filedir, 'tmp.tif'))
-        os.remove(os.path.join(filedir, 'tmp.tif'))
-        # if file_size / w < 100:
-        #   continue
-        n = ('0000' + str(x))[-4:]
-        _images.append((os.path.join(file_name + '-' + str(n)), roi))
-    _images.sort(key = _get_contours)
-    images = []
-    for i, (name, roi) in enumerate(_images):
-      roi = cv2.resize(roi, (16, 16))
-      images.append((os.path.join(name[:-5] + '_' + ('00' + str(i))[-3:] + '.tif'), roi))
-    if len(images) > 0:
-      extra = 'result'
-      if len(images) > 2:
-        extra = os.path.join('result', '??')
-      Path(os.path.join(filedir, extra)).mkdir(parents=True, exist_ok=True)
-      for name, roi in images:
-        cv2.imwrite(os.path.join(filedir, extra, name), roi)
-      extra = os.path.join('result', 'original')
-      Path(os.path.join(filedir, extra)).mkdir(parents=True, exist_ok=True)
-      cv2.imwrite(os.path.join(filedir, extra, file), copy)
 
-def set_pages_numbers():
+def set_pages_numbers(name):
   def _get_file_name(file):
     file_name = Path(file).stem
     f = file_name.split('_')
@@ -482,7 +415,7 @@ def set_pages_numbers():
       if ok:
         r.append(n[i])
     return file_name, file_name_cutted, np.array(r)
-  image_path = os.path.join(STORAGE_BASE, 'numbers_no_paged')
+  image_path = os.path.join(STORAGE_BASE, 'numbers_' + name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   i = 0
@@ -503,51 +436,32 @@ def set_pages_numbers():
     else:
       n_before = 0
     file_name_before = file_name_cutted
-    # file_name = '_'.join(file_name.split('_')[:-1])
-    file_name += '_' + str(n)
+    file_name = '_'.join(file_name.split('_')[:-1]) + '_' + ('00' + str(n_before))[-3:] + '_' + str(n)
     shutil.copyfile(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
-    #os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_DL, 'numbers', file_name) + '.tif')
     i += 1
 
-def set_X(jump = 20):
-  image_path = os.path.join(STORAGE_BASE, 'no_numbers_no_paged')
+def set_X(name, jump = 5):
+  image_path = os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
+  Path(os.path.join(STORAGE_BASE, 'numbers')).mkdir(parents=True, exist_ok=True)
   for i, file in enumerate(files):
     if i % jump != 0:
       continue
     file_name = Path(file).stem
     # file_name = '_'.join(file_name.split('_')[:-1])
-    file_name += '_X'
+    file_name = '_'.join(file_name.split('_')[:-1]) + '_000_X'
     shutil.copyfile(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
     #os.rename(os.path.join(filedir, file), os.path.join(filedir, file_name) + '.tif')
 
-def crop_png(newspaper_name, limit = None):
-  image_path = os.path.join(STORAGE_DL, newspaper_name, 'train')
-  if limit is None:
-    limit = 1e10
-  for filedir, dirs, files in os.walk(image_path):
-    files.sort()
-    for file in files:
-      newspaper = Newspaper.create(newspaper_name, os.path.join(filedir, file))
-      image = Image.open(os.path.join(image_path, file))
-      image = newspaper.crop_png(image)
-      image.save(os.path.join(image_path, file), 'PNG', quality=80)
-      limit -= 1
-      if limit <= 0:
-        break
-    break
-  pass
 def prepare_cnn():
   names = move_to_train()
   for name in names:
     distribute_cnn(name)
     move_to_class(name)
 
-set_GPUs()
-
 def get_max_box(name):
-  filedir, dirs, files = next(os.walk('/home/sunvod/sormani_CNN/no_numbers_' + name.lower()))
+  filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
   min_w = None
   max_w = None
   min_h = None
@@ -557,6 +471,8 @@ def get_max_box(name):
   for file in files:
     image = Image.open(os.path.join(filedir, file))
     w, h = image.size
+    if w > 1000:
+      continue
     ts = np.asarray(image).mean()
     min_w = min_w if min_w is not None and min_w < w else w
     max_w = max_w if max_w is not None and max_w > w else w
@@ -573,5 +489,12 @@ def save_page_numbers(name):
 # set_pages_numbers()
 # set_X()
 
-save_page_numbers('Avvenire')
+set_GPUs()
 
+
+# save_page_numbers('Avvenire')
+# set_X("Avvenire")
+# set_X("La Stampa")
+# set_X("Il Manifesto")
+
+prepare_cnn()

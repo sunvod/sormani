@@ -262,8 +262,19 @@ class La_stampa(Newspaper):
   def crop_png(self, image):
     image = image.crop(self.get_whole_page_location(image))
     return image
+  # def get_parameters(self):
+  #   return 200, 200, 20, 120, 60, 170, 64
   def get_parameters(self):
-    return 200, 200, 20, 120, 60, 170, 64
+    return Newspaper_parameters(scale = 200,
+                                min_perimeter = 200,
+                                min_w = 26 - 20,
+                                max_w = 91 + 50,
+                                min_h = 60 - 50,
+                                max_h = 161 + 50,
+                                ts = 170,
+                                min_mean = 84.8 - 50,
+                                max_mean = 202.1 + 50,
+                                min_area = 100)
 
 class Il_Giornale(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -366,9 +377,19 @@ class Il_manifesto(Newspaper):
     else:
       image = image.crop((box[2] - 700, box[1], box[2] - 100, box[3]))
     return image
+  # def get_parameters(self):
+  #   return 200, 100, 5, 100, 20, 100, 64
   def get_parameters(self):
-    # return 100, 20, 60, 55, 70
-    return 200, 100, 5, 100, 20, 100, 64
+    return Newspaper_parameters(scale=200,
+                                min_perimeter=200,
+                                min_w=29 - 20,
+                                max_w=100 + 50,
+                                min_h=59 - 50,
+                                max_h=83 + 50,
+                                ts=170,
+                                min_mean=74.2 - 50,
+                                max_mean=145.2 + 50,
+                                min_area=100)
 
 class Milano_Finanza(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -687,11 +708,11 @@ class Avvenire(Newspaper):
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
-                                min_w = 92 - 50,    # 92
-                                max_w = 204 + 50,   # 204
-                                min_h = 257 - 50,   # 257
-                                max_h = 303 + 50,   # 303
+                                min_w = 91 - 50,
+                                max_w = 206 + 50,
+                                min_h = 235 - 50,
+                                max_h = 321 + 50,
                                 ts = 170,
-                                min_mean = 186.8 - 50,  # 186.8
-                                max_mean = 217.5 + 50,  # 217.5
+                                min_mean = 183.9 - 50,
+                                max_mean = 220.4 + 50,
                                 min_area = 100)

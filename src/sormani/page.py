@@ -48,6 +48,7 @@ class Page:
       self.conversions.append(conversion)
   def set_file_names(self):
     page = ('000' + str(self.newspaper.n_page))[-len(str(self.newspaper.n_pages)) : ]
+    #page = ('000' + str(self.newspaper.n_page))[-3:]
     self.file_name = self.newspaper.name.replace(' ', '_') \
                      + '_' + str(self.year) \
                      + '_' + str(self.month_text) \
@@ -154,7 +155,7 @@ class Page:
       x, y, w, h = cv2.boundingRect(c)
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
-    images = [(self.file_name + '_000', bimg)]
+    images = [(self.file_name + '_00000', bimg)]
     _contours = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
@@ -166,7 +167,7 @@ class Page:
           roi = img[y:y + h, x:x + w]
           mean = roi.mean()
           if mean >= np.min_mean and mean <= np.max_mean:
-            name = os.path.join(file_name + '-' + ('0000' + str(x))[-4:])[:-5] + '_' + ('00' + str(i))[-3:]
+            name = file_name + '_' + ('0000' + str(i + 1))[-5:]
             if not no_resize:
               roi = cv2.resize(roi, (32, 32))
             images.append((name, roi))
@@ -387,6 +388,7 @@ class Images_group():
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)
+    page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
     dir_in_filedir = list(map(lambda x: x.replace(image_path, JPG_PDF_PATH), dir_in_filedir))

@@ -116,7 +116,10 @@ class Sormani():
         # pages = int(pages[0]) + 1 \
         #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
         #   else len(page_pool)
-        page_pool.set_pages(pages)
+        if page_pool.isAlreadySeen():
+          page_pool.set_pages_already_seen(len(page_pool))
+        else:
+          page_pool.set_pages(pages)
       self.i += 1
       return page_pool
     else:
@@ -415,10 +418,11 @@ class Sormani():
     self.force = True
     images = []
     for page_pool in self:
-      image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir)
-      if image is not None:
-        images.append(image)
-      print('.', end='')
+      if not page_pool.isins:
+        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir)
+        if image is not None:
+          images.append(image)
+        print('.', end='')
     print()
     if len(images):
       print(f'Extracting numbers from {len(images)} newspapers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
