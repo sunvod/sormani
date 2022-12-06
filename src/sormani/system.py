@@ -26,7 +26,7 @@ IMAGE_ROOT = '/mnt/storage01/sormani'
 #IMAGE_ROOT = '/home/sormani/giornali/'
 STORAGE_BASE = '/home/sunvod/sormani_CNN/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
-CONTRAST = 40
+CONTRAST = 50
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")

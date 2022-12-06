@@ -77,7 +77,7 @@ class Sormani():
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
     if year is not None:
-      root = os.path.join(root, self.add_zero(year))
+      root = os.path.join(root, str(year))
       if month is not None:
         root = os.path.join(root, self.add_zero(month))
         if day is not None:
@@ -150,6 +150,7 @@ class Sormani():
       n = '0' + n
     return n
   def add_zero_to_dir(self, root):
+    to_repeat = False
     for filedir, dirs, files in os.walk(root):
       dirs.sort()
       for dir in dirs:
@@ -162,11 +163,11 @@ class Sormani():
         if n.isdigit() and len(n) == 1:
           try:
             os.rename(os.path.join(filedir, dir), os.path.join(filedir, '0' + dir))
-            if len(files):
-              dirs.remove(dir)
-              dirs.append('0' + dir)
+            to_repeat = True
           except:
             pass
+    if to_repeat:
+      self.add_zero_to_dir(root)
   def get_elements(self, root):
     elements = []
     for filedir, dirs, files in os.walk(root):
@@ -205,8 +206,8 @@ class Sormani():
   def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None, contrast = True):
     if not len(self.elements):
       return
-    if contrast:
-      self.change_all_contrasts()
+    # if contrast:
+    #   self.change_all_contrasts()
     for page_pool in self:
       if not len(page_pool):
         continue
@@ -225,7 +226,6 @@ class Sormani():
           # pages = int(pages[0]) + 1 \
           #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
           #   else len(page_pool)
-          page_pool.set_pages(pages)
           page_pool.set_image_file_name()
         else:
           page_pool.set_pages_already_seen(len(page_pool))
@@ -239,7 +239,7 @@ class Sormani():
     global_count.value = 0
     self.contrast = contrast
     self.force = True
-    with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
+    with Pool(processes=N_PROCESSES) as mp_pool:
       mp_pool.map(self.change_contrast, self)
     if global_count.value:
       print()
@@ -249,19 +249,17 @@ class Sormani():
     self.force = selfforce
   def change_contrast(self, page_pool):
     global global_count
-    count = 0
     end = 0
     for page in page_pool:
       page.contrast = self.contrast
       page.force = self.force
       i = page.change_contrast()
-      count += i
       with global_count.get_lock():
         global_count.value += i
-        if count:
-          print('.', end='')
-          if global_count.value % 100 == 0:
-            print()
+    if global_count % 100 == 0:
+      print('.', end='')
+      if global_count.value % 100 == 0:
+        print()
 
   def divide_all_image(self):
     if not len(self.elements):
@@ -273,6 +271,8 @@ class Sormani():
       f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
       mp_pool.map(self.divide_image, self.elements)
+    # for image_group in self.elements:
+    #   self.divide_image(image_group)
     if global_count.value:
       print()
       print(

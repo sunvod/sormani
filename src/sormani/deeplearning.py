@@ -1,26 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from random import seed
-from random import randint
+from random import seed, random
+import random
 import tensorflow as tf
 from PIL import Image, ImageChops, ImageDraw, ImageOps
 from pathlib import Path
-from typing import Tuple
-from skimage import io, img_as_float
-import matplotlib.pyplot as plt
+
 import cv2
 import numpy as np
 import keras_ocr
 import matplotlib.pyplot as plt
 import pytesseract
-import shutil
 
-import pathlib
-import pandas as pd
-from IPython.core.display import HTML
-
-from src.sormani.newspaper import Newspaper
 
 from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
@@ -34,6 +26,7 @@ class CNN:
 
   def __init__(self, name = 'All'):
     self.train_dir = os.path.join(STORAGE_DL, name)
+    self.test_dir = os.path.join(STORAGE_DL, 'test')
     dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
     data_dir = tf.keras.utils.get_file(origin=dataset_url,
                                        fname='flower_photos',
@@ -42,15 +35,22 @@ class CNN:
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
                                                                 validation_split=0.2,
                                                                 subset="training",
+                                                                color_mode = "grayscale",
                                                                 seed=123,
                                                                 shuffle=True,
                                                                 image_size=IMG_SIZE,
                                                                 batch_size=BATCH_SIZE)
     self.val_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
-                                                               validation_split=0.2,
-                                                               subset="validation",
-                                                               seed=123,
-                                                               shuffle=True,
+                                                              validation_split=0.2,
+                                                              subset="validation",
+                                                              color_mode="grayscale",
+                                                              seed=123,
+                                                              shuffle=True,
+                                                              image_size=IMG_SIZE,
+                                                              batch_size=BATCH_SIZE)
+    self.test_ds = tf.keras.utils.image_dataset_from_directory(self.test_dir,
+                                                               color_mode="grayscale",
+                                                               shuffle=False,
                                                                image_size=IMG_SIZE,
                                                                batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
@@ -63,6 +63,8 @@ class CNN:
     #     plt.title(self.class_names[labels[i]])
     #     plt.axis("off")
     # plt.show()
+    # target_train = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
+    # target_test = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
     normalization_layer = tf.keras.layers.Rescaling(1. / 255)
     normalized_ds = self.train_ds.map(lambda x, y: (normalization_layer(x), y))
     image_batch, labels_batch = next(iter(normalized_ds))
@@ -80,17 +82,30 @@ class CNN:
       tf.keras.layers.Dense(128, activation='relu'),
       tf.keras.layers.Dense(num_classes)
     ])
+    # model = tf.keras.models.load_model(STORAGE_BASE)
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=['accuracy'])
+      metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=25
+      epochs=10
     )
+    # Evaluate the model on the test data using `evaluate`
+    print("Evaluate on test data")
+    results = model.evaluate(self.test_ds, batch_size=128)
+    print("test loss, test acc:", results)
 
-def distribute_cnn(name, validation = 0.1, test = 0.1):
+    # Generate predictions (probabilities -- the output of the last layer)
+    # on new data using `predict`
+    print("Generate predictions for 3 samples")
+    predictions = model.predict(self.test_ds)
+    print("predictions shape:", predictions.shape)
+    final_prediction = np.argmax(predictions, axis=-1)
+    pass
+    # tf.keras.models.save_model(model, STORAGE_BASE)
+def distribute_cnn(name, validation = 0.0, test = 0.1):
   seed(28362)
   train_path = os.path.join(STORAGE_DL, name, 'train')
   os.makedirs(train_path, exist_ok=True)
@@ -98,17 +113,17 @@ def distribute_cnn(name, validation = 0.1, test = 0.1):
   os.makedirs(validation_path, exist_ok=True)
   test_path = os.path.join(STORAGE_DL, name, 'test')
   os.makedirs(test_path, exist_ok=True)
-  for filedir, dirs, files in os.walk(train_path):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     l = len(files)
     for i in range(int(l * validation)):
       j = randint(0, len(files) - 1)
       file = files[j]
-      os.rename(os.path.join(train_path, file), os.path.join(validation_path, file))
+      os.rename(os.path.join(filedir, file), os.path.join(validation_path, file))
       files.remove(file)
     for i in range(int(l * test)):
       j = randint(0, len(files) - 1)
       file = files[j]
-      os.rename(os.path.join(train_path, file), os.path.join(test_path, file))
+      os.rename(os.path.join(filedir, file), os.path.join(test_path, file))
       files.remove(file)
   pass
 
@@ -378,31 +393,8 @@ def save_page_numbers(name):
   sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
 
 
-# set_pages_numbers()
-# set_X()
-
 set_GPUs()
 
-
-
-# set_pages_numbers("Avvenire")
-# set_pages_numbers("La Stampa")
-# set_pages_numbers("Il Manifesto")
-# move_to_train()
-
-# to_rgb()
-#
 cnn = CNN()
 cnn.exec_cnn()
 
-# to_2_classes()
-
-# to_rgb()
-
-# standardize_dimension()
-# to_rgb()
-# standardize_dimension()
-
-# _move_to_class(os.path.join(STORAGE_DL, 'All', 'train'), 'train')
-
-# to_10_classes()

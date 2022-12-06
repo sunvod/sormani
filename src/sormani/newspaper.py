@@ -668,6 +668,11 @@ class Avvenire(Newspaper):
     l = n_pages
     r = 2
     for n_page, page in enumerate(page_pool):
+      try:
+        page.newspaper.n_page
+        continue
+      except:
+        pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       n = Path(page.file_name).stem.split('_')[-1]
