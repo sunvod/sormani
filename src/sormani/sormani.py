@@ -259,7 +259,7 @@ class Sormani():
       with global_count.get_lock():
         global_count.value += i
         if count:
-          print(',', end='')
+          print('.', end='')
           if global_count.value % 100 == 0:
             print()
 
@@ -329,7 +329,7 @@ class Sormani():
           sormani_log.write('No valid Image: ' + file_path + '\n')
         print(f'Not a valid image: {file_path}')
     if i:
-      print(',', end='')
+      print('.', end='')
       with global_count.get_lock():
         global_count.value += i
         if global_count.value % 100 == 0:
