@@ -181,7 +181,7 @@ class Page:
         for img in images:
           image = Image.fromarray(img[1])
           Path(filedir).mkdir(parents=True, exist_ok=True)
-          image.save(os.path.join(filedir, img[0] + '.tif'))
+          image.save(os.path.join(filedir, img[0] + '.png'), format="png")
         images = None
       return images
     return None
