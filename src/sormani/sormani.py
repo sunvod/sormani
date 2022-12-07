@@ -346,8 +346,10 @@ class Sormani():
     selfforce = self.force
     self.force = True
     self.first_number = first_number
-    with Pool(processes=14) as mp_pool:
-      mp_pool.map(self._add_pdf_metadata, self)
+    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
+    #   mp_pool.map(self._add_pdf_metadata, self)
+    for page_pool in self:
+      self._add_pdf_metadata(page_pool)
     if global_count.value:
       print(f'It has redefined Metadata of {global_count.value} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:

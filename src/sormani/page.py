@@ -212,35 +212,37 @@ class Page:
       return
     if first_number is None:
       first_number = 0
-    os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
-    file_in = open(self.pdf_file_name + '.2', 'rb')
-    pdf_merger = PdfFileMerger()
-    pdf_merger.append(file_in)
-    pdf_merger.addMetadata({
-      '/Keywords': 'Nome del periodico:' + self.newspaper.name
-                   + ' ; Anno:' + str(self.year)
-                   + ' ; Mese:' + str(self.month)
-                   + ' ; Giorno:' + str(self.day)
-                   + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
-                   + ' ; Anno del quotidiano:' + self.newspaper.year,
-      '/Title': self.newspaper.name,
-      '/Nome_del_periodico': self.newspaper.name,
-      '/Anno': str(self.year),
-      '/Mese': str(self.month),
-      '/Giorno': str(self.day),
-      '/Data': str(self.newspaper.date),
-      '/Pagina:': str(self.newspaper.n_page),
-      '/Numero_del_quotidiano': str(self.newspaper.number),
-      '/Anno_del_quotidiano': str(self.newspaper.year),
-      '/Producer': 'osi-servizi-informatici.cloud - Milano'
-    })
-    file_out = open(self.pdf_file_name, 'wb')
-    pdf_merger.write(file_out)
-    file_in.close()
-    file_out.close()
-    os.remove(self.pdf_file_name + '.2')
-    # pdf = pdfx.PDFx(page.pdf_file_name)
-    # metadata = pdf.get_metadata()
+    try:
+      file_in = open(self.pdf_file_name, 'rb')
+      os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
+      pdf_merger = PdfFileMerger()
+      pdf_merger.append(file_in)
+      pdf_merger.addMetadata({
+        '/Keywords': 'Nome del periodico:' + self.newspaper.name
+                     + ' ; Anno:' + str(self.year)
+                     + ' ; Mese:' + str(self.month)
+                     + ' ; Giorno:' + str(self.day)
+                     + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
+                     + ' ; Anno del quotidiano:' + self.newspaper.year,
+        '/Title': self.newspaper.name,
+        '/Nome_del_periodico': self.newspaper.name,
+        '/Anno': str(self.year),
+        '/Mese': str(self.month),
+        '/Giorno': str(self.day),
+        '/Data': str(self.newspaper.date),
+        '/Pagina:': str(self.newspaper.n_page),
+        '/Numero_del_quotidiano': str(self.newspaper.number),
+        '/Anno_del_quotidiano': str(self.newspaper.year),
+        '/Producer': 'osi-servizi-informatici.cloud - Milano'
+      })
+      file_out = open(self.pdf_file_name, 'wb')
+      pdf_merger.write(file_out)
+      file_in.close()
+      file_out.close()
+      os.remove(self.pdf_file_name + '.2')
+    except:
+      os.remove(self.pdf_file_name + '.2')
+      file_in.write(self.pdf_file_name)
 class Page_pool(list):
   def __init__(self, newspaper_name, date, force = False):
     self.newspaper_name = newspaper_name

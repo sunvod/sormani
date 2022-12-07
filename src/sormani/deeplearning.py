@@ -7,6 +7,15 @@ import tensorflow as tf
 from PIL import Image, ImageChops, ImageDraw, ImageOps
 from pathlib import Path
 
+from keras.callbacks import ModelCheckpoint
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.models import Model
+
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.efficientnet_v2 import EfficientNetV2L
+
+
 import cv2
 import numpy as np
 import keras_ocr
@@ -19,9 +28,95 @@ from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
-IMG_SIZE = (32, 32)
+IMG_SIZE = (224, 224)
 
+class CNN2:
 
+  def __init__(self, name = 'All'):
+    self.train_dir = os.path.join(STORAGE_DL, name)
+    self.test_dir = os.path.join(STORAGE_DL, 'test')
+    self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
+                                                                validation_split=0.2,
+                                                                subset="training",
+                                                                # color_mode = "grayscale",
+                                                                seed=123,
+                                                                shuffle=True,
+                                                                image_size=IMG_SIZE,
+                                                                batch_size=BATCH_SIZE)
+    self.val_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
+                                                              validation_split=0.2,
+                                                              subset="validation",
+                                                              # color_mode="grayscale",
+                                                              seed=123,
+                                                              shuffle=True,
+                                                              image_size=IMG_SIZE,
+                                                              batch_size=BATCH_SIZE)
+    self.test_ds = tf.keras.utils.image_dataset_from_directory(self.test_dir,
+                                                               # color_mode="grayscale",
+                                                               shuffle=False,
+                                                               image_size=IMG_SIZE,
+                                                               batch_size=BATCH_SIZE)
+    self.class_names = self.train_ds.class_names
+  def exec_cnn2(self):
+    def process(image, label):
+      image = tf.cast(image / 255., tf.float32)
+      return image, label
+    # plt.figure(figsize=(10, 10))
+    # for images, labels in self.train_ds.take(1):
+    #   for i in range(9):
+    #     ax = plt.subplot(3, 3, i + 1)
+    #     plt.imshow(images[i].numpy().astype("uint8"))
+    #     plt.title(self.class_names[labels[i]])
+    #     plt.axis("off")
+    # plt.show()
+    # target_train = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
+    # target_test = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
+    self.train_ds = self.train_ds.map(process)
+    self.val_ds = self.val_ds.map(process)
+    self.test_ds = self.test_ds.map(process)
+    num_classes = len(self.class_names)
+    # base_model = InceptionV3(weights='imagenet', include_top=False)
+    base_model = EfficientNetV2L(weights='imagenet', include_top=False)
+    # add a global spatial average pooling layer
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)
+    # # let's add a fully-connected layer
+    x = Dense(1024, activation='relu')(x)
+    # and a logistic layer -- let's say we have 200 classes
+    predictions = Dense(num_classes, activation='softmax')(x)
+
+    # this is the model we will train
+    model = Model(inputs=base_model.input, outputs=predictions)
+
+    # first: train only the top layers (which were randomly initialized)
+    # i.e. freeze all convolutional InceptionV3 layers
+    for layer in base_model.layers:
+      layer.trainable = True
+    # model = tf.keras.models.load_model(STORAGE_BASE)
+    model.compile(
+      optimizer='adam',
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, '.mdl_wts.hdf5'), save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='min')
+    model.fit(
+      self.train_ds,
+      validation_data=self.val_ds,
+      epochs=40,
+      callbacks=[mcp_save]
+    )
+    # Evaluate the model on the test data using `evaluate`
+    print("Evaluate on test data")
+    results = model.evaluate(self.test_ds, batch_size=128)
+    print("test loss, test acc:", results)
+
+    # Generate predictions (probabilities -- the output of the last layer)
+    # on new data using `predict`
+    print("Generate predictions for 3 samples")
+    predictions = model.predict(self.test_ds)
+    print("predictions shape:", predictions.shape)
+    final_prediction = np.argmax(predictions, axis=-1)
+    pass
+    # tf.keras.models.save_model(model, STORAGE_BASE)
 class CNN:
 
   def __init__(self, name = 'All'):
@@ -74,7 +169,7 @@ class CNN:
       tf.keras.layers.Conv2D(32, 3, activation='relu'),
       tf.keras.layers.MaxPooling2D(),
       tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(32, activation='relu'),
+      tf.keras.layers.Dense(128, activation='relu'),
       tf.keras.layers.Dense(num_classes)
     ])
     # model = tf.keras.models.load_model(STORAGE_BASE)
@@ -85,7 +180,7 @@ class CNN:
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=20
+      epochs=100
     )
     # Evaluate the model on the test data using `evaluate`
     print("Evaluate on test data")
@@ -390,6 +485,6 @@ def save_page_numbers(name):
 
 set_GPUs()
 
-cnn = CNN()
-cnn.exec_cnn()
+cnn = CNN2()
+cnn.exec_cnn2()
 
