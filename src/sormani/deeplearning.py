@@ -19,7 +19,7 @@ from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
-IMG_SIZE = (48, 48)
+IMG_SIZE = (32, 32)
 
 
 class CNN:
@@ -27,11 +27,6 @@ class CNN:
   def __init__(self, name = 'All'):
     self.train_dir = os.path.join(STORAGE_DL, name)
     self.test_dir = os.path.join(STORAGE_DL, 'test')
-    dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
-    data_dir = tf.keras.utils.get_file(origin=dataset_url,
-                                       fname='flower_photos',
-                                       untar=True)
-    # self.train_dir = pathlib.Path(data_dir)
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
                                                                 validation_split=0.2,
                                                                 subset="training",
@@ -79,7 +74,7 @@ class CNN:
       tf.keras.layers.Conv2D(32, 3, activation='relu'),
       tf.keras.layers.MaxPooling2D(),
       tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(128, activation='relu'),
+      tf.keras.layers.Dense(32, activation='relu'),
       tf.keras.layers.Dense(num_classes)
     ])
     # model = tf.keras.models.load_model(STORAGE_BASE)
@@ -90,7 +85,7 @@ class CNN:
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=10
+      epochs=20
     )
     # Evaluate the model on the test data using `evaluate`
     print("Evaluate on test data")
