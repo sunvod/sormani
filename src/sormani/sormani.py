@@ -9,11 +9,11 @@ import re
 
 import tkinter as tk
 from PIL import Image, ImageTk
-from src.sormani.page import Images_group
 from multiprocessing import Pool
 from pathlib import Path
 import numpy as np
 
+from src.sormani.subprocess.image_group import Images_group
 from src.sormani.system import IMAGE_PATH, IMAGE_ROOT, N_PROCESSES, STORAGE_DL, JPG_PDF_PATH, N_PROCESSES_SHORT
 
 import warnings

@@ -8,10 +8,10 @@ if __name__ == '__main__':
   #print(sormani.count_number())
   #sormani.get_pages_numbers()
   #sormani.change_all_contrasts()
-  sormani.add_pdf_metadata()
+  # sormani.add_pdf_metadata()
   # sormani.create_all_images()
   #sormani.save_pages_images()
   #sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])
   #sormani.add_pdf_metadata();
-  sormani.count_pages()
+  # sormani.count_pages()
 

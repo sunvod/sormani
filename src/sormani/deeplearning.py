@@ -122,10 +122,6 @@ class CNN:
     pass
 
   def prediction_images_cnn(self):
-    def process(image, label):
-      image = tf.cast(image / 255., tf.float32)
-      return image, label
-
     dataset = []
     for filedir, dirs, files in os.walk(self.test_dir):
       files.sort()
@@ -133,12 +129,8 @@ class CNN:
         image = Image.open(os.path.join(filedir, file)).resize(IMG_SIZE)
         image = tf.image.convert_image_dtype(image, dtype=tf.float32)
         dataset.append(image)
-    test_ds = np.array(dataset)
-    # test_ds = tf.convert_to_tensor(test_ds, dtype=tf.float32)
-    # test_ds = tf.data.Dataset.from_tensor_slices(test_ds).batch(32)
     model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'best_model_1.0_0.9948'))
-    predictions = model.predict(test_ds)
-    final_prediction = np.argmax(predictions, axis=-1)
+    prediction = np.argmax(model.predict(np.array(dataset)), axis=-1)
     pass
 
 
