@@ -13,4 +13,5 @@ if __name__ == '__main__':
   #sormani.save_pages_images()
   #sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])
   #sormani.add_pdf_metadata();
+  sormani.count_pages()
 

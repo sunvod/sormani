@@ -6,14 +6,17 @@ import random
 import tensorflow as tf
 from PIL import Image, ImageChops, ImageDraw, ImageOps
 from pathlib import Path
+from tensorflow import keras
 
 from keras.callbacks import ModelCheckpoint
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
-from tensorflow.keras.models import Model
+from keras.applications.inception_v3 import InceptionV3
+from keras.layers import Dense, GlobalAveragePooling2D
+from keras.models import Model
+from keras.datasets import mnist
 
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.applications.efficientnet_v2 import EfficientNetV2L
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.efficientnet_v2 import EfficientNetV2M, EfficientNetV2L
+from keras.applications.convnext import ConvNeXtXLarge
 
 
 import cv2
@@ -30,11 +33,11 @@ import tensorflow_datasets as tfds
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
 
-class CNN2:
+class CNN:
 
   def __init__(self, name = 'All'):
     self.train_dir = os.path.join(STORAGE_DL, name)
-    self.test_dir = os.path.join(STORAGE_DL, 'test')
+    self.test_dir = os.path.join(STORAGE_BASE, 'test')
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
                                                                 validation_split=0.2,
                                                                 subset="training",
@@ -57,58 +60,45 @@ class CNN2:
                                                                image_size=IMG_SIZE,
                                                                batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
-  def exec_cnn2(self):
+
+  def create_model_cnn(self,num_classes = 11):
+    # base_model = InceptionV3(weights='imagenet', include_top=False)
+    base_model = EfficientNetV2M(weights='imagenet', include_top=False)
+    for layer in base_model.layers:
+      layer.trainable = True
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(1024, activation='relu')(x)
+    predictions = Dense(num_classes, activation='softmax')(x)
+    model = Model(inputs=base_model.input, outputs=predictions)
+    return model
+  def exec_cnn(self):
     def process(image, label):
       image = tf.cast(image / 255., tf.float32)
       return image, label
-    # plt.figure(figsize=(10, 10))
-    # for images, labels in self.train_ds.take(1):
-    #   for i in range(9):
-    #     ax = plt.subplot(3, 3, i + 1)
-    #     plt.imshow(images[i].numpy().astype("uint8"))
-    #     plt.title(self.class_names[labels[i]])
-    #     plt.axis("off")
-    # plt.show()
-    # target_train = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
-    # target_test = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
+
     self.train_ds = self.train_ds.map(process)
     self.val_ds = self.val_ds.map(process)
     self.test_ds = self.test_ds.map(process)
     num_classes = len(self.class_names)
-    # base_model = InceptionV3(weights='imagenet', include_top=False)
-    base_model = EfficientNetV2L(weights='imagenet', include_top=False)
-    # add a global spatial average pooling layer
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    # # let's add a fully-connected layer
-    x = Dense(1024, activation='relu')(x)
-    # and a logistic layer -- let's say we have 200 classes
-    predictions = Dense(num_classes, activation='softmax')(x)
-
-    # this is the model we will train
-    model = Model(inputs=base_model.input, outputs=predictions)
-
-    # first: train only the top layers (which were randomly initialized)
-    # i.e. freeze all convolutional InceptionV3 layers
-    for layer in base_model.layers:
-      layer.trainable = True
+    model = self.create_model_cnn(num_classes)
     # model = tf.keras.models.load_model(STORAGE_BASE)
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, '.mdl_wts.hdf5'), save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='min')
+    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'best_model'), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=40,
+      epochs=20,
       callbacks=[mcp_save]
     )
     # Evaluate the model on the test data using `evaluate`
+    tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'model'), save_format = 'tf')
     print("Evaluate on test data")
     results = model.evaluate(self.test_ds, batch_size=128)
     print("test loss, test acc:", results)
-
     # Generate predictions (probabilities -- the output of the last layer)
     # on new data using `predict`
     print("Generate predictions for 3 samples")
@@ -116,8 +106,43 @@ class CNN2:
     print("predictions shape:", predictions.shape)
     final_prediction = np.argmax(predictions, axis=-1)
     pass
-    # tf.keras.models.save_model(model, STORAGE_BASE)
-class CNN:
+
+  def prediction_cnn(self):
+    def process(image, label):
+      image = tf.cast(image / 255., tf.float32)
+      return image, label
+
+    self.test_ds = self.test_ds.map(process)
+    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'best_model'))
+    print("Evaluate on test data")
+    results = model.evaluate(self.test_ds, batch_size=128)
+    print("test loss, test acc:", results)
+    predictions = model.predict(self.test_ds)
+    final_prediction = np.argmax(predictions, axis=-1)
+    pass
+
+  def prediction_images_cnn(self):
+    def process(image, label):
+      image = tf.cast(image / 255., tf.float32)
+      return image, label
+
+    dataset = []
+    for filedir, dirs, files in os.walk(self.test_dir):
+      files.sort()
+      for file in files:
+        image = Image.open(os.path.join(filedir, file)).resize(IMG_SIZE)
+        image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+        dataset.append(image)
+    test_ds = np.array(dataset)
+    # test_ds = tf.convert_to_tensor(test_ds, dtype=tf.float32)
+    # test_ds = tf.data.Dataset.from_tensor_slices(test_ds).batch(32)
+    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'best_model_1.0_0.9948'))
+    predictions = model.predict(test_ds)
+    final_prediction = np.argmax(predictions, axis=-1)
+    pass
+
+
+class CNN2:
 
   def __init__(self, name = 'All'):
     self.train_dir = os.path.join(STORAGE_DL, name)
@@ -144,7 +169,7 @@ class CNN:
                                                                image_size=IMG_SIZE,
                                                                batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
-  def exec_cnn(self):
+  def exec_cnn2(self):
     # plt.figure(figsize=(10, 10))
     # for images, labels in self.train_ds.take(1):
     #   for i in range(9):
@@ -186,9 +211,6 @@ class CNN:
     print("Evaluate on test data")
     results = model.evaluate(self.test_ds, batch_size=128)
     print("test loss, test acc:", results)
-
-    # Generate predictions (probabilities -- the output of the last layer)
-    # on new data using `predict`
     print("Generate predictions for 3 samples")
     predictions = model.predict(self.test_ds)
     print("predictions shape:", predictions.shape)
@@ -485,6 +507,8 @@ def save_page_numbers(name):
 
 set_GPUs()
 
-cnn = CNN2()
-cnn.exec_cnn2()
+cnn = CNN()
+# cnn.exec_cnn()
+cnn.prediction_images_cnn()
+# cnn.prediction_cnn()
 
