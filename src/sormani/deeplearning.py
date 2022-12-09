@@ -133,7 +133,6 @@ class CNN:
     prediction = np.argmax(model.predict(np.array(dataset)), axis=-1)
     pass
 
-
 class CNN2:
 
   def __init__(self, name = 'All'):

@@ -52,6 +52,18 @@ class Page_pool(list):
       if image is not None:
         images.append(image)
     return images
+  def check_pages_numbers(self, model):
+    images = []
+    ok = True
+    for page in self:
+      page.check_pages_numbers(model)
+      if page.page_control == 0:
+        ok = False
+    if ok:
+      print(f'Il quotidiano {self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine corrette.')
+    else:
+      print(
+        f'Il quotidiano {self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine non corrette.')
   def get_head(self):
     images = []
     for page in self:

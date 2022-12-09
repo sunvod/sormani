@@ -5,6 +5,8 @@ import datetime
 import re
 
 from os import listdir
+
+from src.sormani.page import Page
 from src.sormani.subprocess.page_pool import Page_pool
 from src.sormani.system import *
 from src.sormani.newspaper import Newspaper

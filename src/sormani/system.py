@@ -27,6 +27,7 @@ IMAGE_ROOT = '/mnt/storage01/sormani'
 STORAGE_BASE = '/home/sunvod/sormani_CNN/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
 CONTRAST = 50
+NUMBER_IMAGE_SIZE = (224, 224)
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")

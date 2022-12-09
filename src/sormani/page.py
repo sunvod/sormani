@@ -1,23 +1,31 @@
 from __future__ import annotations
 
 import pathlib
-import time
-import datetime
 import cv2
-import re
+import os
 import numpy as np
 
-from PIL import Image, ImageOps
-from pathlib import Path
-from argparse import Namespace
-from multiprocessing import Pool
-from os import listdir
 from PyPDF2 import PdfFileMerger
-from ocrmypdf._plugin_manager import get_parser_options_plugins
-
-from src.sormani.subprocess.page_pool import Page_pool
 from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
+
+import tensorflow as tf
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+
+from PIL import Image
+from pathlib import Path
+import numpy as np
+
+from tensorflow import keras
+from keras.callbacks import ModelCheckpoint
+from keras.applications.inception_v3 import InceptionV3
+from keras.layers import Dense, GlobalAveragePooling2D
+from keras.models import Model
+from keras.datasets import mnist
+
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.efficientnet_v2 import EfficientNetV2M, EfficientNetV2L
+from keras.applications.convnext import ConvNeXtXLarge
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -41,6 +49,7 @@ class Page:
     self.txt_file_name = os.path.join(txt_path, self.file_name) + '.txt'
     self.original_txt_file_name = self.txt_file_name
     self.conversions = []
+    self.page_control = -1
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -170,7 +179,7 @@ class Page:
           if mean >= np.min_mean and mean <= np.max_mean:
             name = file_name + '_' + ('0000' + str(i + 1))[-5:]
             if not no_resize:
-              roi = cv2.resize(roi, (32, 32))
+              roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
             images.append((name, roi))
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
@@ -244,4 +253,33 @@ class Page:
     except:
       os.remove(self.pdf_file_name + '.2')
       file_in.write(self.pdf_file_name)
+  def check_pages_numbers(self, model):
+    if self.isAlreadySeen():
+      image = Image.open(self.original_image)
+      cropped = self.newspaper.crop_png(image)
+      images, img = self.get_boxes(cropped)
+      if images is not None:
+        prediction = self.get_page_numbers(model, images)
+      if images is None or prediction is None:
+        self.page_control = -1
+      elif prediction == self.newspaper.n_page:
+        self.page_control = 1
+      else:
+        self.page_control = 0
+  def get_page_numbers(self, model, images):
+    images.pop(0)
+    dataset = []
+    for image in images:
+      img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
+      img = Image.fromarray(img)
+      img = tf.image.convert_image_dtype(img, dtype=tf.float32)
+      dataset.append(img)
+    predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
+    predictions = [str(x) for x in predictions if x != 10]
+    predictions = ''.join(predictions)
+    if len(predictions):
+      prediction = int(predictions)
+    else:
+      prediction = None
+    return prediction
 
