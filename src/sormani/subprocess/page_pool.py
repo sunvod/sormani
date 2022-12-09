@@ -6,6 +6,7 @@ import datetime
 
 from multiprocessing import Pool
 from src.sormani.system import *
+import matplotlib.pyplot as plt
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -53,16 +54,29 @@ class Page_pool(list):
         images.append(image)
     return images
   def check_pages_numbers(self, model):
-    images = []
-    ok = True
+    errors = []
     for page in self:
-      page.check_pages_numbers(model)
+      images, predictions = page.check_pages_numbers(model)
       if page.page_control == 0:
-        ok = False
-    if ok:
+        errors.append(page.newspaper.n_page)
+        col = 4
+        row = len(images) // col + (1 if len(images) % col != 0 else 0)
+        if row < 2:
+          row = 2
+        fig, ax = plt.subplots(row, col)
+        for i in range(row):
+          for j in range(col):
+            ax[i][j].set_axis_off()
+        title = str(self.date.strftime("%d/%m/%y")) + ' ' + str(page.newspaper.n_page)
+        for i, image in enumerate(images):
+          ax[i // col][i % col].imshow(image[1])
+          ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
+        plt.axis("off")
+        plt.show()
+    if not len(errors):
       print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine corrette.')
     else:
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine non corrette.')
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine {errors} non corrette.')
   def get_head(self):
     images = []
     for page in self:

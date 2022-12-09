@@ -258,14 +258,16 @@ class Page:
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped)
+      original_predictions = None
       if images is not None:
-        prediction = self.get_page_numbers(model, images)
+        prediction, original_predictions = self.get_page_numbers(model, images)
       if images is None or prediction is None:
         self.page_control = -1
       elif prediction == self.newspaper.n_page:
         self.page_control = 1
       else:
         self.page_control = 0
+      return images, original_predictions
   def get_page_numbers(self, model, images):
     images.pop(0)
     dataset = []
@@ -275,14 +277,14 @@ class Page:
       img = tf.image.convert_image_dtype(img, dtype=tf.float32)
       dataset.append(img)
     try:
-      predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
+      original_predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
     except:
-      return None
-    predictions = [str(x) for x in predictions if x != 10]
+      return None, None
+    predictions = [str(x) for x in original_predictions if x != 10]
     predictions = ''.join(predictions)
     if len(predictions):
       prediction = int(predictions)
     else:
       prediction = None
-    return prediction
+    return prediction, original_predictions
 
