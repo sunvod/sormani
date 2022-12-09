@@ -274,7 +274,10 @@ class Page:
       img = Image.fromarray(img)
       img = tf.image.convert_image_dtype(img, dtype=tf.float32)
       dataset.append(img)
-    predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
+    try:
+      predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
+    except:
+      return None
     predictions = [str(x) for x in predictions if x != 10]
     predictions = ''.join(predictions)
     if len(predictions):

@@ -60,10 +60,9 @@ class Page_pool(list):
       if page.page_control == 0:
         ok = False
     if ok:
-      print(f'Il quotidiano {self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine corrette.')
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine corrette.')
     else:
-      print(
-        f'Il quotidiano {self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine non corrette.')
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine non corrette.')
   def get_head(self):
     images = []
     for page in self:
