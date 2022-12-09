@@ -3,6 +3,7 @@ from __future__ import annotations
 import pathlib
 import time
 import datetime
+import cv2
 
 from multiprocessing import Pool
 from src.sormani.system import *
@@ -53,7 +54,7 @@ class Page_pool(list):
       if image is not None:
         images.append(image)
     return images
-  def check_pages_numbers(self, model):
+  def check_pages_numbers(self, model, save_images = False):
     errors = []
     for page in self:
       images, predictions = page.check_pages_numbers(model)
@@ -67,16 +68,30 @@ class Page_pool(list):
         for i in range(row):
           for j in range(col):
             ax[i][j].set_axis_off()
-        title = str(self.date.strftime("%d/%m/%y")) + ' ' + str(page.newspaper.n_page)
+        title = str(self.date.strftime("%d/%m")) + ' ' + str(page.newspaper.n_page)
         for i, image in enumerate(images):
           ax[i // col][i % col].imshow(image[1])
           ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
         plt.axis("off")
         plt.show()
-    if not len(errors):
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine corrette.')
+      elif page.page_control == 1 and save_images and images is not None:
+        Path(os.path.join(STORAGE_BASE, 'tmp', 'X')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(STORAGE_BASE, 'tmp', 'numbers')).mkdir(parents=True, exist_ok=True)
+        for i, image in enumerate(images):
+          n = 'X' if predictions[i] == 10 else str(predictions[i])
+          if n == 'X':
+            dir = 'X'
+          else:
+            dir = 'numbers'
+          file_name = image[0] + '_' + str(n)
+          cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', dir, file_name) + '.jpg', image[1])
+    if len(errors) < 2:
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte.')
     else:
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine {errors} non corrette.')
+      msg = '{} del giorno {} ha le pagine {} non esatte.'.format(self.newspaper_name, str(self.date.strftime("%d/%m/%y")), errors)
+      print(msg)
+      with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
+        sormani_log.write(msg + '\n')
   def get_head(self):
     images = []
     for page in self:

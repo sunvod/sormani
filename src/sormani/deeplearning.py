@@ -3,6 +3,7 @@ import numpy as np
 import os
 from random import seed, random
 import random
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 from PIL import Image, ImageChops, ImageDraw, ImageOps
 from pathlib import Path
@@ -14,9 +15,12 @@ from keras.layers import Dense, GlobalAveragePooling2D
 from keras.models import Model
 from keras.datasets import mnist
 
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.efficientnet_v2 import EfficientNetV2M, EfficientNetV2L
-from keras.applications.convnext import ConvNeXtXLarge
+from keras.applications.inception_v3 import *
+from keras.applications.efficientnet_v2 import *
+from keras.applications.inception_resnet_v2 import *
+from keras.applications.convnext import *
+from keras.applications.nasnet import *
+from keras.applications.densenet import *
 
 
 import cv2
@@ -62,8 +66,9 @@ class CNN:
     self.class_names = self.train_ds.class_names
 
   def create_model_cnn(self,num_classes = 11):
-    # base_model = InceptionV3(weights='imagenet', include_top=False)
-    base_model = EfficientNetV2M(weights='imagenet', include_top=False)
+    # base_model = InceptionResNetV2(weights='imagenet', include_top=False)
+    # base_model = EfficientNetV2M(weights='imagenet', include_top=False)
+    base_model = DenseNet201(weights='imagenet', include_top=False)
     for layer in base_model.layers:
       layer.trainable = True
     x = base_model.output
@@ -82,6 +87,18 @@ class CNN:
     self.test_ds = self.test_ds.map(process)
     num_classes = len(self.class_names)
     model = self.create_model_cnn(num_classes)
+    # model = tf.keras.Sequential([
+    #   tf.keras.layers.Rescaling(1. / 255),
+    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #   tf.keras.layers.MaxPooling2D(),
+    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #   tf.keras.layers.MaxPooling2D(),
+    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #   tf.keras.layers.MaxPooling2D(),
+    #   tf.keras.layers.Flatten(),
+    #   tf.keras.layers.Dense(128, activation='relu'),
+    #   tf.keras.layers.Dense(num_classes)
+    # ])
     # model = tf.keras.models.load_model(STORAGE_BASE)
     model.compile(
       optimizer='adam',
@@ -397,19 +414,21 @@ def set_pages_numbers(name):
     os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
     i += 1
 
-def set_X(name, jump = 5):
+def set_X(name, jump = 1):
   image_path = os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
-  Path(os.path.join(STORAGE_BASE, 'numbers')).mkdir(parents=True, exist_ok=True)
+  Path(os.path.join(STORAGE_BASE, 'new_X')).mkdir(parents=True, exist_ok=True)
   for i, file in enumerate(files):
     if i % jump != 0:
       continue
     file_name = Path(file).stem
     # file_name = '_'.join(file_name.split('_')[:-1])
-    file_name = '_'.join(file_name.split('_')[:-1]) + '_000_X'
+    file_name = '_'.join(file_name.split('_')[:-3]) + '_' + str(i) + '_X'
+    image = Image.open(os.path.join(filedir, file))
+    image.save(os.path.join(STORAGE_BASE, 'test', 'images', file_name) + '.jpg', 'JPEG')
     # shutil.copyfile(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
-    os.rename(os.path.join(filedir, file), os.path.join(filedir, file_name) + '.tif')
+    # os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'new_X', file_name) + '.jpg')
 
 def prepare_cnn():
   names = move_to_train()
@@ -497,9 +516,10 @@ def save_page_numbers(name):
 
 
 set_GPUs()
-
+#
 cnn = CNN()
-# cnn.exec_cnn()
-cnn.prediction_images_cnn()
+cnn.exec_cnn()
+# cnn.prediction_images_cnn()
 # cnn.prediction_cnn()
 
+# set_X('Avvenire')
