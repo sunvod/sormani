@@ -357,13 +357,13 @@ class Milano_Finanza(Newspaper):
     return whole
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
+                                min_perimeter = 100,
                                 min_w = 10,
                                 max_w = 200,
-                                min_h = 30,
+                                min_h = 40,
                                 max_h = 400,
                                 ts = 170,
-                                min_mean = 50,
+                                min_mean = 10,
                                 max_mean = 500,
                                 min_area = 100)
 
