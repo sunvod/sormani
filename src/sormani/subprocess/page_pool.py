@@ -47,12 +47,15 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
-  def get_pages_numbers(self, no_resize = False, filedir = None):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None):
     images = []
+    if isinstance(pages, int):
+      pages = [pages]
     for page in self:
-      image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir)
-      if image is not None:
-        images.append(image)
+      if pages is None or page.newspaper.n_page in pages:
+        image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir)
+        if image is not None:
+          images.append(image)
     return images
   def check_pages_numbers(self, model, save_images = False):
     errors = []
@@ -60,7 +63,7 @@ class Page_pool(list):
       images, predictions = page.check_pages_numbers(model)
       if page.page_control == 0:
         errors.append(page.newspaper.n_page)
-        col = 4
+        col = 6
         row = len(images) // col + (1 if len(images) % col != 0 else 0)
         if row < 2:
           row = 2
@@ -74,9 +77,13 @@ class Page_pool(list):
           ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
         plt.axis("off")
         plt.show()
-      elif page.page_control == 1 and save_images and images is not None:
-        Path(os.path.join(STORAGE_BASE, 'tmp', 'X')).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(STORAGE_BASE, 'tmp', 'numbers')).mkdir(parents=True, exist_ok=True)
+      elif save_images and images is not None and predictions is not None:
+        if page.page_control == 1:
+          exact = 'sure'
+        else:
+          exact = 'notsure'
+        Path(os.path.join(STORAGE_BASE, 'tmp', exact, 'X')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(STORAGE_BASE, 'tmp', exact, 'numbers')).mkdir(parents=True, exist_ok=True)
         for i, image in enumerate(images):
           n = 'X' if predictions[i] == 10 else str(predictions[i])
           if n == 'X':
@@ -84,7 +91,7 @@ class Page_pool(list):
           else:
             dir = 'numbers'
           file_name = image[0] + '_' + str(n)
-          cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', dir, file_name) + '.jpg', image[1])
+          cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', exact, dir, file_name) + '.jpg', image[1])
     if len(errors) < 2:
       print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte.')
     else:

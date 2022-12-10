@@ -173,14 +173,15 @@ class Page:
     _contours.sort(key = _get_contours)
     for i, (_, contour) in enumerate(_contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if hierarchy[0, i, 3] == -1 and cv2.arcLength(contour, True) > np.min_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
+      perimeter = cv2.arcLength(contour, True)
+      if hierarchy[0, i, 3] == -1 and perimeter > np.min_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
           roi = img[y:y + h, x:x + w]
           mean = roi.mean()
           if mean >= np.min_mean and mean <= np.max_mean:
             name = file_name + '_' + ('0000' + str(i + 1))[-5:]
             if not no_resize:
               roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
-            images.append((name, roi))
+            images.append((name, roi, perimeter))
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
     if self.isAlreadySeen():
@@ -191,7 +192,7 @@ class Page:
         for img in images:
           image = Image.fromarray(img[1])
           Path(filedir).mkdir(parents=True, exist_ok=True)
-          image.save(os.path.join(filedir, img[0] + '.png'), format="png")
+          image.save(os.path.join(filedir, img[0] + '.jpg'), format="JPEG")
         images = None
       return images
     return None
@@ -287,10 +288,11 @@ class Page:
         b = e
         if e == 0:
           continue
-      elif e ==  0 and (b == 0 or b == 10 or len(predictions) >= 2):
+      elif e ==  0 and (b == 0 or (b == 10 and  len(predictions) == 0) or len(predictions) >= 2):
         continue
       if e != 10:
         predictions.append(str(e))
+      b = e
     predictions = ''.join(predictions)
     if len(predictions):
       prediction = int(predictions)

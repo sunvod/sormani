@@ -65,7 +65,7 @@ class CNN:
                                                                batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
 
-  def create_model_cnn(self,num_classes = 11):
+  def create_model_cnn(self, num_classes = 11):
     # base_model = InceptionResNetV2(weights='imagenet', include_top=False)
     # base_model = EfficientNetV2M(weights='imagenet', include_top=False)
     base_model = DenseNet201(weights='imagenet', include_top=False)
@@ -77,7 +77,7 @@ class CNN:
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=predictions)
     return model
-  def exec_cnn(self):
+  def exec_cnn(self, name = ''):
     def process(image, label):
       image = tf.cast(image / 255., tf.float32)
       return image, label
@@ -104,15 +104,15 @@ class CNN:
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'best_model'), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
+    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, name, 'best_model'), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=20,
+      epochs=50,
       callbacks=[mcp_save]
     )
     # Evaluate the model on the test data using `evaluate`
-    tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'model'), save_format = 'tf')
+    tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, name, 'model'), save_format = 'tf')
     print("Evaluate on test data")
     results = model.evaluate(self.test_ds, batch_size=128)
     print("test loss, test acc:", results)
@@ -236,12 +236,12 @@ def distribute_cnn(name, validation = 0.0, test = 0.1):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     l = len(files)
     for i in range(int(l * validation)):
-      j = randint(0, len(files) - 1)
+      j = random.randint(0, len(files) - 1)
       file = files[j]
       os.rename(os.path.join(filedir, file), os.path.join(validation_path, file))
       files.remove(file)
     for i in range(int(l * test)):
-      j = randint(0, len(files) - 1)
+      j = random.randint(0, len(files) - 1)
       file = files[j]
       os.rename(os.path.join(filedir, file), os.path.join(test_path, file))
       files.remove(file)
@@ -445,7 +445,7 @@ def put_all():
     move_to_class(name)
 
 def convert_to_jpg(name = 'All'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name, 'train')):
     for file in files:
       image = Image.open(os.path.join(filedir, file))
       os.remove(os.path.join(filedir, file))
@@ -464,7 +464,11 @@ def to_rgb(name = 'All'):
       image = Image.open(os.path.join(filedir, file))
       image = image.convert('RGB')
       image.save(os.path.join(filedir, file))
-
+def to_gray(name = 'All'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
+    for file in files:
+      image = Image.open(os.path.join(filedir, file)).convert('L')
+      image.save(os.path.join(filedir, file))
 def to_base(name = 'All'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
@@ -488,27 +492,52 @@ def to_10_classes(name = 'All'):
       os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
       os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
 
-def get_max_box(name):
-  filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
+def to_X(name = 'All'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'test/images')):
+    for file in files:
+      n = Path(file).stem.split('_')[-1]
+      if n == 'X':
+        os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+        os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+
+def move_to_test(name = 'numbers'):
+  dest_path = os.path.join(STORAGE_BASE, 'test/images')
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
+    for file in files:
+      os.rename(os.path.join(filedir, file), os.path.join(STORAGE_DL, dest_path, file))
+def get_max_box(name = 'All'):
+  # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
+  filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'repository', 'numbers')))
   min_w = None
   max_w = None
   min_h = None
   max_h = None
-  min_ts = None
-  max_ts = None
+  min_mean = None
+  max_mean = None
+  min_perimeter = None
+  max_perimeter = None
+  min_area = None
+  max_area = None
   for file in files:
-    image = Image.open(os.path.join(filedir, file))
-    w, h = image.size
+    img = cv2.imread(os.path.join(filedir, file))
+    h, w, _ = img.shape
     if w > 1000:
       continue
-    ts = np.asarray(image).mean()
+    edges = cv2.Canny(img, 1, 50)
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    ts = np.asarray(img).mean()
     min_w = min_w if min_w is not None and min_w < w else w
     max_w = max_w if max_w is not None and max_w > w else w
     min_h = min_h if min_h is not None and min_h < h else h
     max_h = max_h if max_h is not None and max_h > h else h
-    min_ts = min_ts if min_ts is not None and min_ts < ts else ts
-    max_ts = max_ts if max_ts is not None and max_ts > ts else ts
-  print(min_w, max_w, min_h, max_h, min_ts, max_ts)
+    min_mean = min_mean if min_mean is not None and min_mean < ts else ts
+    max_mean = max_mean if max_mean is not None and max_mean > ts else ts
+    for i, contour in enumerate(contours):
+      perimeter = cv2.arcLength(contour, True)
+      min_perimeter = min_perimeter if min_perimeter is not None and min_perimeter < perimeter else perimeter
+      max_perimeter = max_perimeter if max_perimeter is not None and max_perimeter > perimeter else perimeter
+  print(f'Larghezza (min max): {min_w} : {max_w}\nAltezza (min max): {min_h} {max_h}')
+  print(f'Media (min max): {min_mean} {max_mean}\nPerimetro (min max) {min_perimeter} {max_perimeter}')
 
 def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
@@ -516,10 +545,8 @@ def save_page_numbers(name):
 
 
 set_GPUs()
-#
-cnn = CNN()
-cnn.exec_cnn()
-# cnn.prediction_images_cnn()
-# cnn.prediction_cnn()
 
-# set_X('Avvenire')
+# cnn = CNN()
+# cnn.exec_cnn()
+
+get_max_box()

@@ -54,7 +54,9 @@ class Sormani():
                path_exist ='pdf',
                force = False,
                rename_only = False,
-               rename_file_names =  True):
+               rename_file_names =  True,
+               divide_only = False,
+               notdivide = False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -71,7 +73,7 @@ class Sormani():
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
-          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names)
+          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names, divide_only, notdivide)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -79,7 +81,7 @@ class Sormani():
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names):
+  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names, divide_only, notdivide):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -106,7 +108,10 @@ class Sormani():
     self.converts = None
     self.elements = self.get_elements(root)
     self.new_root = root
-    self.divide_all_image()
+    if not notdivide:
+      self.divide_all_image()
+    if divide_only:
+      return None
     self.elements = self.get_elements(root)
     # if contrast:
     #   self.change_all_contrasts()
@@ -269,7 +274,7 @@ class Sormani():
       i = page.change_contrast()
       with global_count.get_lock():
         global_count.value += i
-    if global_count % 100 == 0:
+    if global_count.value % 100 == 0:
       print('.', end='')
       if global_count.value % 100 == 0:
         print()
@@ -422,7 +427,7 @@ class Sormani():
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def get_pages_numbers(self, no_resize = False, filedir = None):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None):
     if not len(self.elements):
       return
     start_time = time.time()
@@ -434,7 +439,7 @@ class Sormani():
     images = []
     for page_pool in self:
       if not page_pool.isins:
-        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir)
+        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages)
         if image is not None:
           images.append(image)
         print('.', end='')
@@ -520,7 +525,7 @@ class Sormani():
     selfforce = self.force
     self.force = True
     images = []
-    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'best_model_'))
+    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'best_model_DenseNet201'))
     for page_pool in self:
       if not page_pool.isins:
         page_pool.check_pages_numbers(model, save_images = save_images)
