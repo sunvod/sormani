@@ -272,13 +272,13 @@ class Il_Giornale(Newspaper):
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
-                                min_w = 10,
-                                max_w = 200,
-                                min_h = 50,
-                                max_h = 400,
+                                min_w = 50,
+                                max_w = 150,
+                                min_h = 140,
+                                max_h = 240,
                                 ts = 170,
-                                min_mean = 0,
-                                max_mean = 500,
+                                min_mean = 100,
+                                max_mean = 300,
                                 min_area = 100)
 
 class Il_manifesto(Newspaper):

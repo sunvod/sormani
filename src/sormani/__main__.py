@@ -4,7 +4,7 @@ from src.sormani.sormani import *
 if __name__ == '__main__':
   #sormani = Sormani('Il Manifesto', year=2016, months=1, days=None)
   # sormani = Sormani('La Stampa', year=2016, months=[x for x in range(2,13)], days=None)
-  sormani = Sormani('Il Giornale', year=2016, months=1, days=2)
+  sormani = Sormani('Il Giornale', year=2016, months=1, days=None)
   #print(sormani.count_pages())
   #print(sormani.count_number())
   #sormani.get_pages_numbers()
@@ -15,6 +15,6 @@ if __name__ == '__main__':
   # sormani.count_pages()
   # sormani.change_all_contrasts()
   # sormani.create_all_images()
-  # sormani.check_page_numbers(save_images = True)
-  sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, 'repository'), pages = None, no_resize = True)
+  sormani.check_page_numbers(save_images = True, model_path = 'best_model_DenseNet201', assume_newspaper = True)
+  # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, 'repository'), pages = None, no_resize = True)
 

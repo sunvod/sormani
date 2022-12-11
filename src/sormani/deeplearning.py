@@ -39,9 +39,10 @@ IMG_SIZE = (224, 224)
 
 class CNN:
 
-  def __init__(self, name = 'train'):
+  def __init__(self, name = 'all'):
+    name = name.lower().replace(' ', '_')
     self.train_dir = os.path.join(STORAGE_DL, name)
-    self.test_dir = os.path.join(STORAGE_BASE, 'test')
+    self.test_dir = os.path.join(STORAGE_DL, 'test')
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
                                                                 validation_split=0.2,
                                                                 subset="training",
@@ -76,8 +77,8 @@ class CNN:
     x = Dense(1024, activation='relu')(x)
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=predictions)
-    return model
-  def exec_cnn(self, name = ''):
+    return model, 'DenseNet201'
+  def exec_cnn(self, name = None):
     def process(image, label):
       image = tf.cast(image / 255., tf.float32)
       return image, label
@@ -86,7 +87,7 @@ class CNN:
     self.val_ds = self.val_ds.map(process)
     self.test_ds = self.test_ds.map(process)
     num_classes = len(self.class_names)
-    model = self.create_model_cnn(num_classes)
+    model, model_name = self.create_model_cnn(num_classes)
     # model = tf.keras.Sequential([
     #   tf.keras.layers.Rescaling(1. / 255),
     #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
@@ -100,11 +101,15 @@ class CNN:
     #   tf.keras.layers.Dense(num_classes)
     # ])
     # model = tf.keras.models.load_model(STORAGE_BASE)
+    if name is not None:
+      name = name.lower().replace(' ', '_')
+    else:
+      name = ''
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, name, 'best_model'), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
+    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
@@ -112,16 +117,16 @@ class CNN:
       callbacks=[mcp_save]
     )
     # Evaluate the model on the test data using `evaluate`
-    tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, name, 'model'), save_format = 'tf')
+    tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
     print("Evaluate on test data")
     results = model.evaluate(self.test_ds, batch_size=128)
     print("test loss, test acc:", results)
     # Generate predictions (probabilities -- the output of the last layer)
     # on new data using `predict`
-    print("Generate predictions for 3 samples")
-    predictions = model.predict(self.test_ds)
-    print("predictions shape:", predictions.shape)
-    final_prediction = np.argmax(predictions, axis=-1)
+    # print("Generate predictions for 3 samples")
+    # predictions = model.predict(self.test_ds)
+    # print("predictions shape:", predictions.shape)
+    # final_prediction = np.argmax(predictions, axis=-1)
     pass
 
   def prediction_cnn(self):
@@ -388,7 +393,7 @@ def set_pages_numbers(name):
       if ok:
         r.append(n[i])
     return file_name, file_name_cutted, np.array(r)
-  image_path = os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))
+  image_path = os.path.join(STORAGE_BASE, 'numbers_' + name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   i = 0
@@ -481,19 +486,19 @@ def to_2_classes(name = 'train'):
       else:
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'N', file))
 
-def to_10_classes(name = 'train'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))):
+def to_10_classes():
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
     for file in files:
       n = Path(file).stem.split('_')[-1]
       os.makedirs(os.path.join(os.path.join(STORAGE_DL, 'train'), str(n)), exist_ok=True)
       os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), str(n), file))
 
-def to_X(name = 'train'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))):
+def to_X():
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'no_numbers')):
     for file in files:
       n = Path(file).stem.split('_')[-1]
       if n == 'X':
-        os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+        os.makedirs(os.path.join(os.path.join(STORAGE_DL, 'train'), str(n)), exist_ok=True)
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), 'X', file))
 
 def move_to_test(name = 'numbers'):
@@ -501,7 +506,7 @@ def move_to_test(name = 'numbers'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
     for file in files:
       os.rename(os.path.join(filedir, file), os.path.join(STORAGE_DL, dest_path, file))
-def get_max_box(name = 'train'):
+def get_max_box():
   # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
   filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'numbers')))
   min_w = None
@@ -542,9 +547,9 @@ def save_page_numbers(name):
 
 set_GPUs()
 
-# cnn = CNN()
-# cnn.exec_cnn()
+cnn = CNN('Il Giornale')
+cnn.exec_cnn('Il Giornale')
 
 # get_max_box()
 
-convert_to_jpg()
+# get_max_box('repository')

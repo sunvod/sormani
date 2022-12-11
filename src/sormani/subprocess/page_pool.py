@@ -82,8 +82,8 @@ class Page_pool(list):
           exact = 'sure'
         else:
           exact = 'notsure'
-        Path(os.path.join(STORAGE_BASE, 'tmp', exact, 'X')).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(STORAGE_BASE, 'tmp', exact, 'numbers')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(STORAGE_BASE, 'repository', exact, 'X')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(STORAGE_BASE, 'repository', exact, 'numbers')).mkdir(parents=True, exist_ok=True)
         for i, image in enumerate(images):
           n = 'X' if predictions[i] == 10 else str(predictions[i])
           if n == 'X':
@@ -93,7 +93,7 @@ class Page_pool(list):
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', exact, dir, file_name) + '.jpg', image[1])
     if len(errors) < 2:
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte.')
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {page.page_control}).')
     else:
       msg = '{} del giorno {} ha le pagine {} non esatte.'.format(self.newspaper_name, str(self.date.strftime("%d/%m/%y")), errors)
       print(msg)
