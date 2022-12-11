@@ -249,12 +249,6 @@ class La_stampa(Newspaper):
     w, h = image.size
     whole = (0, 100, w, 500)
     return whole
-  def get_page_location(self):
-    left = [0, 100, 700, 500]
-    right = [4100, 100, 4800, 500]
-    return left, right
-  # def get_parameters(self):
-  #   return 200, 200, 20, 120, 60, 170, 64
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
@@ -275,10 +269,17 @@ class Il_Giornale(Newspaper):
   def get_whole_page_location(self, image):
     whole = (0, 100, 5000, 500)
     return whole
-  def get_page_location(self):
-    left = [0, 100, 700, 500]
-    right = [4100, 100, 4850, 500]
-    return left, right
+  def get_parameters(self):
+    return Newspaper_parameters(scale = 200,
+                                min_perimeter = 200,
+                                min_w = 10,
+                                max_w = 200,
+                                min_h = 50,
+                                max_h = 400,
+                                ts = 170,
+                                min_mean = 0,
+                                max_mean = 500,
+                                min_area = 100)
 
 class Il_manifesto(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -347,7 +348,7 @@ class Milano_Finanza(Newspaper):
       else:
         page.newspaper.n_page = f
         f += 1
-        r = 2
+        r = -2
   def get_page_location(self):
     left =  [4100, 100, 4850, 400]
     right = [0, 100, 700, 400]
@@ -358,10 +359,10 @@ class Milano_Finanza(Newspaper):
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 100,
-                                min_w = 10,
-                                max_w = 200,
-                                min_h = 40,
-                                max_h = 400,
+                                min_w = 30,
+                                max_w = 100,
+                                min_h = 90,
+                                max_h = 200,
                                 ts = 170,
                                 min_mean = 10,
                                 max_mean = 500,

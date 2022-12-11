@@ -39,7 +39,7 @@ IMG_SIZE = (224, 224)
 
 class CNN:
 
-  def __init__(self, name = 'All'):
+  def __init__(self, name = 'train'):
     self.train_dir = os.path.join(STORAGE_DL, name)
     self.test_dir = os.path.join(STORAGE_BASE, 'test')
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
@@ -152,7 +152,7 @@ class CNN:
 
 class CNN2:
 
-  def __init__(self, name = 'All'):
+  def __init__(self, name = 'train'):
     self.train_dir = os.path.join(STORAGE_DL, name)
     self.test_dir = os.path.join(STORAGE_DL, 'test')
     self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
@@ -388,7 +388,7 @@ def set_pages_numbers(name):
       if ok:
         r.append(n[i])
     return file_name, file_name_cutted, np.array(r)
-  image_path = os.path.join(STORAGE_BASE, 'numbers_' + name.lower().replace(' ', '_'))
+  image_path = os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
   i = 0
@@ -410,30 +410,25 @@ def set_pages_numbers(name):
       n_before = 0
     file_name_before = file_name_cutted
     file_name = '_'.join(file_name.split('_')[:-1]) + '_' + ('00' + str(n_before))[-3:] + '_' + str(n)
-    #shutil.copyfile(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
-    os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
+    os.rename(os.path.join(filedir, files[i]), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.jpg')
     i += 1
 
 def set_X(name, jump = 1):
   image_path = os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))
   filedir, dirs, files = next(os.walk(image_path))
   files.sort()
-  Path(os.path.join(STORAGE_BASE, 'new_X')).mkdir(parents=True, exist_ok=True)
+  Path(os.path.join(STORAGE_BASE, 'no_numbers')).mkdir(parents=True, exist_ok=True)
   for i, file in enumerate(files):
     if i % jump != 0:
       continue
     file_name = Path(file).stem
-    # file_name = '_'.join(file_name.split('_')[:-1])
     file_name = '_'.join(file_name.split('_')[:-3]) + '_' + str(i) + '_X'
-    image = Image.open(os.path.join(filedir, file))
-    image.save(os.path.join(STORAGE_BASE, 'test', 'images', file_name) + '.jpg', 'JPEG')
-    # shutil.copyfile(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', file_name) + '.tif')
-    # os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'new_X', file_name) + '.jpg')
+    os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'no_numbers', file_name) + '.jpg')
 
 def prepare_cnn():
   names = move_to_train()
   for name in names:
-    if name == 'All':
+    if name == 'train':
       continue
     distribute_cnn(name)
     move_to_class(name)
@@ -444,37 +439,38 @@ def put_all():
     distribute_cnn(name)
     move_to_class(name)
 
-def convert_to_jpg(name = 'All'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name, 'train')):
+def convert_to_jpg(name = 'train'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
-      image = Image.open(os.path.join(filedir, file))
-      os.remove(os.path.join(filedir, file))
-      image.save(os.path.join(filedir, Path(file).stem + '.jpg'), format="jpeg")
+      if Path(os.path.join(filedir, file)).suffix != '.jpg':
+        image = Image.open(os.path.join(filedir, file))
+        os.remove(os.path.join(filedir, file))
+        image.save(os.path.join(filedir, Path(file).stem + '.jpg'), format="jpeg")
 
-def standardize_dimension(name = 'All'):
+def standardize_dimension(name = 'train'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
       image = Image.open(os.path.join(filedir, file))
       image = image.resize(IMG_SIZE, Image.Resampling.LANCZOS)
       image.save(os.path.join(filedir, file))
 
-def to_rgb(name = 'All'):
+def to_rgb(name = 'train'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
       image = Image.open(os.path.join(filedir, file))
       image = image.convert('RGB')
       image.save(os.path.join(filedir, file))
-def to_gray(name = 'All'):
+def to_gray(name = 'train'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
       image = Image.open(os.path.join(filedir, file)).convert('L')
       image.save(os.path.join(filedir, file))
-def to_base(name = 'All'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
+def to_base(name = 'train'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE,  name.lower().replace(' ', '_'))):
     for file in files:
-      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), file))
+      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_BASE,  name.lower().replace(' ', '_')), file))
 
-def to_2_classes(name = 'All'):
+def to_2_classes(name = 'train'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
     for file in files:
       p = Path(file).stem.split('_')[-1]
@@ -485,29 +481,29 @@ def to_2_classes(name = 'All'):
       else:
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'N', file))
 
-def to_10_classes(name = 'All'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
+def to_10_classes(name = 'train'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))):
     for file in files:
       n = Path(file).stem.split('_')[-1]
-      os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
-      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
+      os.makedirs(os.path.join(os.path.join(STORAGE_DL, 'train'), str(n)), exist_ok=True)
+      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), str(n), file))
 
-def to_X(name = 'All'):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'test/images')):
+def to_X(name = 'train'):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, name.lower().replace(' ', '_'))):
     for file in files:
       n = Path(file).stem.split('_')[-1]
       if n == 'X':
         os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
-        os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+        os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), 'X', file))
 
 def move_to_test(name = 'numbers'):
   dest_path = os.path.join(STORAGE_BASE, 'test/images')
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
     for file in files:
       os.rename(os.path.join(filedir, file), os.path.join(STORAGE_DL, dest_path, file))
-def get_max_box(name = 'All'):
+def get_max_box(name = 'train'):
   # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
-  filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'repository', 'numbers')))
+  filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'numbers')))
   min_w = None
   max_w = None
   min_h = None
@@ -536,8 +532,8 @@ def get_max_box(name = 'All'):
       perimeter = cv2.arcLength(contour, True)
       min_perimeter = min_perimeter if min_perimeter is not None and min_perimeter < perimeter else perimeter
       max_perimeter = max_perimeter if max_perimeter is not None and max_perimeter > perimeter else perimeter
-  print(f'Larghezza (min max): {min_w} : {max_w}\nAltezza (min max): {min_h} {max_h}')
-  print(f'Media (min max): {min_mean} {max_mean}\nPerimetro (min max) {min_perimeter} {max_perimeter}')
+  print(f'Larghezza (min , max): {min_w} {max_w}\nAltezza (min max): {min_h} {max_h}')
+  print(f'Media (min , max): {round(min_mean, 3)} , {round(max_mean, 3)}\nPerimetro (min max) {round(min_perimeter, 3)} , {round(max_perimeter, 3)}')
 
 def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
@@ -549,4 +545,6 @@ set_GPUs()
 # cnn = CNN()
 # cnn.exec_cnn()
 
-get_max_box()
+# get_max_box()
+
+convert_to_jpg()
