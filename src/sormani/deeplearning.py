@@ -31,7 +31,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
@@ -66,6 +66,20 @@ class CNN:
                                                                batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
 
+  def create_simple_model_cnn(self):
+    model = tf.keras.Sequential([
+      tf.keras.layers.Rescaling(1. / 255),
+      tf.keras.layers.Conv2D(32, 3, activation='relu'),
+      tf.keras.layers.MaxPooling2D(),
+      tf.keras.layers.Conv2D(32, 3, activation='relu'),
+      tf.keras.layers.MaxPooling2D(),
+      tf.keras.layers.Conv2D(32, 3, activation='relu'),
+      tf.keras.layers.MaxPooling2D(),
+      tf.keras.layers.Flatten(),
+      tf.keras.layers.Dense(128, activation='relu'),
+      tf.keras.layers.Dense(num_classes)
+    ])
+    return model
   def create_model_cnn(self, num_classes = 11):
     # base_model = InceptionResNetV2(weights='imagenet', include_top=False)
     # base_model = EfficientNetV2M(weights='imagenet', include_top=False)
@@ -86,25 +100,13 @@ class CNN:
     self.train_ds = self.train_ds.map(process)
     self.val_ds = self.val_ds.map(process)
     self.test_ds = self.test_ds.map(process)
-    num_classes = len(self.class_names)
-    model, model_name = self.create_model_cnn(num_classes)
-    # model = tf.keras.Sequential([
-    #   tf.keras.layers.Rescaling(1. / 255),
-    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    #   tf.keras.layers.MaxPooling2D(),
-    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    #   tf.keras.layers.MaxPooling2D(),
-    #   tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    #   tf.keras.layers.MaxPooling2D(),
-    #   tf.keras.layers.Flatten(),
-    #   tf.keras.layers.Dense(128, activation='relu'),
-    #   tf.keras.layers.Dense(num_classes)
-    # ])
-    # model = tf.keras.models.load_model(STORAGE_BASE)
     if name is not None:
       name = name.lower().replace(' ', '_')
     else:
       name = ''
+    num_classes = len(self.class_names)
+    model, model_name = self.create_model_cnn(num_classes)
+    # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -113,20 +115,10 @@ class CNN:
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=50,
+      epochs=100,
       callbacks=[mcp_save]
     )
-    # Evaluate the model on the test data using `evaluate`
     tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
-    print("Evaluate on test data")
-    results = model.evaluate(self.test_ds, batch_size=128)
-    print("test loss, test acc:", results)
-    # Generate predictions (probabilities -- the output of the last layer)
-    # on new data using `predict`
-    # print("Generate predictions for 3 samples")
-    # predictions = model.predict(self.test_ds)
-    # print("predictions shape:", predictions.shape)
-    # final_prediction = np.argmax(predictions, axis=-1)
     pass
 
   def prediction_cnn(self):
@@ -300,8 +292,17 @@ def move_to_class(name):
 
 def count_tiff():
   count = 0
-  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF')):
-    count += len(files)
+  tot = 0
+  for newspaper in NEWSPAPERS:
+    count = 0
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+      count += len(files)
+      if not len(files):
+        pass
+    if count:
+      print(f'{newspaper}: {count}')
+      tot += count
+  print(f'Totale: {tot}')
   return count
 
 def set_GPUs():
@@ -486,21 +487,38 @@ def to_2_classes(name = 'train'):
       else:
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'N', file))
 
-def to_10_classes():
+def to_10_classes(name = 'all'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
     for file in files:
       n = Path(file).stem.split('_')[-1]
-      os.makedirs(os.path.join(os.path.join(STORAGE_DL, 'train'), str(n)), exist_ok=True)
-      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), str(n), file))
+      os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
 
-def to_X():
+def to_X(name = 'all'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'no_numbers')):
     for file in files:
       n = Path(file).stem.split('_')[-1]
       if n == 'X':
-        os.makedirs(os.path.join(os.path.join(STORAGE_DL, 'train'), str(n)), exist_ok=True)
-        os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, 'train'), 'X', file))
-
+        os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+        os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+def to_11_classes(name = 'all', source = None):
+  name = name.lower().replace(' ', '_')
+  if source is None:
+    sources = ['sure/numbers', 'sure/no_numbers', 'notsure/numbers', 'notsure/no_numbers']
+  elif isinstance(source, str):
+    sources = [source]
+  else:
+    sources = source
+  for source in sources:
+    for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name, source)):
+      for file in files:
+        n = Path(file).stem.split('_')[-1]
+        if n == 'X':
+          os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), 'X'), exist_ok=True)
+          os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+        else:
+          os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+          os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
 def move_to_test(name = 'numbers'):
   dest_path = os.path.join(STORAGE_BASE, 'test/images')
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
@@ -547,9 +565,9 @@ def save_page_numbers(name):
 
 set_GPUs()
 
-cnn = CNN('Il Giornale')
-cnn.exec_cnn('Il Giornale')
+# cnn = CNN('Il Giornale')
+# cnn.exec_cnn('Il Giornale')
 
-# get_max_box()
+# to_11_classes('Il Giornale')
 
-# get_max_box('repository')
+count_tiff()

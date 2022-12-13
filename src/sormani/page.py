@@ -139,23 +139,23 @@ class Page:
       return e[0]
     img = self.change_contrast_PIL(image, level)
     img = self.change_contrast_cv2(img)
-    np = self.newspaper.get_parameters()
+    parameters = self.newspaper.get_parameters()
     p = self.file_name.split('_')[-1][1:]
-    if np.include is not None:
-      if not int(p) in np.include:
+    if parameters.include is not None:
+      if not int(p) in parameters.include:
         return None, img
-    if np.exclude is not None:
-      if int(p) in np.exclude:
+    if parameters.exclude is not None:
+      if int(p) in parameters.exclude:
         return None, img
-    img = self.cv2_resize(img, np.scale)
+    img = self.cv2_resize(img, parameters.scale)
     bimg = img.copy()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.threshold(gray, np.ts, 255, cv2.THRESH_BINARY_INV)[1]
+    img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
     cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     for c in cnts:
-      if cv2.contourArea(c) < 100:
-        cv2.drawContours(img, [c], -1, (0, 0, 0), -1)
+      if cv2.contourArea(c)  < parameters.max_fillarea:
+        cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
     img = 255 - img
     edges = cv2.Canny(img, 1, 50)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
@@ -174,10 +174,10 @@ class Page:
     for i, (_, contour) in enumerate(_contours):
       x, y, w, h = cv2.boundingRect(contour)
       perimeter = cv2.arcLength(contour, True)
-      if hierarchy[0, i, 3] == -1 and perimeter > np.min_perimeter and w > np.box[0] and w < np.box[1] and h > np.box[2] and h < np.box[3]:
+      if hierarchy[0, i, 3] == -1 and perimeter > parameters.min_perimeter and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
           roi = img[y:y + h, x:x + w]
           mean = roi.mean()
-          if mean >= np.min_mean and mean <= np.max_mean:
+          if mean >= parameters.min_mean and mean <= parameters.max_mean:
             name = file_name + '_' + ('0000' + str(i + 1))[-5:]
             if not no_resize:
               roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)

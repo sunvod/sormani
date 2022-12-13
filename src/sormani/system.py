@@ -28,6 +28,19 @@ STORAGE_BASE = '/home/sunvod/sormani_CNN/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
 CONTRAST = 50
 NUMBER_IMAGE_SIZE = (224, 224)
+REPOSITORY = 'repository'
+NUMBERS = 'numbers'
+NO_NUMBERS = 'no_numbers'
+NEWSPAPERS = ['Alias',
+              'Alias Domenica',
+              'Avvenire',
+              'Il Fatto Quotidiano',
+              'Il Giornale',
+              'Il Manifesto',
+              'Italia Oggi',
+              'La Stampa',
+              'Libero',
+              'Milano Finanza']
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")

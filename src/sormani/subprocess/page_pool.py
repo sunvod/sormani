@@ -59,9 +59,13 @@ class Page_pool(list):
     return images
   def check_pages_numbers(self, model, save_images = False):
     errors = []
+    countplusone = 0
+    countminusone = 0
+    countzero = 0
     for page in self:
       images, predictions = page.check_pages_numbers(model)
       if page.page_control == 0:
+        countzero += 1
         errors.append(page.newspaper.n_page)
         col = 6
         row = len(images) // col + (1 if len(images) % col != 0 else 0)
@@ -77,25 +81,28 @@ class Page_pool(list):
           ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
         plt.axis("off")
         plt.show()
-      elif save_images and images is not None and predictions is not None:
+      if save_images and images is not None and predictions is not None:
         if page.page_control == 1:
+          countplusone += 1
           exact = 'sure'
         else:
+          countminusone += 1
           exact = 'notsure'
-        Path(os.path.join(STORAGE_BASE, 'repository', exact, 'X')).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(STORAGE_BASE, 'repository', exact, 'numbers')).mkdir(parents=True, exist_ok=True)
+        name = self.newspaper_name.lower().replace(' ', '_')
+        Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NO_NUMBERS)).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NUMBERS)).mkdir(parents=True, exist_ok=True)
         for i, image in enumerate(images):
           n = 'X' if predictions[i] == 10 else str(predictions[i])
           if n == 'X':
-            dir = 'X'
+            dir = NO_NUMBERS
           else:
-            dir = 'numbers'
+            dir = NUMBERS
           file_name = image[0] + '_' + str(n)
-          cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', exact, dir, file_name) + '.jpg', image[1])
+          cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
     if len(errors) < 2:
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {page.page_control}).')
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
-      msg = '{} del giorno {} ha le pagine {} non esatte.'.format(self.newspaper_name, str(self.date.strftime("%d/%m/%y")), errors)
+      msg = '{} del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(self.newspaper_name, str(self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
       print(msg)
       with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
         sormani_log.write(msg + '\n')
@@ -104,9 +111,10 @@ class Page_pool(list):
     for page in self:
       images.append(page.get_head())
     return images
-  def create_pdf(self, number = None):
+  def create_pdf(self, number = None, ocr = True):
     if len(self):
       self.number = number
+      self.ocr = ocr
       start_time = time.time()
       print(f'Start creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
@@ -119,7 +127,12 @@ class Page_pool(list):
     options = Namespace()
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
-    exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
+    if self.ocr:
+      exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
+    else:
+      image = Image.open(page.original_image)
+      image.save(page.pdf_file_name, "PDF", resolution=50.0)
+      image.close()
     page.add_pdf_metadata(self.number)
   def set_image_file_name(self):
     for page in self:

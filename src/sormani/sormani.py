@@ -221,7 +221,7 @@ class Sormani():
     return e
   def set_force(self, force):
     self.force = force
-  def create_all_images(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None, contrast = True):
+  def create_all_images(self, ocr = True, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None, contrast = True):
     if not len(self.elements):
       return
     # if contrast:
@@ -229,7 +229,7 @@ class Sormani():
     for page_pool in self:
       if not len(page_pool):
         continue
-      page_pool.create_pdf(number)
+      page_pool.create_pdf(number, ocr = ocr)
       page_pool.convert_images(converts)
   def set_all_images_names(self):
     if not len(self.elements):
