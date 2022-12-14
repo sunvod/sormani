@@ -552,4 +552,5 @@ class Unita(Newspaper):
                                 min_mean=0,
                                 max_mean=500,
                                 min_area=100,
-                                invert = True)
+                                invert = True,
+                                internal_box = (30, 100, 80, 120))

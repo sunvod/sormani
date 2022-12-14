@@ -152,25 +152,24 @@ class Page:
           name = file_name + '_' + ('0000' + str(i + 1))[-5:]
           if not no_resize:
             roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
-          bimg = roi.copy()
-          cnts_inside, hierarchy_inside = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-          _cnts_inside = []
-          for i, cnt_inside in enumerate(cnts_inside):
-            _x, _, _, _ = cv2.boundingRect(cnt_inside)
-            _cnts_inside.append((_x, cnt_inside))
-          _cnts_inside.sort(key=_get_contours)
-          for j, (_, cnt_inside) in enumerate(_cnts_inside):
-            _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
-            roia = roi[_y:_y + _h, _x:_x + _w]
-            cv2.rectangle(bimg, (_x, _y), (_x + _w, _y + _h), (36, 255, 12), 2)
-            name_b = file_name + '_' + ('0000' + 'b' + str(j + 1))[-5:]
-            if parameters.internal_box is None or \
-                (_w > parameters.internal_box[0] and
-                 _w < parameters.internal_box[1] and
-                 _h > parameters.internal_box[2] and
-                 _h < parameters.internal_box[3]):
-              images.append((name_b, roia, perimeter))
-          if parameters.internal_box is None:
+          if parameters.internal_box is not None:
+            cnts_inside, hierarchy_inside = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            _cnts_inside = []
+            for i, cnt_inside in enumerate(cnts_inside):
+              _x, _, _, _ = cv2.boundingRect(cnt_inside)
+              _cnts_inside.append((_x, cnt_inside))
+            _cnts_inside.sort(key=_get_contours)
+            for j, (_, cnt_inside) in enumerate(_cnts_inside):
+              _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
+              _roi = roi[_y:_y + _h, _x:_x + _w]
+              name_i = file_name + '_' + ('0000' + 'i' + str(j + 1))[-5:]
+              if parameters.internal_box is None or \
+                  (_w > parameters.internal_box[0] and
+                   _w < parameters.internal_box[1] and
+                   _h > parameters.internal_box[2] and
+                   _h < parameters.internal_box[3]):
+                images.append((name_i, _roi, perimeter))
+          else:
             images.append((name, roi, perimeter))
   def get_boxes(self, image, level=200, no_resize=False):
     img = self.change_contrast_PIL(image, level)
