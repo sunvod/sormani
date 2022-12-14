@@ -274,10 +274,9 @@ class Sormani():
       i = page.change_contrast()
       with global_count.get_lock():
         global_count.value += i
+    print('.', end='')
     if global_count.value % 100 == 0:
-      print('.', end='')
-      if global_count.value % 100 == 0:
-        print()
+      print()
 
   def divide_all_image(self):
     if not len(self.elements):
