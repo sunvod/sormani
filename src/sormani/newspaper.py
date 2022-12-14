@@ -462,8 +462,6 @@ class Avvenire(Newspaper):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_page(self):
-    return None, None
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
@@ -479,13 +477,11 @@ class Osservatore_Romano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 49
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_path, date, year, number, init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Osservatore Romano', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_page(self):
-    return None, None
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
@@ -502,13 +498,11 @@ class Il_Foglio(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 49
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_path, date, year, number, init_page = 5)
+    Newspaper.__init__(self, newspaper_base, 'Il Foglio', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_page(self):
-    return None, None
   def get_parameters(self):
     return Newspaper_parameters(scale = 200,
                                 min_perimeter = 200,
@@ -525,13 +519,11 @@ class Unita(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 49
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Avvenire', file_path, date, year, number, init_page=5)
+    Newspaper.__init__(self, newspaper_base, 'Unita', file_path, date, year, number, init_page=5)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_page(self):
-    return None, None
   def get_parameters(self):
     return Newspaper_parameters(scale=200,
                                 min_perimeter=200,

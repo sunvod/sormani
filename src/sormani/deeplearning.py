@@ -31,7 +31,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
@@ -444,6 +444,14 @@ def put_all():
   for name in names:
     distribute_cnn(name)
     move_to_class(name)
+def change_newspaper_name(newspaper_name, oldname, newname):
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, IMAGE_PATH, newspaper_name)):
+    files.sort()
+    for file in files:
+      oldname = oldname.replace(' ', '_')
+      newname = newname.replace(' ', '_')
+      newfile = file.replace(oldname, newname)
+      os.rename(os.path.join(filedir, file), os.path.join(filedir, newfile))
 
 def convert_to_jpg(name = 'train'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
@@ -570,4 +578,6 @@ set_GPUs()
 
 # to_11_classes('Il Giornale')
 
-count_tiff()
+# count_tiff()
+
+change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
