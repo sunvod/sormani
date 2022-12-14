@@ -133,10 +133,46 @@ class Page:
     mask = cv2.inRange(img, min, max)
     img[mask > 0] = [255, 255, 255]
     return img
-
-  def get_boxes(self, image, level=200, no_resize=False):
+  def add_boxes(self, images, img, contours, parameters, file_name, no_resize):
     def _get_contours(e):
       return e[0]
+    _contours = []
+    for i, contour in enumerate(contours):
+      x, _, _, _ = cv2.boundingRect(contour)
+      _contours.append((x, contour))
+    _contours.sort(key = _get_contours)
+    for i, (_, contour) in enumerate(_contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      perimeter = cv2.arcLength(contour, True)  # hierarchy[0, i, 3] == -1 and
+      roi = img[y:y + h, x:x + w]
+      if perimeter > parameters.min_perimeter and w > parameters.box[0] and w < parameters.box[1] and h > \
+          parameters.box[2] and h < parameters.box[3]:
+        mean = roi.mean()
+        if mean >= parameters.min_mean and mean <= parameters.max_mean:
+          name = file_name + '_' + ('0000' + str(i + 1))[-5:]
+          if not no_resize:
+            roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
+          bimg = roi.copy()
+          cnts_inside, hierarchy_inside = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+          _cnts_inside = []
+          for i, cnt_inside in enumerate(cnts_inside):
+            _x, _, _, _ = cv2.boundingRect(cnt_inside)
+            _cnts_inside.append((_x, cnt_inside))
+          _cnts_inside.sort(key=_get_contours)
+          for j, (_, cnt_inside) in enumerate(_cnts_inside):
+            _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
+            roia = roi[_y:_y + _h, _x:_x + _w]
+            cv2.rectangle(bimg, (_x, _y), (_x + _w, _y + _h), (36, 255, 12), 2)
+            name_b = file_name + '_' + ('0000' + 'b' + str(j + 1))[-5:]
+            if parameters.internal_box is None or \
+                (_w > parameters.internal_box[0] and
+                 _w < parameters.internal_box[1] and
+                 _h > parameters.internal_box[2] and
+                 _h < parameters.internal_box[3]):
+              images.append((name_b, roia, perimeter))
+          if parameters.internal_box is None:
+            images.append((name, roi, perimeter))
+  def get_boxes(self, image, level=200, no_resize=False):
     img = self.change_contrast_PIL(image, level)
     img = self.change_contrast_cv2(img)
     parameters = self.newspaper.get_parameters()
@@ -156,7 +192,8 @@ class Page:
     for c in cnts:
       if cv2.contourArea(c)  < parameters.max_fillarea:
         cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
-    img = 255 - img
+    if not parameters.invert:
+      img = 255 - img
     edges = cv2.Canny(img, 1, 50)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
@@ -166,22 +203,7 @@ class Page:
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
     images = [(self.file_name + '_00000', bimg)]
-    _contours = []
-    for i, contour in enumerate(contours):
-      x, y, w, h = cv2.boundingRect(contour)
-      _contours.append((x, contour))
-    _contours.sort(key = _get_contours)
-    for i, (_, contour) in enumerate(_contours):
-      x, y, w, h = cv2.boundingRect(contour)
-      perimeter = cv2.arcLength(contour, True)
-      if hierarchy[0, i, 3] == -1 and perimeter > parameters.min_perimeter and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
-          roi = img[y:y + h, x:x + w]
-          mean = roi.mean()
-          if mean >= parameters.min_mean and mean <= parameters.max_mean:
-            name = file_name + '_' + ('0000' + str(i + 1))[-5:]
-            if not no_resize:
-              roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
-            images.append((name, roi, perimeter))
+    self.add_boxes(images, img, contours, parameters, file_name, no_resize)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
     if self.isAlreadySeen():

@@ -16,7 +16,22 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Newspaper_parameters():
-  def __init__(self, scale, min_perimeter, min_w, max_w, min_h, max_h, ts, min_mean = None, max_mean = None, min_area = 100, include = None, exclude = [1], max_fillarea = 100):
+  def __init__(self,
+               scale,
+               min_perimeter,
+               min_w,
+               max_w,
+               min_h,
+               max_h,
+               ts,
+               min_mean = None,
+               max_mean = None,
+               min_area = 100,
+               include = None,
+               exclude = [1],
+               max_fillarea = 100,
+               invert = False,
+               internal_box = None):
     self.scale = scale
     self.min_perimeter = min_perimeter
     self.box = (min_w, max_w, min_h, max_h)
@@ -27,6 +42,8 @@ class Newspaper_parameters():
     self.include = include
     self.exclude = exclude
     self.max_fillarea = max_fillarea
+    self.invert = invert
+    self.internal_box = internal_box
 
 class Newspaper():
   @staticmethod
@@ -522,16 +539,17 @@ class Unita(Newspaper):
     Newspaper.__init__(self, newspaper_base, 'Unita', file_path, date, year, number, init_page=5)
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (0, 100, w, 800)
+    whole = (0, h - 700, w, h - 300)
     return whole
   def get_parameters(self):
     return Newspaper_parameters(scale=200,
                                 min_perimeter=200,
-                                min_w=91 - 50,
-                                max_w=206 + 50,
-                                min_h=235 - 50,
-                                max_h=321 + 50,
-                                ts=170,
-                                min_mean=183.9 - 50,
-                                max_mean=220.4 + 50,
-                                min_area=100)
+                                min_w=180,
+                                max_w=240,
+                                min_h=180,
+                                max_h=240,
+                                ts=100,
+                                min_mean=0,
+                                max_mean=500,
+                                min_area=100,
+                                invert = True)

@@ -439,7 +439,7 @@ class Sormani():
     for page_pool in self:
       if not page_pool.isins:
         image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages)
-        if image is not None:
+        if image is not None and len(image):
           images.append(image)
         print('.', end='')
     print()
