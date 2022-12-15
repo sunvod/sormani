@@ -163,11 +163,10 @@ class Page:
               _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
               _roi = roi[_y:_y + _h, _x:_x + _w]
               name_i = file_name + '_' + ('0000' + 'i' + str(j + 1))[-5:]
-              if parameters.internal_box is None or \
-                  (_w > parameters.internal_box[0] and
-                   _w < parameters.internal_box[1] and
-                   _h > parameters.internal_box[2] and
-                   _h < parameters.internal_box[3]):
+              if (_w > parameters.internal_box[0] and
+                 _w < parameters.internal_box[1] and
+                 _h > parameters.internal_box[2] and
+                 _h < parameters.internal_box[3]):
                 images.append((name_i, _roi, perimeter))
           else:
             images.append((name, roi, perimeter))

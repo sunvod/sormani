@@ -17,14 +17,14 @@ class Page_pool(list):
     self.newspaper_name = newspaper_name
     self.date = date
     self.force = force
-  def set_pages(self, pages):
-    n_pages = len(self) if pages is None or pages > len(self) else pages
+  def set_pages(self):
+    n_pages = len(self)
     if n_pages > 0:
       page = self[0]
       page.newspaper.set_n_pages(self, n_pages)
       self.sort(key=self._n_page_sort)
-  def set_pages_already_seen(self, pages):
-    n_pages = len(self) if pages is None or pages > len(self) else pages
+  def set_pages_already_seen(self):
+    n_pages = len(self)
     for page in self:
       try:
         n_page = page.file_name.split('_')[-1][1:]

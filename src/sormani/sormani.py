@@ -135,9 +135,9 @@ class Sormani():
         #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
         #   else len(page_pool)
         if page_pool.isAlreadySeen():
-          page_pool.set_pages_already_seen(len(page_pool))
+          page_pool.set_pages_already_seen()
         else:
-          page_pool.set_pages(pages)
+          page_pool.set_pages()
       self.i += 1
       return page_pool
     else:
@@ -151,14 +151,9 @@ class Sormani():
   def count_number(self):
     if len(self.elements) == 0:
       return 'ND'
-    page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
-    if not page_pool.isAlreadySeen():
-      pages = page_pool.extract_pages(range=(3, 4))
-      pages = int(pages[0]) + 1 if isinstance(pages, list) and len(pages) > 0 and pages[0].isdigit() and int(
-        pages[0]) + 1 < len(page_pool) else len(page_pool)
-    else:
-      pages = len(page_pool)
-    page_pool.set_pages(pages)
+    page_pool = self.elements[self.i].get_page_pool(
+      self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
+    page_pool.set_pages()
     self.i += 1
     return page_pool[0].newspaper.number
   def add_zero(self, n):
@@ -221,11 +216,12 @@ class Sormani():
     return e
   def set_force(self, force):
     self.force = force
-  def create_all_images(self, ocr = True, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], number = None, contrast = True):
+  def create_all_images(self,
+                        ocr = True,
+                        converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
+                        number = None):
     if not len(self.elements):
       return
-    # if contrast:
-    #   self.change_all_contrasts()
     for page_pool in self:
       if not len(page_pool):
         continue
@@ -239,15 +235,10 @@ class Sormani():
         continue
       else:
         if not page_pool.isAlreadySeen():
-          init_page = int(page_pool[0].newspaper.number)
-          pages = len(page_pool) # page_pool.extract_pages(range=(init_page, init_page + 1))
-          # pages = int(pages[0]) + 1 \
-          #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
-          #   else len(page_pool)
           page_pool.set_image_file_name()
         else:
-          page_pool.set_pages_already_seen(len(page_pool))
-  def change_all_contrasts(self, contrast = None, force = False):
+          page_pool.set_pages_already_seen()
+  def change_all_contrasts(self, contrast = None):
     if not len(self.elements):
       return
     start_time = time.time()

@@ -534,7 +534,7 @@ class Il_Foglio(Newspaper):
 
 class Unita(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 49
+    self.init_year = 93
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Unita', file_path, date, year, number, init_page=5)
   def get_whole_page_location(self, image):
