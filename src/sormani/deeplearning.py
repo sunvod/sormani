@@ -61,14 +61,14 @@ class CNN:
                                                               shuffle=True,
                                                               image_size=IMG_SIZE,
                                                               batch_size=BATCH_SIZE)
-    self.test_ds = tf.keras.utils.image_dataset_from_directory(self.test_dir,
-                                                               # color_mode="grayscale",
-                                                               shuffle=False,
-                                                               image_size=IMG_SIZE,
-                                                               batch_size=BATCH_SIZE)
+    # self.test_ds = tf.keras.utils.image_dataset_from_directory(self.test_dir,
+    #                                                            # color_mode="grayscale",
+    #                                                            shuffle=False,
+    #                                                            image_size=IMG_SIZE,
+    #                                                            batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
 
-  def create_simple_model_cnn(self):
+  def create_simple_model_cnn(self, num_classes = 11):
     model = tf.keras.Sequential([
       tf.keras.layers.Rescaling(1. / 255),
       tf.keras.layers.Conv2D(32, 3, activation='relu'),
@@ -81,7 +81,7 @@ class CNN:
       tf.keras.layers.Dense(128, activation='relu'),
       tf.keras.layers.Dense(num_classes)
     ])
-    return model
+    return model, 'SimpleCCN'
   def create_model_cnn(self, num_classes = 11):
     # base_model = InceptionResNetV2(weights='imagenet', include_top=False)
     # base_model = EfficientNetV2M(weights='imagenet', include_top=False)
@@ -94,14 +94,14 @@ class CNN:
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=predictions)
     return model, 'DenseNet201'
-  def exec_cnn(self, name = None):
+  def exec_cnn(self, name = None, epochs = 100):
     def process(image, label):
       image = tf.cast(image / 255., tf.float32)
       return image, label
 
     self.train_ds = self.train_ds.map(process)
     self.val_ds = self.val_ds.map(process)
-    self.test_ds = self.test_ds.map(process)
+    # self.test_ds = self.test_ds.map(process)
     if name is not None:
       name = name.lower().replace(' ', '_')
     else:
@@ -125,7 +125,7 @@ class CNN:
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
-      epochs=100,
+      epochs=epochs,
       callbacks=[mcp_save]
     )
     tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
@@ -533,8 +533,8 @@ def to_11_classes(name = 'all', source = None):
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
                os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'no_numbers'),
-               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
-               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
+               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
+               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
                os.path.join(STORAGE_BASE, 'numbers')]
   elif isinstance(source, str):
     sources = [source]
@@ -593,21 +593,6 @@ def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
   sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
 
-
-set_GPUs()
-
-# cnn = CNN('Unita')
-# cnn.exec_cnn('Unita')
-
-# to_11_classes('Unita')
-
-# count_tiff()
-
-# change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
-
-# to_11_classes('Unita')
-
-
 def open_win(count, filedir, file):
   def close():
     gui.destroy()
@@ -620,8 +605,8 @@ def open_win(count, filedir, file):
 
   gui = tk.Tk()
   gui.title('')
-  w = 800  # Width
-  h = 400  # Height
+  w = 900  # Width
+  h = 500  # Height
 
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
@@ -631,9 +616,6 @@ def open_win(count, filedir, file):
   y = (screen_height / 2) - (h / 2)
 
   gui.geometry('%dx%d+%d+%d' % (w, h, x, y))
-
-  v = tk.IntVar()
-
   gui_frame = tk.Frame(gui)
   gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
 
@@ -656,9 +638,8 @@ def open_win(count, filedir, file):
                                 text=text,
                                 compound="center",
                                 font=('Aria', 24),
-                                height=80,
-                                width=80,
-                                image=pixel,
+                                height=2,
+                                width=4,
                                 padx=0,
                                 pady=0,
                                 command=lambda number=str(text): number_chosen(number, filedir, file))
@@ -684,4 +665,17 @@ def rename_images_files():
       open_win(count, filedir, file)
       count += 1
 
-rename_images_files()
+set_GPUs()
+
+cnn = CNN('Unita')
+cnn.exec_cnn('Unita', epochs = 100)
+
+# to_11_classes('Unita')
+
+# count_tiff()
+
+# change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
+
+# to_11_classes('Unita')
+
+# rename_images_files()

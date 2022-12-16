@@ -162,11 +162,13 @@ class Page:
             for j, (_, cnt_inside) in enumerate(_cnts_inside):
               _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
               _roi = roi[_y:_y + _h, _x:_x + _w]
-              name_i = file_name + '_' + ('0000' + 'i' + str(j + 1))[-5:]
+              name_i = file_name + '_' + ('0000' + str(j + 1))[-5:]
               if (_w > parameters.internal_box[0] and
                  _w < parameters.internal_box[1] and
                  _h > parameters.internal_box[2] and
                  _h < parameters.internal_box[3]):
+                if not no_resize:
+                  _roi = cv2.resize(_roi, NUMBER_IMAGE_SIZE)
                 images.append((name_i, _roi, perimeter))
           else:
             images.append((name, roi, perimeter))
