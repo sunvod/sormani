@@ -40,7 +40,10 @@ NEWSPAPERS = ['Alias',
               'Italia Oggi',
               'La Stampa',
               'Libero',
-              'Milano Finanza']
+              'Milano Finanza',
+              'Unita',
+              'Osservatore Romano',
+              'Il Foglio']
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")

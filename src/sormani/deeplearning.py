@@ -5,7 +5,9 @@ from random import seed, random
 import random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
-from PIL import Image, ImageChops, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps, ImageTk
+import tkinter as tk
+from tkinter import Label, Button
 from pathlib import Path
 from tensorflow import keras
 
@@ -111,7 +113,15 @@ class CNN:
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name), verbose=1, save_weights_only=False, save_best_only=True, monitor='val_sparse_categorical_accuracy', mode='max')
+    callbacks = []
+    callbacks.append(CustomCallback())
+    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name),
+                               verbose=1,
+                               save_weights_only=False,
+                               save_best_only=True,
+                               monitor='val_sparse_categorical_accuracy',
+                               mode='max',
+                               callbacks = callbacks)
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
@@ -147,6 +157,11 @@ class CNN:
     prediction = np.argmax(model.predict(np.array(dataset)), axis=-1)
     pass
 
+class CustomCallback(keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs=None):
+    pass
+
+# callbacks.append(CustomCallback())
 class CNN2:
 
   def __init__(self, name = 'train'):
@@ -379,7 +394,11 @@ def cv2_resize(img, scale):
   img = cv2.resize(img, dim)
   return img
 
-
+# ----------------------------------------------------------------
+#   Aggiunge il numero al nome del file
+#     * il file di input deve essere in numbers_<nome giornale>
+#     * il file di output va in numbers
+# ----------------------------------------------------------------
 def set_pages_numbers(name):
   def _get_file_name(file):
     file_name = Path(file).stem
@@ -512,13 +531,17 @@ def to_X(name = 'all'):
 def to_11_classes(name = 'all', source = None):
   name = name.lower().replace(' ', '_')
   if source is None:
-    sources = ['sure/numbers', 'sure/no_numbers', 'notsure/numbers', 'notsure/no_numbers']
+    sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'no_numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
+               os.path.join(STORAGE_BASE, 'numbers')]
   elif isinstance(source, str):
     sources = [source]
   else:
     sources = source
   for source in sources:
-    for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name, source)):
+    for filedir, dirs, files in os.walk(source):
       for file in files:
         n = Path(file).stem.split('_')[-1]
         if n == 'X':
@@ -573,11 +596,85 @@ def save_page_numbers(name):
 
 set_GPUs()
 
-# cnn = CNN('Il Giornale')
-# cnn.exec_cnn('Il Giornale')
+# cnn = CNN('Unita')
+# cnn.exec_cnn('Unita')
 
-# to_11_classes('Il Giornale')
+# to_11_classes('Unita')
 
 # count_tiff()
 
-change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
+# change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
+
+# to_11_classes('Unita')
+
+
+def open_win(count, filedir, file):
+  def close():
+    gui.destroy()
+    exit()
+  def number_chosen(button_press, filedir, file):
+    new_file = '_'.join(file.split('_')[:-1]) + '_' + str(button_press) + '.jpg'
+    os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+    print(new_file)
+    gui.destroy()
+
+  gui = tk.Tk()
+  gui.title('')
+  w = 800  # Width
+  h = 320  # Height
+
+  screen_width = gui.winfo_screenwidth()  # Width of the screen
+  screen_height = gui.winfo_screenheight()  # Height of the screen
+
+  # Calculate Starting X and Y coordinates for Window
+  x = (screen_width / 2) - (w / 2)
+  y = (screen_height / 2) - (h / 2)
+
+  gui.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
+  v = tk.IntVar()
+
+  gui_frame = tk.Frame(gui)
+  gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
+
+  button_frame = tk.Frame(gui_frame)
+  button_frame.columnconfigure(0, weight=1)
+  button_frame.pack(fill=tk.X, side=tk.BOTTOM)
+  button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
+
+  buttons = [[0 for x in range(3)] for x in range(4)]
+
+  for i in range(4):
+    for j in range(3):
+      text = i + j * 4
+      if text == 10:
+        continue
+      if text == 11:
+        text = 'X'
+      buttons[i][j] = tk.Button(button_frame,
+                                text=text,
+                                font=('Aria', 14),
+                                command=lambda number=str(text): number_chosen(number, filedir, file))
+      buttons[i][j].columnconfigure(i, weight=2)
+      buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(3, 3), pady=(3, 3))
+  image = Image.open(os.path.join(filedir, file))
+  img = ImageTk.PhotoImage(image)
+  label = Label(gui_frame, image = img)
+  label.columnconfigure(1, weight=1)
+  label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(50, 50))
+  label2 = Label(gui, text = str(count) + '. ' + file, font = ('Arial', 14))
+  label2.pack(padx=10)
+  exit_button = Button(gui_frame, text="Exit", font = ('Arial', 12), command=close)
+  exit_button.columnconfigure(2, weight=1)
+  exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
+  gui.mainloop()
+
+def rename_images_files():
+  count = 1
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, 'unita', 'notsure', 'numbers')):
+    files.sort()
+    for file in files:
+      open_win(count, filedir, file)
+      count += 1
+
+rename_images_files()
