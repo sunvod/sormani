@@ -613,15 +613,15 @@ def open_win(count, filedir, file):
     gui.destroy()
     exit()
   def number_chosen(button_press, filedir, file):
-    new_file = '_'.join(file.split('_')[:-1]) + '_' + str(button_press) + '.jpg'
-    os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
-    print(new_file)
+    if button_press != 'ok':
+      new_file = '_'.join(file.split('_')[:-1]) + '_' + str(button_press) + '.jpg'
+      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_BASE, 'numbers'), new_file))
     gui.destroy()
 
   gui = tk.Tk()
   gui.title('')
   w = 800  # Width
-  h = 320  # Height
+  h = 400  # Height
 
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
@@ -642,29 +642,36 @@ def open_win(count, filedir, file):
   button_frame.pack(fill=tk.X, side=tk.BOTTOM)
   button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
 
-  buttons = [[0 for x in range(3)] for x in range(4)]
+  buttons = [[0 for x in range(4)] for x in range(3)]
 
-  for i in range(4):
-    for j in range(3):
-      text = i + j * 4
+  for i in range(3):
+    for j in range(4):
+      text = i * 4 + j
       if text == 10:
-        continue
-      if text == 11:
         text = 'X'
+      if text == 11:
+        text = 'ok'
+      pixel = tk.PhotoImage(width=1, height=1)
       buttons[i][j] = tk.Button(button_frame,
                                 text=text,
-                                font=('Aria', 14),
+                                compound="center",
+                                font=('Aria', 24),
+                                height=80,
+                                width=80,
+                                image=pixel,
+                                padx=0,
+                                pady=0,
                                 command=lambda number=str(text): number_chosen(number, filedir, file))
-      buttons[i][j].columnconfigure(i, weight=2)
-      buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(3, 3), pady=(3, 3))
+      buttons[i][j].columnconfigure(i)
+      buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(5, 5), pady=(5, 5))
   image = Image.open(os.path.join(filedir, file))
   img = ImageTk.PhotoImage(image)
   label = Label(gui_frame, image = img)
   label.columnconfigure(1, weight=1)
   label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(50, 50))
   label2 = Label(gui, text = str(count) + '. ' + file, font = ('Arial', 14))
-  label2.pack(padx=10)
-  exit_button = Button(gui_frame, text="Exit", font = ('Arial', 12), command=close)
+  label2.pack(pady=20)
+  exit_button = Button(gui_frame, text="Exit", font = ('Arial', 18), command=close)
   exit_button.columnconfigure(2, weight=1)
   exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
   gui.mainloop()
