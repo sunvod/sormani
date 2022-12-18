@@ -26,24 +26,26 @@ class Newspaper_parameters():
                ts,
                min_mean = None,
                max_mean = None,
-               min_area = 100,
                include = None,
                exclude = [1],
                max_fillarea = 100,
                invert = False,
-               internal_box = None):
+               internal_box = None,
+               fill_hole = None,
+               exclude_colors = None):
     self.scale = scale
     self.min_perimeter = min_perimeter
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
     self.min_mean = min_mean
     self.max_mean = max_mean
-    self.min_area = min_area
     self.include = include
     self.exclude = exclude
     self.max_fillarea = max_fillarea
     self.invert = invert
     self.internal_box = internal_box
+    self.fill_hole = fill_hole
+    self.exclude_colors = exclude_colors
 
 class Newspaper():
   @staticmethod
@@ -282,8 +284,7 @@ class La_stampa(Newspaper):
                                 max_h = 146 + 20,
                                 ts = 170,
                                 min_mean = 146.2 - 50,
-                                max_mean = 191.0 + 50,
-                                min_area = 100)
+                                max_mean = 191.0 + 50)
 
 class Il_Giornale(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -303,7 +304,6 @@ class Il_Giornale(Newspaper):
                                 ts = 220,
                                 min_mean = 100,
                                 max_mean = 300,
-                                min_area = 100,
                                 max_fillarea = 0)
 
 class Il_manifesto(Newspaper):
@@ -325,8 +325,7 @@ class Il_manifesto(Newspaper):
                                 max_h=83 + 50,
                                 ts=170,
                                 min_mean=74.2 - 50,
-                                max_mean=145.2 + 50,
-                                min_area=100)
+                                max_mean=145.2 + 50)
 
 class Milano_Finanza(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -382,8 +381,7 @@ class Milano_Finanza(Newspaper):
                                 max_h = 200,
                                 ts = 170,
                                 min_mean = 10,
-                                max_mean = 500,
-                                min_area = 100)
+                                max_mean = 500)
 
 class Il_Fatto_Quotidiano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -449,8 +447,21 @@ class Libero(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Libero', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    whole = [0, 100, 4850, 500]
     return whole
+  def get_parameters(self):
+    return Newspaper_parameters(scale=200,
+                                min_perimeter=10,
+                                min_w=50,
+                                max_w=130,
+                                min_h=110,
+                                max_h=190,
+                                ts=1,
+                                min_mean=40,
+                                max_mean=160,
+                                fill_hole = 2,
+                                exclude_colors = (-230, 20, 20),
+                                invert = True)
 
 class Alias(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -488,8 +499,7 @@ class Avvenire(Newspaper):
                                 max_h = 321 + 50,
                                 ts = 170,
                                 min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50,
-                                min_area = 100)
+                                max_mean = 220.4 + 50)
 class Osservatore_Romano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 49
@@ -508,8 +518,7 @@ class Osservatore_Romano(Newspaper):
                                 max_h = 321 + 50,
                                 ts = 170,
                                 min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50,
-                                min_area = 100)
+                                max_mean = 220.4 + 50)
 
 class Il_Foglio(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -529,8 +538,7 @@ class Il_Foglio(Newspaper):
                                 max_h = 321 + 50,
                                 ts = 170,
                                 min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50,
-                                min_area = 100)
+                                max_mean = 220.4 + 50)
 
 class Unita(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -551,6 +559,5 @@ class Unita(Newspaper):
                                 ts=100,
                                 min_mean=0,
                                 max_mean=500,
-                                min_area=100,
                                 invert = True,
                                 internal_box = (30, 100, 80, 120))

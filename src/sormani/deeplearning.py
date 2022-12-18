@@ -157,77 +157,7 @@ class CNN:
     prediction = np.argmax(model.predict(np.array(dataset)), axis=-1)
     pass
 
-class CustomCallback(keras.callbacks.Callback):
-  def on_epoch_end(self, epoch, logs=None):
-    pass
-
-# callbacks.append(CustomCallback())
-class CNN2:
-
-  def __init__(self, name = 'train'):
-    self.train_dir = os.path.join(STORAGE_DL, name)
-    self.test_dir = os.path.join(STORAGE_DL, 'test')
-    self.train_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
-                                                                validation_split=0.2,
-                                                                subset="training",
-                                                                color_mode = "grayscale",
-                                                                seed=123,
-                                                                shuffle=True,
-                                                                image_size=IMG_SIZE,
-                                                                batch_size=BATCH_SIZE)
-    self.val_ds = tf.keras.utils.image_dataset_from_directory(self.train_dir,
-                                                              validation_split=0.2,
-                                                              subset="validation",
-                                                              color_mode="grayscale",
-                                                              seed=123,
-                                                              shuffle=True,
-                                                              image_size=IMG_SIZE,
-                                                              batch_size=BATCH_SIZE)
-    self.test_ds = tf.keras.utils.image_dataset_from_directory(self.test_dir,
-                                                               color_mode="grayscale",
-                                                               shuffle=False,
-                                                               image_size=IMG_SIZE,
-                                                               batch_size=BATCH_SIZE)
-    self.class_names = self.train_ds.class_names
-  def exec_cnn2(self):
-    # plt.figure(figsize=(10, 10))
-    # for images, labels in self.train_ds.take(1):
-    #   for i in range(9):
-    #     ax = plt.subplot(3, 3, i + 1)
-    #     plt.imshow(images[i].numpy().astype("uint8"))
-    #     plt.title(self.class_names[labels[i]])
-    #     plt.axis("off")
-    # plt.show()
-    # target_train = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
-    # target_test = tf.keras.utils.to_categorical(self.train_ds, self.class_names)
-    normalization_layer = tf.keras.layers.Rescaling(1. / 255)
-    normalized_ds = self.train_ds.map(lambda x, y: (normalization_layer(x), y))
-    image_batch, labels_batch = next(iter(normalized_ds))
-    AUTOTUNE = tf.data.AUTOTUNE
-    num_classes = len(self.class_names)
-    model = tf.keras.Sequential([
-      tf.keras.layers.Rescaling(1. / 255),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(128, activation='relu'),
-      tf.keras.layers.Dense(num_classes)
-    ])
-    # model = tf.keras.models.load_model(STORAGE_BASE)
-    model.compile(
-      optimizer='adam',
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-    model.fit(
-      self.train_ds,
-      validation_data=self.val_ds,
-      epochs=100
-    )
-    # Evaluate the model on the test data using `evaluate`
+  def evaluate(self):
     print("Evaluate on test data")
     results = model.evaluate(self.test_ds, batch_size=128)
     print("test loss, test acc:", results)
@@ -235,7 +165,13 @@ class CNN2:
     predictions = model.predict(self.test_ds)
     print("predictions shape:", predictions.shape)
     final_prediction = np.argmax(predictions, axis=-1)
+
+
+class CustomCallback(keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs=None):
     pass
+
+# callbacks.append(CustomCallback())
     # tf.keras.models.save_model(model, STORAGE_BASE)
 def distribute_cnn(name, validation = 0.0, test = 0.1):
   seed(28362)
@@ -582,12 +518,9 @@ def get_max_box():
     max_h = max_h if max_h is not None and max_h > h else h
     min_mean = min_mean if min_mean is not None and min_mean < ts else ts
     max_mean = max_mean if max_mean is not None and max_mean > ts else ts
-    for i, contour in enumerate(contours):
-      perimeter = cv2.arcLength(contour, True)
-      min_perimeter = min_perimeter if min_perimeter is not None and min_perimeter < perimeter else perimeter
-      max_perimeter = max_perimeter if max_perimeter is not None and max_perimeter > perimeter else perimeter
-  print(f'Larghezza (min , max): {min_w} {max_w}\nAltezza (min max): {min_h} {max_h}')
-  print(f'Media (min , max): {round(min_mean, 3)} , {round(max_mean, 3)}\nPerimetro (min max) {round(min_perimeter, 3)} , {round(max_perimeter, 3)}')
+  print(f'Larghezza (min , max): {min_w} {max_w}')
+  print(f'Altezza (min max): {min_h} {max_h}')
+  print(f'Media (min , max): {round(min_mean, 3)} , {round(max_mean, 3)}')
 
 def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
@@ -605,7 +538,7 @@ def open_win(count, filedir, file):
 
   gui = tk.Tk()
   gui.title('')
-  w = 900  # Width
+  w = 1000  # Width
   h = 500  # Height
 
   screen_width = gui.winfo_screenwidth()  # Width of the screen
@@ -667,9 +600,9 @@ def rename_images_files():
 
 set_GPUs()
 
-cnn = CNN('Unita')
-cnn.exec_cnn('Unita', epochs = 100)
-
+# cnn = CNN('Unita')
+# cnn.exec_cnn('Unita', epochs = 100)
+#
 # to_11_classes('Unita')
 
 # count_tiff()
@@ -679,3 +612,5 @@ cnn.exec_cnn('Unita', epochs = 100)
 # to_11_classes('Unita')
 
 # rename_images_files()
+
+get_max_box()
