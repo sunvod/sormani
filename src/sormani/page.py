@@ -428,7 +428,7 @@ class Page:
         buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     end_button = Button(button_frame, text="Fine", font=('Arial', 18), command=end, height=2, width=4)
     end_button.grid(row=5, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
-    exit_button = Button(button_frame, text="Termina", font=('Arial', 18), command=close, height=2, width=4)
+    exit_button = Button(button_frame, text="Esci", font=('Arial', 18), command=close, height=2, width=4)
     exit_button.grid(row=5, column=3, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
     gui.mainloop()
     return file_to_be_changing, end_flag
