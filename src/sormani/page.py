@@ -382,12 +382,19 @@ class Page:
       else:
         new_file += str(button_press)
         label1.config(text=new_file)
+    def page_chosen(button_press):
+      global next_page
+      next_page = int(button_press)
+      gui.destroy()
     global new_file
     global end_flag
+    global next_page
+    end_flag = False
+    next_page = -1
     gui = tk.Tk()
     gui.title('ATTENZIONE ! Se confermi verrà mdificato il nome del file in tutti i formati esistenti: ' + self.file_name)
-    w = 2100  # Width
-    h = 2100  # Height
+    w = 2140  # Width
+    h = 2140  # Height
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
     x = (screen_width / 2) - (w / 2)
@@ -406,6 +413,8 @@ class Page:
     button_frame = tk.Frame(gui_frame)
     button_frame.columnconfigure(0, weight=1)
     button_frame.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    button_frame_1 = tk.Frame(button_frame)
+    button_frame_1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
     buttons = [[0 for x in range(4)] for x in range(3)]
     for i in range(3):
       for j in range(4):
@@ -415,7 +424,7 @@ class Page:
         if text == 11:
           text = 'ok'
         pixel = tk.PhotoImage(width=1, height=1)
-        buttons[i][j] = tk.Button(button_frame,
+        buttons[i][j] = tk.Button(button_frame_1,
                                   text=text,
                                   compound="center",
                                   font=('Aria', 24),
@@ -424,14 +433,35 @@ class Page:
                                   padx=0,
                                   pady=0,
                                   command=lambda number=str(text): number_chosen(number))
-        buttons[i][j].columnconfigure(i)
+        # buttons[i][j].columnconfigure(i)
         buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
+    button_frame_2 = tk.Frame(button_frame)
+    button_frame_2.grid(row=1, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(100, 100))
+    n_lines = self.newspaper.n_pages // 6 + 1
+    buttons = [[0 for x in range(6)] for x in range(n_lines)]
+    for i in range(n_lines):
+      for j in range(6):
+        text = i * 6 + j + 1
+        if text > self.newspaper.n_pages:
+          break
+        pixel = tk.PhotoImage(width=1, height=1)
+        buttons[i][j] = tk.Button(button_frame_2,
+                                  text=text,
+                                  compound="center",
+                                  font=('Aria', 14),
+                                  height=2,
+                                  width=4,
+                                  padx=0,
+                                  pady=0,
+                                  command=lambda number=str(text): page_chosen(number))
+        # buttons[i][j].columnconfigure(i)
+        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
     end_button = Button(button_frame, text="Fine", font=('Arial', 18), command=end, height=2, width=4)
-    end_button.grid(row=5, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
+    end_button.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     exit_button = Button(button_frame, text="Esci", font=('Arial', 18), command=close, height=2, width=4)
-    exit_button.grid(row=5, column=3, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
+    exit_button.grid(row=3, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     gui.mainloop()
-    return file_to_be_changing, end_flag
+    return file_to_be_changing, end_flag, next_page
   def rename_pages_files(self, file_to_be_changing):
     if self.isAlreadySeen():
       if os.path.isdir(self.pdf_path):
@@ -442,7 +472,7 @@ class Page:
             break
       else:
         image = Image.open(self.original_image)
-      file_to_be_changing, end_flag = self.open_win_pages_files(image, file_to_be_changing)
-    return file_to_be_changing, end_flag
+      file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing)
+    return file_to_be_changing, end_flag, next_page
 
 

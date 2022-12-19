@@ -200,10 +200,19 @@ class Page_pool(list):
   def rename_pages_files(self):
     file_to_be_changing = []
     end_flag = False
-    for page in self:
-      file_to_be_changing, end_flag = page.rename_pages_files(file_to_be_changing)
-      if end_flag:
-        break
+    next_page = -1
+    while not end_flag:
+      for page in self:
+        if next_page > 1:
+          next_page -= 1
+          continue
+        file_to_be_changing, end_flag, next_page = page.rename_pages_files(file_to_be_changing)
+        if end_flag:
+          break
+        if next_page >= 0:
+          break
+      if next_page < 0:
+        end_flag = True
     flag = False
     filedirs = []
     for i, (old_file, new_file) in enumerate(file_to_be_changing):
@@ -215,22 +224,37 @@ class Page_pool(list):
         path = os.path.dirname(new_file)
         if not path in filedirs:
           filedirs.append(path)
-    if not flag:
-      for old_file, new_file in file_to_be_changing:
-        ext = pathlib.Path(old_file).suffix
-        if ext == '.pdf':
-          n = new_file.split('_')[-1][1:]
-          if n.isdigit():
-            n = int(n)
-            page.newspaper.n_page = n
-            # page.add_pdf_metadata()
-        os.rename(old_file, new_file + '.***')
-      for dir in filedirs:
-        for filedir, dirs, files in os.walk(dir):
-          for file in files:
-            ext = pathlib.Path(file).suffix
-            if ext == '.***':
-              new_file = Path(file).stem
-              os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+    if flag:
+      print('Errore')
+      return
+    for dir in filedirs:
+      filedir, dirs, files = next(os.walk(dir))
+      files.sort()
+      _, _, _files = next(os.walk(dir))
+      new_files = []
+      for (old_file, new_file) in file_to_be_changing:
+        if os.path.basename(old_file) in files:
+          files.remove(os.path.basename(old_file))
+        new_files.append(os.path.basename(new_file))
+      for file in files:
+        if file in new_files:
+          print('Errore')
+          return
+    for old_file, new_file in file_to_be_changing:
+      ext = pathlib.Path(old_file).suffix
+      if ext == '.pdf':
+        n = new_file.split('_')[-1][1:]
+        if n.isdigit():
+          n = int(n)
+          page.newspaper.n_page = n
+          # page.add_pdf_metadata()
+      # os.rename(old_file, new_file + '.***')
+    for dir in filedirs:
+      for filedir, dirs, files in os.walk(dir):
+        for file in files:
+          ext = pathlib.Path(file).suffix
+          if ext == '.***':
+            new_file = Path(file).stem
+            # os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
 
