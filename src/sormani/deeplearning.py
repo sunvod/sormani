@@ -524,7 +524,7 @@ def save_page_numbers(name):
   sormani = Sormani(name, year=2016, months=2, days=None)
   sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
 
-def open_win(count, filedir, file):
+def open_win_rename_images_files(count, filedir, file):
   def close():
     gui.destroy()
     exit()
@@ -594,7 +594,80 @@ def rename_images_files(name):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     for file in files:
-      open_win(count, filedir, file)
+      open_win_rename_images_files(count, filedir, file)
+      count += 1
+
+def open_win_pages_files(count, filedir, file):
+  def close():
+    gui.destroy()
+    exit()
+  def number_chosen(button_press, filedir, file):
+    if button_press != 'ok':
+      new_file = '_'.join(file.split('_')[:-1]) + '_' + str(button_press) + '.jpg'
+      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_BASE, 'numbers'), new_file))
+    gui.destroy()
+
+  gui = tk.Tk()
+  gui.title('')
+  w = 1000  # Width
+  h = 500  # Height
+
+  screen_width = gui.winfo_screenwidth()  # Width of the screen
+  screen_height = gui.winfo_screenheight()  # Height of the screen
+
+  # Calculate Starting X and Y coordinates for Window
+  x = (screen_width / 2) - (w / 2)
+  y = (screen_height / 2) - (h / 2)
+
+  gui.geometry('%dx%d+%d+%d' % (w, h, x, y))
+  gui_frame = tk.Frame(gui)
+  gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
+
+  button_frame = tk.Frame(gui_frame)
+  button_frame.columnconfigure(0, weight=1)
+  button_frame.pack(fill=tk.X, side=tk.BOTTOM)
+  button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
+
+  buttons = [[0 for x in range(4)] for x in range(3)]
+
+  for i in range(3):
+    for j in range(4):
+      text = i * 4 + j
+      if text == 10:
+        text = 'X'
+      if text == 11:
+        text = 'ok'
+      pixel = tk.PhotoImage(width=1, height=1)
+      buttons[i][j] = tk.Button(button_frame,
+                                text=text,
+                                compound="center",
+                                font=('Aria', 24),
+                                height=2,
+                                width=4,
+                                padx=0,
+                                pady=0,
+                                command=lambda number=str(text): number_chosen(number, filedir, file))
+      buttons[i][j].columnconfigure(i)
+      buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(5, 5), pady=(5, 5))
+  image = Image.open(os.path.join(filedir, file))
+  img = ImageTk.PhotoImage(image)
+  label = Label(gui_frame, image = img)
+  label.columnconfigure(1, weight=1)
+  label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(50, 50))
+  label2 = Label(gui, text = str(count) + '. ' + file, font = ('Arial', 14))
+  label2.pack(pady=20)
+  exit_button = Button(gui_frame, text="Exit", font = ('Arial', 18), command=close)
+  exit_button.columnconfigure(2, weight=1)
+  exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
+  gui.mainloop()
+
+def rename_pages_files(name):
+  count = 1
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+    files.sort()
+    for file in files:
+      open_win_pages_files(count, filedir, file)
       count += 1
 
 def delete_name(name):

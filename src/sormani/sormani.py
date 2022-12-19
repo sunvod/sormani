@@ -183,11 +183,14 @@ class Sormani():
       self.add_zero_to_dir(root)
   def get_elements(self, root):
     elements = []
+    filedirs = []
     for filedir, dirs, files in os.walk(root):
-      n_pages = len(files)
-      if filedir in self.path_exclude or n_pages == 0 or len(dirs) > 0:
+      if filedir in self.path_exclude or len(files) == 0 or len(dirs) > 0:
         continue
       files.sort(key = self._get_elements)
+      filedirs.append((filedir, files))
+    filedirs.sort()
+    for filedir, files in filedirs:
       if self.check_if_image(filedir, files):
         elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
     if len(elements) > 1:
@@ -486,7 +489,10 @@ class Sormani():
         old_folder = os.path.join(filedir, dir)
         new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
         if old_folder != new_folder:
-          os.rename(old_folder, new_folder)
+          try:
+            os.rename(old_folder, new_folder)
+          except:
+            raise OSError('La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).')
         number += 1
   def set_GPUs(self):
     from numba import cuda
@@ -525,3 +531,11 @@ class Sormani():
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
     return images
+  def rename_pages_files(self):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    self.force = True
+    for page_pool in self:
+      page_pool.rename_pages_files()
+    self.force = selfforce

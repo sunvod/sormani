@@ -16,6 +16,10 @@ from PIL import Image
 from pathlib import Path
 import numpy as np
 
+from PIL import Image, ImageChops, ImageDraw, ImageOps, ImageTk
+import tkinter as tk
+from tkinter import Label, Button, RAISED
+
 from tensorflow import keras
 from keras.callbacks import ModelCheckpoint
 from keras.applications.inception_v3 import InceptionV3
@@ -344,4 +348,101 @@ class Page:
     else:
       prediction = None
     return prediction, original_predictions
+  def open_win_pages_files(self, image, file_to_be_changing):
+    def close():
+      gui.destroy()
+      exit()
+    def end():
+      global end_flag
+      gui.destroy()
+      end_flag = True
+    def number_chosen(button_press):
+      global new_file
+      global end_flag
+      end_flag = False
+      if button_press == 'ok':
+        if self.file_name != new_file and new_file[-1] != 'p':
+          on = self.file_name.split('_')[-1][1:]
+          n = ('0000' + new_file.split('_')[-1][1:])[-len(on):]
+          new_file = '_'.join(new_file.split('_')[:-1]) + '_p' + n
+          ext = pathlib.Path(self.original_image).suffix
+          file_to_be_changing.append((os.path.join(self.original_path, self.original_image), os.path.join(self.original_path, new_file) + ext))
+          if os.path.isdir(self.pdf_path):
+            for filedir, _, files in os.walk(self.pdf_path):
+              for file in files:
+                ext = pathlib.Path(file).suffix
+                if Path(file).stem == self.file_name:
+                  file_to_be_changing.append((os.path.join(filedir, file), os.path.join(filedir, new_file) + ext))
+        gui.destroy()
+      elif button_press == 'del':
+        lc = new_file[-1]
+        if lc != 'p':
+          new_file = new_file[:-1]
+          label1.config(text = new_file)
+      else:
+        new_file += str(button_press)
+        label1.config(text=new_file)
+    global new_file
+    global end_flag
+    gui = tk.Tk()
+    gui.title('ATTENZIONE ! Se confermi verrà mdificato il nome del file in tutti i formati esistenti: ' + self.file_name)
+    w = 2100  # Width
+    h = 2100  # Height
+    screen_width = gui.winfo_screenwidth()
+    screen_height = gui.winfo_screenheight()
+    x = (screen_width / 2) - (w / 2)
+    y = (screen_height / 2) - (h / 2)
+    gui.geometry('%dx%d+%d+%d' % (w, h, x, y))
+    gui_frame = tk.Frame(gui)
+    gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
+    # new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
+    new_file = self.file_name
+    label1 = Label(gui, text=new_file, font=('Arial 20 bold'), height = 5)
+    label1.pack(padx=(10, 10), pady=(10, 10))
+    image = image.resize((1550, 2000), Image.Resampling.LANCZOS)
+    img = ImageTk.PhotoImage(image)
+    label2 = Label(gui_frame, image=img)
+    label2.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    button_frame = tk.Frame(gui_frame)
+    button_frame.columnconfigure(0, weight=1)
+    button_frame.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    buttons = [[0 for x in range(4)] for x in range(3)]
+    for i in range(3):
+      for j in range(4):
+        text = i * 4 + j
+        if text == 10:
+          text = 'del'
+        if text == 11:
+          text = 'ok'
+        pixel = tk.PhotoImage(width=1, height=1)
+        buttons[i][j] = tk.Button(button_frame,
+                                  text=text,
+                                  compound="center",
+                                  font=('Aria', 24),
+                                  height=2,
+                                  width=4,
+                                  padx=0,
+                                  pady=0,
+                                  command=lambda number=str(text): number_chosen(number))
+        buttons[i][j].columnconfigure(i)
+        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
+    end_button = Button(button_frame, text="Fine", font=('Arial', 18), command=end, height=2, width=4)
+    end_button.grid(row=5, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
+    exit_button = Button(button_frame, text="Termina", font=('Arial', 18), command=close, height=2, width=4)
+    exit_button.grid(row=5, column=3, sticky=tk.W + tk.E, padx=(5, 5), pady=(1550, 5))
+    gui.mainloop()
+    return file_to_be_changing, end_flag
+  def rename_pages_files(self, file_to_be_changing):
+    if self.isAlreadySeen():
+      if os.path.isdir(self.pdf_path):
+        filedir, dirs, files = next(os.walk(self.pdf_path))
+        for dir in dirs:
+          if dir != 'pdf':
+            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.jpg'))
+            break
+      else:
+        image = Image.open(self.original_image)
+      file_to_be_changing, end_flag = self.open_win_pages_files(image, file_to_be_changing)
+    return file_to_be_changing, end_flag
+
 

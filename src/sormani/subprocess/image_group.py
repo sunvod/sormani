@@ -26,9 +26,14 @@ class Images_group():
     pos = re.search(r'[^0-9]', day_folder + 'a').start()
     day = day_folder[ : pos]
     if year.isdigit() and month.isdigit() and day.isdigit():
-      self.date = datetime.date(int(year), int(month), int(day))
+      try:
+        self.date = datetime.date(int(year), int(month), int(day))
+      except:
+        error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
+        raise OSError(error)
     else:
-      raise NotADirectoryError('Le directory non indicano una data.')
+      error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
+      raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date)
   def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
     page_pool = Page_pool(newspaper_name, self.date, force)

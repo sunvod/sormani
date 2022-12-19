@@ -197,4 +197,22 @@ class Page_pool(list):
         else:
           images.show()
     return pages
+  def rename_pages_files(self):
+    file_to_be_changing = []
+    end_flag = False
+    for page in self:
+      file_to_be_changing, end_flag = page.rename_pages_files(file_to_be_changing)
+      if end_flag:
+        break
+    for old_file, new_file in file_to_be_changing:
+      ext = pathlib.Path(self.original_image).suffix
+      if ext == '.pdf':
+        n = new_file.split('_')[-1][1:]
+        if n.isdigit():
+          n = int(n)
+          page.newspaper.n_page = n
+          # page.add_pdf_metadata()
+      if not os.path.isfile(new_file):
+        pass
+
 
