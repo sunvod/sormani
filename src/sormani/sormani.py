@@ -420,6 +420,8 @@ class Sormani():
   def get_pages_numbers(self, no_resize = False, filedir = None, pages = None):
     if not len(self.elements):
       return
+    if filedir is not None:
+      filedir += '_' + self.newspaper_name.lower().replace(' ', '_')
     start_time = time.time()
     print(
       f'Start extract pages numbers of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')

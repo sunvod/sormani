@@ -529,13 +529,13 @@ class Avvenire(Newspaper):
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_w = 91 - 50,
-                                max_w = 206 + 50,
-                                min_h = 235 - 50,
-                                max_h = 321 + 50,
+                                min_w = 80,
+                                max_w = 220,
+                                min_h = 220,
+                                max_h = 330,
                                 ts = 170,
-                                min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50)
+                                min_mean = 120,
+                                max_mean = 260)
 class Osservatore_Romano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 156

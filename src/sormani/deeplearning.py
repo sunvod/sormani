@@ -607,17 +607,17 @@ def delete_name(name):
 
 set_GPUs()
 
-cnn = CNN('Avvenire')
-cnn.exec_cnn('Avvenire', epochs = 50)
+# cnn = CNN('Avvenire')
+# cnn.exec_cnn('Avvenire', epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# to_11_classes('La Stampa')
+# to_11_classes('Avvenire')
 #
 # rename_images_files('La Stampa')
 
-# get_max_box('Il Manifesto')
+get_max_box('Avvenire')
 
 # delete_name('Avvenire')
