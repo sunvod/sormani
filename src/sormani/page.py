@@ -133,7 +133,7 @@ class Page:
     mask = cv2.inRange(img, min, max)
     img[mask > 0] = [255, 255, 255]
     return img
-  def add_boxes(self, images, img, contours, parameters, file_name, no_resize):
+  def add_boxes(self, images, img, contours, hierarchy, parameters, file_name, no_resize):
     def _get_contours(e):
       return e[0]
     _contours = []
@@ -145,7 +145,7 @@ class Page:
       x, y, w, h = cv2.boundingRect(contour)
       perimeter = cv2.arcLength(contour, True)  # hierarchy[0, i, 3] == -1 and
       roi = img[y:y + h, x:x + w]
-      if perimeter > parameters.min_perimeter and w > parameters.box[0] and w < parameters.box[1] and h > \
+      if w > parameters.box[0] and w < parameters.box[1] and h > \
           parameters.box[2] and h < parameters.box[3]:
         mean = roi.mean()
         if mean >= parameters.min_mean and mean <= parameters.max_mean:
@@ -172,61 +172,6 @@ class Page:
                 images.append((name_i, _roi, perimeter))
           else:
             images.append((name, roi, perimeter))
-  # def get_boxes(self, image, level=200, no_resize=False):
-  #   img = self.change_contrast_PIL(image, level)
-  #   img = self.change_contrast_cv2(img)
-  #   parameters = self.newspaper.get_parameters()
-  #   p = self.file_name.split('_')[-1][1:]
-  #   if parameters.include is not None:
-  #     if not int(p) in parameters.include:
-  #       return None, img
-  #   if parameters.exclude is not None:
-  #     if int(p) in parameters.exclude:
-  #       return None, img
-  #   img = self.cv2_resize(img, parameters.scale)
-  #   bimg = img.copy()
-  #   black_pixels = np.where(
-  #     (img[:, :, 0] < 230) |
-  #     (img[:, :, 1] > 20) |
-  #     (img[:, :, 2] > 20)
-  #   )
-  #   # set those pixels to white
-  #   img[black_pixels] = [255, 255, 255]
-  #   # img_tosave = cv2.threshold(gray, 50, 255, cv2.THRESH_BINARY_INV)[1]
-  #   # img_tosave = gray.copy()
-  #   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  #
-  #   # Questo riempie i buchi
-  #   thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-  #   # Apply Dilate + Erode:
-  #   kernel = np.ones((3, 3), np.uint8)
-  #   binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
-  #   gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-  #   # gray = 255 - gray
-  #
-  #   img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
-  #   # img_tosave = img.astype(np.uint8)
-  #   cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-  #   cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-  #   for c in cnts:
-  #     if cv2.contourArea(c)  < parameters.max_fillarea:
-  #       cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
-  #   # img = cv2.threshold(img, 150, 255, cv2.THRESH_BINARY_INV)[1]
-  #   if not parameters.invert:
-  #     img = 255 - img
-  #   edges = cv2.Canny(img, 1, 50)
-  #   kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-  #   edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-  #   bimg = img.copy()
-  #   contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-  #   for c in contours:
-  #     x, y, w, h = cv2.boundingRect(c)
-  #     cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
-  #   file_name = Path(self.file_name).stem
-  #   images = [(self.file_name + '_00000', bimg)]
-  #   self.add_boxes(images, img, contours, parameters, file_name, no_resize)
-  #   return images, img
-
   def get_boxes(self, image, level=200, no_resize=False):
     img = self.change_contrast_PIL(image, level)
     img = self.change_contrast_cv2(img)
@@ -281,7 +226,7 @@ class Page:
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
     images = [(self.file_name + '_00000', bimg)]
-    self.add_boxes(images, img, contours, parameters, file_name, no_resize)
+    self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None):
     if self.isAlreadySeen():

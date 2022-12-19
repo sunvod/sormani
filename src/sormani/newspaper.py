@@ -18,7 +18,6 @@ warnings.filterwarnings("ignore")
 class Newspaper_parameters():
   def __init__(self,
                scale,
-               min_perimeter,
                min_w,
                max_w,
                min_h,
@@ -34,7 +33,6 @@ class Newspaper_parameters():
                fill_hole = None,
                exclude_colors = None):
     self.scale = scale
-    self.min_perimeter = min_perimeter
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
     self.min_mean = min_mean
@@ -85,10 +83,47 @@ class Newspaper():
       newspaper = Il_Foglio(newspaper_base, file_path, date, year, number)
     elif name == 'Unita':
       newspaper = Unita(newspaper_base, file_path, date, year, number)
+    elif name == 'Tutto Libri':
+      newspaper = Tutto_Libri(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     return newspaper
+
+  @staticmethod
+  def get_parameters(name):
+    if name == 'La Stampa':
+      parameters = La_stampa.get_parameters()
+    elif name == 'Il Giornale':
+      parameters = Il_Giornale.get_parameters()
+    elif name == 'Il Manifesto':
+      parameters = Il_manifesto.get_parameters()
+    elif name == 'Avvenire':
+      parameters = Avvenire.get_parameters()
+    elif name == 'Milano Finanza':
+      parameters = Milano_Finanza.get_parameters()
+    elif name == 'Il Fatto Quotidiano':
+      parameters = Il_Fatto_Quotidiano.get_parameters()
+    elif name == 'Italia Oggi':
+      parameters = Italia_Oggi.get_parameters()
+    elif name == 'Libero':
+      parameters = Libero.get_parameters()
+    elif name == 'Alias':
+      parameters = Alias.get_parameters()
+    elif name == 'Alias Domenica':
+      parameters = Alias_Domenica.get_parameters()
+    elif name == 'Osservatore Romano':
+      parameters = Osservatore_Romano.get_parameters()
+    elif name == 'Il Foglio':
+      parameters = Il_Foglio.get_parameters()
+    elif name == 'Unita':
+      parameters = Unita.get_parameters()
+    elif name == 'Tutto Libri':
+      parameters = Tutto_Libri.get_parameters()
+    else:
+      error = "Error: \'" + name + "\' is not defined in this application."
+      raise ValueError(error)
+    return parameters
   def __init__(self, newspaper_base, name, file_path, date, year, number, init_page):
     self.newspaper_base = newspaper_base
     self.name = name
@@ -275,9 +310,9 @@ class La_stampa(Newspaper):
     w, h = image.size
     whole = (0, 100, w, 500)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
                                 min_w = 39 - 20,
                                 max_w = 91 + 20,
                                 min_h = 125 - 20,
@@ -294,9 +329,9 @@ class Il_Giornale(Newspaper):
   def get_whole_page_location(self, image):
     whole = (0, 100, 5000, 500)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
                                 min_w = 50,
                                 max_w = 150,
                                 min_h = 140,
@@ -312,20 +347,21 @@ class Il_manifesto(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_path, date, year, number, init_page = 3)
   def get_whole_page_location(self, image):
-    whole = [0, 150, 4850, 450]
+    if self.n_page % 2 == 0:
+      whole = [0, 150, 1000, 450]
+    else:
+      whole = [3850, 150, 4850, 450]
     return whole
-  # def get_parameters(self):
-  #   return 200, 100, 5, 100, 20, 100, 64
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale=200,
-                                min_perimeter=200,
-                                min_w=29 - 20,
-                                max_w=100 + 50,
-                                min_h=59 - 50,
-                                max_h=83 + 50,
-                                ts=170,
-                                min_mean=74.2 - 50,
-                                max_mean=145.2 + 50)
+                                min_w=30,
+                                max_w=60,
+                                min_h=55,
+                                max_h=75,
+                                ts=5,
+                                min_mean=20,
+                                max_mean=140)
 
 class Milano_Finanza(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -372,9 +408,9 @@ class Milano_Finanza(Newspaper):
   def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 100,
                                 min_w = 30,
                                 max_w = 100,
                                 min_h = 90,
@@ -447,11 +483,11 @@ class Libero(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Libero', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 500]
+    whole = [0, 100, 4850, 520]
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale=200,
-                                min_perimeter=10,
                                 min_w=50,
                                 max_w=130,
                                 min_h=110,
@@ -490,9 +526,9 @@ class Avvenire(Newspaper):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
                                 min_w = 91 - 50,
                                 max_w = 206 + 50,
                                 min_h = 235 - 50,
@@ -502,16 +538,16 @@ class Avvenire(Newspaper):
                                 max_mean = 220.4 + 50)
 class Osservatore_Romano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 49
+    self.init_year = 156
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Osservatore Romano', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
                                 min_w = 91 - 50,
                                 max_w = 206 + 50,
                                 min_h = 235 - 50,
@@ -522,16 +558,16 @@ class Osservatore_Romano(Newspaper):
 
 class Il_Foglio(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 49
+    self.init_year = 21
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Foglio', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 800)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_perimeter = 200,
                                 min_w = 91 - 50,
                                 max_w = 206 + 50,
                                 min_h = 235 - 50,
@@ -549,9 +585,9 @@ class Unita(Newspaper):
     w, h = image.size
     whole = (0, h - 700, w, h - 300)
     return whole
-  def get_parameters(self):
+  @staticmethod
+  def get_parameters():
     return Newspaper_parameters(scale=200,
-                                min_perimeter=200,
                                 min_w=180,
                                 max_w=240,
                                 min_h=180,
@@ -561,3 +597,12 @@ class Unita(Newspaper):
                                 max_mean=500,
                                 invert = True,
                                 internal_box = (30, 100, 80, 120))
+
+class Tutto_Libri(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 19
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Tutto Libri', file_path, date, year, number, init_page = 5)
+  def get_whole_page_location(self, image):
+    whole = [0, 100, 4850, 400]
+    return whole

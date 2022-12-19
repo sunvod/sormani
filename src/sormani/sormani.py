@@ -434,10 +434,6 @@ class Sormani():
           images.append(image)
         print('.', end='')
     print()
-    if len(images):
-      print(f'Extracting numbers from {len(images)} newspapers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'There are no pages numbers to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
     return images
   def get_head(self):

@@ -3,6 +3,9 @@ import numpy as np
 import os
 from random import seed, random
 import random
+
+from src.sormani.newspaper import Newspaper
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 from PIL import Image, ImageChops, ImageDraw, ImageOps, ImageTk
@@ -33,7 +36,8 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
+  NUMBER_IMAGE_SIZE
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
@@ -114,7 +118,7 @@ class CNN:
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
     callbacks = []
-    callbacks.append(CustomCallback())
+    callbacks.append(customCallback)
     mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name),
                                verbose=1,
                                save_weights_only=False,
@@ -167,12 +171,11 @@ class CNN:
     final_prediction = np.argmax(predictions, axis=-1)
 
 
-class CustomCallback(keras.callbacks.Callback):
+class customCallback(keras.callbacks.Callback):
   def on_epoch_end(self, epoch, logs=None):
     pass
 
-# callbacks.append(CustomCallback())
-    # tf.keras.models.save_model(model, STORAGE_BASE)
+
 def distribute_cnn(name, validation = 0.0, test = 0.1):
   seed(28362)
   train_path = os.path.join(STORAGE_DL, name, 'train')
@@ -469,8 +472,8 @@ def to_11_classes(name = 'all', source = None):
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
                os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'no_numbers'),
-               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
-               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
                os.path.join(STORAGE_BASE, 'numbers')]
   elif isinstance(source, str):
     sources = [source]
@@ -491,26 +494,21 @@ def move_to_test(name = 'numbers'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
     for file in files:
       os.rename(os.path.join(filedir, file), os.path.join(STORAGE_DL, dest_path, file))
-def get_max_box():
+def get_max_box(name):
   # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
   filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'numbers')))
+  parameters = Newspaper.get_parameters(name)
   min_w = None
   max_w = None
   min_h = None
   max_h = None
   min_mean = None
   max_mean = None
-  min_perimeter = None
-  max_perimeter = None
-  min_area = None
-  max_area = None
   for file in files:
     img = cv2.imread(os.path.join(filedir, file))
     h, w, _ = img.shape
     if w > 1000:
       continue
-    edges = cv2.Canny(img, 1, 50)
-    contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     ts = np.asarray(img).mean()
     min_w = min_w if min_w is not None and min_w < w else w
     max_w = max_w if max_w is not None and max_w > w else w
@@ -590,27 +588,36 @@ def open_win(count, filedir, file):
   exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
   gui.mainloop()
 
-def rename_images_files():
+def rename_images_files(name):
   count = 1
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, 'unita', 'notsure', 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     for file in files:
       open_win(count, filedir, file)
       count += 1
 
+def delete_name(name):
+  dir_name = name.lower().replace(' ', '_')
+  name = name.replace(' ', '_')
+  for filedir, dirs, files in os.walk(os.path.join(os.path.join(STORAGE_DL, dir_name))):
+    for file in files:
+      if file.find(name) == -1:
+        os.remove(os.path.join(filedir, file))
+
 set_GPUs()
 
-# cnn = CNN('Unita')
-# cnn.exec_cnn('Unita', epochs = 100)
-#
-# to_11_classes('Unita')
+cnn = CNN('Avvenire')
+cnn.exec_cnn('Avvenire', epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# to_11_classes('Unita')
+# to_11_classes('La Stampa')
+#
+# rename_images_files('La Stampa')
 
-# rename_images_files()
+# get_max_box('Il Manifesto')
 
-get_max_box()
+# delete_name('Avvenire')
