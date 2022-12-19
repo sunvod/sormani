@@ -247,14 +247,14 @@ class Page_pool(list):
         if n.isdigit():
           n = int(n)
           page.newspaper.n_page = n
-          # page.add_pdf_metadata()
-      # os.rename(old_file, new_file + '.***')
+          page.add_pdf_metadata()
+      os.rename(old_file, new_file + '.***')
     for dir in filedirs:
       for filedir, dirs, files in os.walk(dir):
         for file in files:
           ext = pathlib.Path(file).suffix
           if ext == '.***':
             new_file = Path(file).stem
-            # os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+            os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
 

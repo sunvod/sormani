@@ -359,6 +359,7 @@ class Page:
     def number_chosen(button_press):
       global new_file
       global end_flag
+      global flag_digited
       end_flag = False
       if button_press == 'ok':
         if self.file_name != new_file and new_file[-1] != 'p':
@@ -380,6 +381,9 @@ class Page:
           new_file = new_file[:-1]
           label1.config(text = new_file)
       else:
+        if not flag_digited:
+          new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
+        flag_digited = True
         new_file += str(button_press)
         label1.config(text=new_file)
     def page_chosen(button_press):
@@ -389,8 +393,10 @@ class Page:
     global new_file
     global end_flag
     global next_page
+    global flag_digited
     end_flag = False
     next_page = -1
+    flag_digited = False
     gui = tk.Tk()
     gui.title('ATTENZIONE ! Se confermi verrà mdificato il nome del file in tutti i formati esistenti: ' + self.file_name)
     w = 2140  # Width
