@@ -63,7 +63,7 @@ class Page_pool(list):
     countminusone = 0
     countzero = 0
     for page in self:
-      images, predictions = page.check_pages_numbers(model)
+      images, _, predictions = page.check_pages_numbers(model)
       if page.page_control == 0:
         countzero += 1
         errors.append(page.newspaper.n_page)
@@ -197,7 +197,7 @@ class Page_pool(list):
         else:
           images.show()
     return pages
-  def rename_pages_files(self):
+  def rename_pages_files(self, model):
     file_to_be_changing = []
     end_flag = False
     next_page = -1
@@ -206,7 +206,8 @@ class Page_pool(list):
         if next_page > 1:
           next_page -= 1
           continue
-        file_to_be_changing, end_flag, next_page = page.rename_pages_files(file_to_be_changing)
+        predictions = None
+        file_to_be_changing, end_flag, next_page = page.rename_pages_files(file_to_be_changing, model)
         if end_flag:
           break
         if next_page >= 0:
@@ -221,12 +222,12 @@ class Page_pool(list):
           continue
         if new_file == new_file2:
           flag = True
+          print(new_file)
         path = os.path.dirname(new_file)
         if not path in filedirs:
           filedirs.append(path)
     if flag:
-      print('Errore')
-      return
+      raise OSError('Le modifiche fatte non sono valide')
     for dir in filedirs:
       filedir, dirs, files = next(os.walk(dir))
       files.sort()
@@ -236,10 +237,13 @@ class Page_pool(list):
         if os.path.basename(old_file) in files:
           files.remove(os.path.basename(old_file))
         new_files.append(os.path.basename(new_file))
+      file_to_be_changed = []
       for file in files:
         if file in new_files:
-          print('Errore')
-          return
+          file_to_be_changed.append(file)
+          print(file)
+      if len(file_to_be_changed):
+        raise OSError('Le modifiche fatte non sono valide perchè uno o più nuovi file sono già presenti')
     for old_file, new_file in file_to_be_changing:
       ext = pathlib.Path(old_file).suffix
       if ext == '.pdf':

@@ -531,11 +531,18 @@ class Sormani():
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
     return images
-  def rename_pages_files(self):
+  def rename_pages_files(self, model_path = 'best_model_DenseNet201', assume_newspaper = False, do_prediction = False):
     if not len(self.elements):
       return
     selfforce = self.force
     self.force = True
+    if assume_newspaper:
+      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
+    else:
+      model_path = os.path.join('models', model_path)
+    model = None
+    if do_prediction:
+      model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     for page_pool in self:
-      page_pool.rename_pages_files()
+      page_pool.rename_pages_files(model)
     self.force = selfforce

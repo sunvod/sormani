@@ -3,7 +3,7 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
   #sormani = Sormani('Il Manifesto', year=2016, months=1, days=None)
-  sormani = Sormani('Avvenire', year=2016, months=11, days=6)  # [x for x in range(1,13)]
+  sormani = Sormani('Il Manifesto', year=2016, months=5, days=11)  # [x for x in range(1,13)]
   # sormani = Sormani('Unita', year=2016, months=[x for x in range(2,13)], days=None)
   # sormani = Sormani('Unita', year=2016, months=1, days=2)
   # sormani = Sormani('Milano Finanza', year=2016, months=1, days=[2,9])
@@ -16,5 +16,5 @@ if __name__ == '__main__':
   # sormani.create_all_images()
   # sormani.check_page_numbers(save_images = True, model_path = 'best_model_DenseNet201', assume_newspaper = True)
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = True)
-  sormani.rename_pages_files()
+  sormani.rename_pages_files(do_prediction=False)
 

@@ -308,6 +308,7 @@ class Page:
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped)
+      prediction = None
       predictions = None
       if images is not None:
         prediction, predictions = self.get_page_numbers(model, images)
@@ -317,7 +318,7 @@ class Page:
         self.page_control = 1
       else:
         self.page_control = 0
-      return images, predictions
+      return images, prediction, predictions
   def get_page_numbers(self, model, images):
     images.pop(0)
     dataset = []
@@ -348,7 +349,7 @@ class Page:
     else:
       prediction = None
     return prediction, original_predictions
-  def open_win_pages_files(self, image, file_to_be_changing):
+  def open_win_pages_files(self, image, file_to_be_changing, prediction = None):
     def close():
       gui.destroy()
       exit()
@@ -361,8 +362,11 @@ class Page:
       global end_flag
       global flag_digited
       end_flag = False
-      if button_press == 'ok':
-        if self.file_name != new_file and new_file[-1] != 'p':
+      if button_press != 'ok':
+        new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
+        new_file += str(button_press)
+        label1.config(text=new_file)
+        if self.file_name != os.path.basename(new_file) and new_file[-1] != 'p':
           on = self.file_name.split('_')[-1][1:]
           n = ('0000' + new_file.split('_')[-1][1:])[-len(on):]
           new_file = '_'.join(new_file.split('_')[:-1]) + '_p' + n
@@ -374,29 +378,24 @@ class Page:
                 ext = pathlib.Path(file).suffix
                 if Path(file).stem == self.file_name:
                   file_to_be_changing.append((os.path.join(filedir, file), os.path.join(filedir, new_file) + ext))
-        gui.destroy()
-      elif button_press == 'del':
-        lc = new_file[-1]
-        if lc != 'p':
-          new_file = new_file[:-1]
-          label1.config(text = new_file)
-      else:
-        if not flag_digited:
-          new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
-        flag_digited = True
-        new_file += str(button_press)
-        label1.config(text=new_file)
+      gui.destroy()
     def page_chosen(button_press):
       global next_page
       next_page = int(button_press)
       gui.destroy()
+    def on_start_hover(event):
+      global label3
+      img = image.crop((event.x - 40, event.y - 40, event.x + 40, event.y + 40))
+      img = img.resize((480, 480), Image.Resampling.LANCZOS)
+      crop = ImageTk.PhotoImage(img)
+      label3.configure(image=crop)
+      label3.image = crop
     global new_file
     global end_flag
     global next_page
-    global flag_digited
+    global label3
     end_flag = False
     next_page = -1
-    flag_digited = False
     gui = tk.Tk()
     gui.title('ATTENZIONE ! Se confermi verrà mdificato il nome del file in tutti i formati esistenti: ' + self.file_name)
     w = 2140  # Width
@@ -410,6 +409,8 @@ class Page:
     gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
     # new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
     new_file = self.file_name
+    if prediction is not None:
+      new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p' + str(prediction)
     label1 = Label(gui, text=new_file, font=('Arial 20 bold'), height = 5)
     label1.pack(padx=(10, 10), pady=(10, 10))
     image = image.resize((1550, 2000), Image.Resampling.LANCZOS)
@@ -417,34 +418,55 @@ class Page:
     label2 = Label(gui_frame, image=img)
     label2.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
     button_frame = tk.Frame(gui_frame)
-    button_frame.columnconfigure(0, weight=1)
     button_frame.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    if self.newspaper.n_page % 2 == 0:
+      crop = ImageTk.PhotoImage(image.crop((0, 0, 240, 240)).resize((480, 480), Image.Resampling.LANCZOS))
+    else:
+      w, h = image.size
+      crop = ImageTk.PhotoImage(image.crop((w - 240, 0, w, 240)).resize((480, 480), Image.Resampling.LANCZOS))
+    label3 = Label(button_frame, image=crop)
+    label3.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    label2.bind('<Button-1>', on_start_hover)
     button_frame_1 = tk.Frame(button_frame)
-    button_frame_1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
-    buttons = [[0 for x in range(4)] for x in range(3)]
-    for i in range(3):
-      for j in range(4):
-        text = i * 4 + j
-        if text == 10:
-          text = 'del'
-        if text == 11:
+    button_frame_1.grid(row=1, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
+    n_lines = (self.newspaper.n_pages + 2) // 6 + 2
+    buttons = [[0 for x in range(6)] for x in range(n_lines)]
+    for i in range(n_lines):
+      for j in range(6):
+        text = i * 6 + j + 1
+        if text == self.newspaper.n_pages + 1:
           text = 'ok'
+        elif text > self.newspaper.n_pages:
+          break
         pixel = tk.PhotoImage(width=1, height=1)
         buttons[i][j] = tk.Button(button_frame_1,
                                   text=text,
                                   compound="center",
-                                  font=('Aria', 24),
+                                  font=('Aria', 14),
                                   height=2,
                                   width=4,
                                   padx=0,
                                   pady=0,
                                   command=lambda number=str(text): number_chosen(number))
-        # buttons[i][j].columnconfigure(i)
-        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
+        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
     button_frame_2 = tk.Frame(button_frame)
-    button_frame_2.grid(row=1, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(100, 100))
+    button_frame_2.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(100, 100))
     n_lines = self.newspaper.n_pages // 6 + 1
     buttons = [[0 for x in range(6)] for x in range(n_lines)]
+    lst = [x + 1 for x in range(self.newspaper.n_pages)]
+    for old_file, new_file in file_to_be_changing:
+      if pathlib.Path(old_file).suffix == '.tif':
+        on = ''.join(Path(old_file).stem.split('_')[-1])[1:]
+        nn = ''.join(Path(new_file).stem.split('_')[-1])[1:]
+        if on.isdigit():
+          on = int(on)
+        if nn.isdigit():
+          nn = int(nn)
+        if on in lst:
+          lst.remove(on)
+        if not nn in lst:
+          lst.append(nn)
+        pass
     for i in range(n_lines):
       for j in range(6):
         text = i * 6 + j + 1
@@ -460,15 +482,16 @@ class Page:
                                   padx=0,
                                   pady=0,
                                   command=lambda number=str(text): page_chosen(number))
-        # buttons[i][j].columnconfigure(i)
+        if not text in lst:
+          buttons[i][j].config(bg='#f00', fg='#fff')
         buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
     end_button = Button(button_frame, text="Fine", font=('Arial', 18), command=end, height=2, width=4)
-    end_button.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
+    end_button.grid(row=3, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     exit_button = Button(button_frame, text="Esci", font=('Arial', 18), command=close, height=2, width=4)
-    exit_button.grid(row=3, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
+    exit_button.grid(row=4, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     gui.mainloop()
     return file_to_be_changing, end_flag, next_page
-  def rename_pages_files(self, file_to_be_changing):
+  def rename_pages_files(self, file_to_be_changing, model = None):
     if self.isAlreadySeen():
       if os.path.isdir(self.pdf_path):
         filedir, dirs, files = next(os.walk(self.pdf_path))
@@ -478,7 +501,10 @@ class Page:
             break
       else:
         image = Image.open(self.original_image)
-      file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing)
+      prediction = None
+      if model is not None:
+        _, prediction, _ = self.check_pages_numbers(model)
+      file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing, prediction = prediction)
     return file_to_be_changing, end_flag, next_page
 
 
