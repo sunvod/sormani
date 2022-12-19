@@ -206,14 +206,13 @@ class Page_pool(list):
         if next_page > 1:
           next_page -= 1
           continue
-        predictions = None
         file_to_be_changing, end_flag, next_page = page.rename_pages_files(file_to_be_changing, model)
         if end_flag:
           break
         if next_page >= 0:
           break
-      if next_page < 0:
-        end_flag = True
+      # if next_page < 0:
+      #   end_flag = True
     flag = False
     filedirs = []
     for i, (old_file, new_file) in enumerate(file_to_be_changing):

@@ -464,8 +464,7 @@ class Page:
           nn = int(nn)
         if on in lst:
           lst.remove(on)
-        if not nn in lst:
-          lst.append(nn)
+        lst.append(nn)
         pass
     for i in range(n_lines):
       for j in range(6):
