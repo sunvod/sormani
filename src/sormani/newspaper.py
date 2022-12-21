@@ -571,14 +571,14 @@ class Il_Foglio(Newspaper):
     return whole
   @staticmethod
   def get_parameters():
-    return Newspaper_parameters(scale = 200,
-                                min_w = 91 - 50,
-                                max_w = 206 + 50,
-                                min_h = 235 - 50,
-                                max_h = 321 + 50,
-                                ts = 170,
-                                min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50)
+    return Newspaper_parameters(scale=200,
+                                min_w=10,
+                                max_w=500,
+                                min_h=10,
+                                max_h=500,
+                                ts=10,
+                                min_mean=0,
+                                max_mean=1000)
 
 class Unita(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):

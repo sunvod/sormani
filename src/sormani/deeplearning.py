@@ -172,16 +172,16 @@ class customCallback(keras.callbacks.Callback):
     self.model_name = model_name
     self.val_sparse_categorical_accuracy = None
   def on_epoch_end(self, epoch, logs=None):
-    if self.val_sparse_categorical_accuracy is None or logs['val_sparse_categorical_accuracy'] > self.val_sparse_categorical_accuracy:
+    logs_val = logs['val_sparse_categorical_accuracy']
+    if logs_val > 0.98 and (self.val_sparse_categorical_accuracy is None or logs_val > self.val_sparse_categorical_accuracy):
       model_path = os.path.join(STORAGE_BASE, 'models', self.name, 'best_model_' + self.model_name)
-      logs_val_sparse_categorical_accuracy = logs['val_sparse_categorical_accuracy']
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy improved from {self.val_sparse_categorical_accuracy} to'
-            f' {logs_val_sparse_categorical_accuracy}, saving model to {model_path}')
-      self.val_sparse_categorical_accuracy = logs_val_sparse_categorical_accuracy
+            f' {logs_val}, saving model to {model_path}')
+      self.val_sparse_categorical_accuracy = logs_val
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
     else:
-      logs_val_sparse_categorical_accuracy = logs['val_sparse_categorical_accuracy']
-      print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val_sparse_categorical_accuracy}'
+      logs_val = logs['val_sparse_categorical_accuracy']
+      print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
             f' did not improved from {self.val_sparse_categorical_accuracy}')
 
 def distribute_cnn(name, validation = 0.0, test = 0.1):

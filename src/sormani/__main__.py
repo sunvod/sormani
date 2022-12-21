@@ -2,11 +2,8 @@
 from src.sormani.sormani import *
 
 if __name__ == '__main__':
-  #sormani = Sormani('Il Manifesto', year=2016, months=1, days=None)
-  sormani = Sormani('Italia Oggi', year=2016, months=None, days=None)  # [x for x in range(1,13)]
-  # sormani = Sormani('Unita', year=2016, months=[x for x in range(2,13)], days=None)
-  # sormani = Sormani('Unita', year=2016, months=1, days=2)
-  # sormani = Sormani('Milano Finanza', year=2016, months=1, days=[2,9])
+  # sormani = Sormani('Italia Oggi', year=2016, months=None, days=None)  # [x for x in range(1,13)]
+  sormani = Sormani('Il Foglio', year=2016, months=None, days=None)  # [x for x in range(1,13)]
   # sormani.get_pages_numbers()
   # sormani.add_pdf_metadata()
   # sormani.save_pages_images()
