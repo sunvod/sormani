@@ -332,13 +332,14 @@ class Il_Giornale(Newspaper):
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_w = 50,
+                                min_w = 40,
                                 max_w = 150,
-                                min_h = 140,
+                                min_h = 120,
                                 max_h = 240,
                                 ts = 220,
-                                min_mean = 100,
-                                max_mean = 300,
+                                min_mean = 50,
+                                max_mean = 250,
+                                fill_hole=3,
                                 max_fillarea = 0)
 
 class Il_manifesto(Newspaper):
@@ -467,16 +468,19 @@ class Italia_Oggi(Newspaper):
         page.newspaper.n_page = f
         f += 1
         r = 2
-    # print(self.n_page, '  ', end='')
-  def set_n_pages(self, page_pool, n_pages):
-    for n_page, page in enumerate(page_pool):
-      page.newspaper.n_pages = n_pages
-      page.newspaper.n_real_pages = len(page_pool)
-      self.set_n_page(n_page, page_pool.date)
   def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
-
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=70,
+                                max_w=110,
+                                min_h=110,
+                                max_h=180,
+                                ts=10,
+                                min_mean=100,
+                                max_mean=200)
 class Libero(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 51

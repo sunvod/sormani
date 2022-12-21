@@ -129,11 +129,6 @@ class Sormani():
     if self.i < len(self.elements):
       page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
       if len(page_pool):
-        init_page = int(page_pool[0].newspaper.number)
-        pages = len(page_pool)  # page_pool.extract_pages(range=(init_page, init_page + 1))
-        # pages = int(pages[0]) + 1 \
-        #   if len(pages) > 0 and isinstance(pages, list) and pages[0] is not None and len(pages) > 0 and pages[0].isdigit() and int(pages[0]) + 1 < len(page_pool) \
-        #   else len(page_pool)
         if page_pool.isAlreadySeen():
           page_pool.set_pages_already_seen()
         else:
@@ -193,8 +188,8 @@ class Sormani():
     for filedir, files in filedirs:
       if self.check_if_image(filedir, files):
         elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
-    if len(elements) > 1:
-      elements.sort(key=self._elements_sort)
+    # if len(elements) > 1:
+    #   elements.sort(key=self._elements_sort)
     return elements
   def check_if_image(self, filedir, files):
     for file_name in files:
@@ -420,7 +415,7 @@ class Sormani():
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True):
     if not len(self.elements):
       return
     if filedir is not None:
@@ -434,7 +429,7 @@ class Sormani():
     images = []
     for page_pool in self:
       if not page_pool.isins:
-        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages)
+        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head)
         if image is not None and len(image):
           images.append(image)
         print('.', end='')
@@ -508,7 +503,7 @@ class Sormani():
       except RuntimeError as e:  # Memory growth must be set before GPUs have been initialized
         print(e)
         exit(0)
-  def check_page_numbers(self, save_images = False, model_path = 'best_model_DenseNet201', assume_newspaper = False):
+  def check_page_numbers(self, save_images = False, model_path = 'best_model_DenseNet201', assume_newspaper = True, newspaper_name = None):
     if not len(self.elements):
       return
     self.set_GPUs()
@@ -520,7 +515,9 @@ class Sormani():
     self.force = True
     images = []
     if assume_newspaper:
-      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
+      if newspaper_name is None:
+        newspaper_name = self.newspaper_name
+      model_path = os.path.join('models', newspaper_name.lower().replace(' ', '_'), model_path)
     else:
       model_path = os.path.join('models', model_path)
     model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
@@ -546,3 +543,19 @@ class Sormani():
     for page_pool in self:
       page_pool.rename_pages_files(model)
     self.force = selfforce
+  def update_date_creation(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(
+      f'Start update data creation of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
+    selfforce = self.force
+    self.force = True
+    images = []
+    for page_pool in self:
+      page_pool.update_date_creation()
+    print()
+    print(f'Update date creation ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    self.force = selfforce
+    return images

@@ -494,10 +494,11 @@ def move_to_test(name = 'numbers'):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
     for file in files:
       os.rename(os.path.join(filedir, file), os.path.join(STORAGE_DL, dest_path, file))
-def get_max_box(name):
-  # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
+def get_max_box(name = None):
+  if name is not None:
+    # filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'no_numbers_' + name.lower().replace(' ', '_'))))
+    pass
   filedir, dirs, files = next(os.walk(os.path.join(STORAGE_BASE, 'numbers')))
-  parameters = Newspaper.get_parameters(name)
   min_w = None
   max_w = None
   min_h = None
@@ -530,33 +531,26 @@ def open_win_rename_images_files(count, filedir, file):
     exit()
   def number_chosen(button_press, filedir, file):
     if button_press != 'ok':
-      new_file = '_'.join(file.split('_')[:-1]) + '_' + str(button_press) + '.jpg'
-      os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_BASE, 'numbers'), new_file))
+      new_file = Path(file).stem + '_' + str(button_press) + '.jpg'
+      os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', new_file))
     gui.destroy()
-
   gui = tk.Tk()
   gui.title('')
   w = 1000  # Width
   h = 500  # Height
-
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
-
   # Calculate Starting X and Y coordinates for Window
   x = (screen_width / 2) - (w / 2)
   y = (screen_height / 2) - (h / 2)
-
   gui.geometry('%dx%d+%d+%d' % (w, h, x, y))
   gui_frame = tk.Frame(gui)
   gui_frame.pack(fill=tk.X, side=tk.BOTTOM)
-
   button_frame = tk.Frame(gui_frame)
   button_frame.columnconfigure(0, weight=1)
   button_frame.pack(fill=tk.X, side=tk.BOTTOM)
   button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
-
   buttons = [[0 for x in range(4)] for x in range(3)]
-
   for i in range(3):
     for j in range(4):
       text = i * 4 + j
@@ -590,8 +584,9 @@ def open_win_rename_images_files(count, filedir, file):
 
 def rename_images_files(name):
   count = 1
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+    # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     for file in files:
       open_win_rename_images_files(count, filedir, file)
@@ -678,19 +673,36 @@ def delete_name(name):
       if file.find(name) == -1:
         os.remove(os.path.join(filedir, file))
 
+def transform_images(name):
+  name = name.lower().replace(' ', '_')
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_DL, name)):
+    files.sort()
+    for file in files:
+      img = cv2.imread(os.path.join(filedir, file))
+      gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+      thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      kernel = np.ones((3, 3), np.uint8)
+      binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
+      gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+      gray = 255 - gray
+      # cv2.imwrite(os.path.join(filedir, file), gray)
+      cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', file), gray)
+
+
+
 set_GPUs()
 
-# cnn = CNN('Avvenire')
-# cnn.exec_cnn('Avvenire', epochs = 50)
+# cnn = CNN('Il Giornale')
+# cnn.exec_cnn('Il Giornale', epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# to_11_classes('Avvenire')
+rename_images_files('Italia Oggi')
 #
-# rename_images_files('La Stampa')
-
-get_max_box('Avvenire')
+# to_11_classes('Il Giornale')
 
 # delete_name('Avvenire')
+
+# get_max_box()

@@ -4,6 +4,8 @@ import pathlib
 import cv2
 import os
 import numpy as np
+import datetime
+import time
 
 from PyPDF2 import PdfFileMerger
 from src.sormani.system import *
@@ -188,6 +190,7 @@ class Page:
       if int(p) in parameters.exclude:
         return None, img
     img = self.cv2_resize(img, parameters.scale)
+    bimg = img.copy()
     # Questo cancella tutto ciò che non è
     if parameters.exclude_colors is not None and len(parameters.exclude_colors) == 3:
       if parameters.exclude_colors[0] >= 0:
@@ -205,7 +208,6 @@ class Page:
       black_pixels = (np.concatenate((red[0], green[0], blue[0]), axis = 0),\
                      np.concatenate((red[1], green[1], blue[1]), axis = 0))
       img[black_pixels] = [255, 255, 255]
-    bimg = img.copy()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Questo riempie i buchi
     if parameters.fill_hole is not None:
@@ -213,6 +215,7 @@ class Page:
       kernel = np.ones((parameters.fill_hole, parameters.fill_hole), np.uint8)
       binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+      gray = 255 - gray
     img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
     cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
@@ -232,11 +235,13 @@ class Page:
     images = [(self.file_name + '_00000', bimg)]
     self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize)
     return images, img
-  def get_pages_numbers(self, no_resize = False, filedir = None):
+  def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped, no_resize = no_resize)
+      if images is not None and not save_head and len(images):
+        images.pop(0)
       if filedir is not None and images is not None:
         for img in images:
           image = Image.fromarray(img[1])
@@ -450,7 +455,7 @@ class Page:
                                   command=lambda number=str(text): number_chosen(number))
         buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
     button_frame_2 = tk.Frame(button_frame)
-    button_frame_2.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(100, 100))
+    button_frame_2.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
     n_lines = self.newspaper.n_pages // 6 + 1
     buttons = [[0 for x in range(6)] for x in range(n_lines)]
     lst = [x + 1 for x in range(self.newspaper.n_pages)]

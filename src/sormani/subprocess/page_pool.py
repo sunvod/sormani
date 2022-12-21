@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import pathlib
 import time
 import datetime
@@ -47,13 +48,13 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True):
     images = []
     if isinstance(pages, int):
       pages = [pages]
     for page in self:
       if pages is None or page.newspaper.n_page in pages:
-        image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir)
+        image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir, save_head = save_head)
         if image is not None:
           images.append(image)
     return images
@@ -259,5 +260,20 @@ class Page_pool(list):
           if ext == '.***':
             new_file = Path(file).stem
             os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
-
-
+            date = datetime.datetime.now()
+            modTime = time.mktime(date.timetuple())
+            os.utime(os.path.join(filedir, new_file), (modTime, modTime))
+  def update_date_creation(self):
+    if not len(self):
+      return
+    for page in self:
+      date = datetime.datetime.now()
+      modTime = time.mktime(date.timetuple())
+      for filedir, _, files in os.walk(page.original_path):
+        for file in files:
+          os.utime(os.path.join(filedir, file), (modTime, modTime))
+      if os.path.isdir(page.pdf_path):
+        for filedir, _, files in os.walk(page.pdf_path):
+          for file in files:
+            os.utime(os.path.join(os.path.join(filedir, file)), (modTime, modTime))
+      return
