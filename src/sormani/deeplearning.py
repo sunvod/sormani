@@ -72,24 +72,27 @@ class CNN:
     #                                                            batch_size=BATCH_SIZE)
     self.class_names = self.train_ds.class_names
 
-  def create_simple_model_cnn(self, num_classes = 11):
-    model = tf.keras.Sequential([
-      tf.keras.layers.Rescaling(1. / 255),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Conv2D(32, 3, activation='relu'),
-      tf.keras.layers.MaxPooling2D(),
-      tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(128, activation='relu'),
-      tf.keras.layers.Dense(num_classes)
-    ])
-    return model, 'SimpleCCN'
-  def create_model_cnn(self, num_classes = 11):
-    # base_model = InceptionResNetV2(weights='imagenet', include_top=False)
-    # base_model = EfficientNetV2M(weights='imagenet', include_top=False)
-    base_model = DenseNet201(weights='imagenet', include_top=False)
+  def create_model_cnn(self, num_classes = 11, type = 'SimpleCNN'):
+    if type == 'DenseNet201':
+      base_model = DenseNet201(weights='imagenet', include_top=False)
+    elif type == 'InceptionResNetV2':
+      base_model = InceptionResNetV2(weights='imagenet', include_top=False)
+    elif type == 'EfficientNetV2M':
+      base_model = EfficientNetV2M(weights='imagenet', include_top=False)
+    else:
+      model = tf.keras.Sequential([
+        tf.keras.layers.Rescaling(1. / 255),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(num_classes)
+      ])
+      return model, 'SimpleCNN'
     for layer in base_model.layers:
       layer.trainable = True
     x = base_model.output
@@ -97,7 +100,7 @@ class CNN:
     x = Dense(1024, activation='relu')(x)
     predictions = Dense(num_classes, activation='softmax')(x)
     model = Model(inputs=base_model.input, outputs=predictions)
-    return model, 'DenseNet201'
+    return model, type
   def exec_cnn(self, name = None, epochs = 100):
     def process(image, label):
       image = tf.cast(image / 255., tf.float32)
@@ -110,27 +113,19 @@ class CNN:
       name = name.lower().replace(' ', '_')
     else:
       name = ''
-    num_classes = len(self.class_names)
-    model, model_name = self.create_model_cnn(num_classes)
+    model, model_name = self.create_model_cnn(len(self.class_names), type = 'DenseNet201')
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
     callbacks = []
-    callbacks.append(customCallback)
-    mcp_save = ModelCheckpoint(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name),
-                               verbose=1,
-                               save_weights_only=False,
-                               save_best_only=True,
-                               monitor='val_sparse_categorical_accuracy',
-                               mode='max',
-                               callbacks = callbacks)
+    callbacks.append(customCallback(name, model, model_name))
     model.fit(
       self.train_ds,
       validation_data=self.val_ds,
       epochs=epochs,
-      callbacks=[mcp_save]
+      callbacks=callbacks
     )
     tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
     pass
@@ -170,11 +165,24 @@ class CNN:
     print("predictions shape:", predictions.shape)
     final_prediction = np.argmax(predictions, axis=-1)
 
-
 class customCallback(keras.callbacks.Callback):
+  def __init__(self, name, model, model_name):
+    self.name = name
+    self.model = model
+    self.model_name = model_name
+    self.val_sparse_categorical_accuracy = None
   def on_epoch_end(self, epoch, logs=None):
-    pass
-
+    if self.val_sparse_categorical_accuracy is None or logs['val_sparse_categorical_accuracy'] > self.val_sparse_categorical_accuracy:
+      model_path = os.path.join(STORAGE_BASE, 'models', self.name, 'best_model_' + self.model_name)
+      logs_val_sparse_categorical_accuracy = logs['val_sparse_categorical_accuracy']
+      print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy improved from {self.val_sparse_categorical_accuracy} to'
+            f' {logs_val_sparse_categorical_accuracy}, saving model to {model_path}')
+      self.val_sparse_categorical_accuracy = logs_val_sparse_categorical_accuracy
+      tf.keras.models.save_model(self.model, model_path, save_format='tf')
+    else:
+      logs_val_sparse_categorical_accuracy = logs['val_sparse_categorical_accuracy']
+      print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val_sparse_categorical_accuracy}'
+            f' did not improved from {self.val_sparse_categorical_accuracy}')
 
 def distribute_cnn(name, validation = 0.0, test = 0.1):
   seed(28362)
@@ -532,7 +540,9 @@ def open_win_rename_images_files(count, filedir, file):
   def number_chosen(button_press, filedir, file):
     if button_press != 'ok':
       new_file = Path(file).stem + '_' + str(button_press) + '.jpg'
-      os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', new_file))
+    else:
+      new_file = file
+    os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', new_file))
     gui.destroy()
   gui = tk.Tk()
   gui.title('')
@@ -584,9 +594,9 @@ def open_win_rename_images_files(count, filedir, file):
 
 def rename_images_files(name):
   count = 1
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
-    # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     for file in files:
       open_win_rename_images_files(count, filedir, file)
@@ -692,16 +702,16 @@ def transform_images(name):
 
 set_GPUs()
 
-# cnn = CNN('Il Giornale')
-# cnn.exec_cnn('Il Giornale', epochs = 50)
+cnn = CNN('Italia Oggi')
+cnn.exec_cnn('Italia Oggi', epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-rename_images_files('Italia Oggi')
-#
-# to_11_classes('Il Giornale')
+# rename_images_files('Italia Oggi')
+
+# to_11_classes('Italia Oggi')
 
 # delete_name('Avvenire')
 

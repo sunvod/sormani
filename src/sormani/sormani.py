@@ -507,6 +507,9 @@ class Sormani():
     if not len(self.elements):
       return
     self.set_GPUs()
+    if not os.path.join(STORAGE_BASE, model_path):
+      print(f'{model_path} doesn\'t exist.')
+      return
     start_time = time.time()
     print(
       f'Start check pages numbers of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
@@ -522,8 +525,7 @@ class Sormani():
       model_path = os.path.join('models', model_path)
     model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     for page_pool in self:
-      if not page_pool.isins:
-        page_pool.check_pages_numbers(model, save_images = save_images)
+      page_pool.check_pages_numbers(model, save_images = save_images)
     if len(images):
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
