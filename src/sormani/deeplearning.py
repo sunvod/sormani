@@ -697,11 +697,19 @@ def transform_images(name):
       cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', file), gray)
 
 def change_ins_file_name():
-  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, JPG_PDF_PATH)):
-    for dir in dirs:
-      if len(dir) > 4 and dir[:2].isdigit() and not dir[:5].isdigit():
-        if dir[3:6] != 'INS':
-          print(dir, ' ', filedir)
+  for one_root in [os.path.join(IMAGE_ROOT, IMAGE_PATH), os.path.join(IMAGE_ROOT, JPG_PDF_PATH)]:
+    for filedir, dirs, files in os.walk(one_root):
+      dirs.sort()
+      for dir in dirs:
+        _dir = dir.replace(' ', '_')
+        if len(dir) > 4 and dir[:2].isdigit() and not dir[:5].isdigit():
+          if dir[3:6] == 'INS':
+            for fd, _, files in os.walk(os.path.join(filedir, dir)):
+              files.sort()
+              for file in files:
+                if file.split('_')[-3] != 'INS':
+                  new_file = '_'.join(file.split('_')[:-2]) + '_' + _dir + '_' + file.split('_')[-1]
+                  os.rename(os.path.join(fd, file), os.path.join(fd, new_file))
 
 set_GPUs()
 
