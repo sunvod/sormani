@@ -160,7 +160,8 @@ class Page_pool(list):
             wpercent = (convert.resolution / float(image.size[0]))
             ysize = int((float(image.size[1]) * float(wpercent)))
             image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
-          image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
+          exif = page.get_jpg_metadata(image)
+          image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality, exif=exif)
     except Exception:
       tb = sys.exc_info()
       pass
@@ -252,6 +253,7 @@ class Page_pool(list):
           n = int(n)
           page.newspaper.n_page = n
           page.add_pdf_metadata()
+          page.add_jpg_metadata()
       os.rename(old_file, new_file + '.***')
     for dir in filedirs:
       for filedir, dirs, files in os.walk(dir):

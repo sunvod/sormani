@@ -308,7 +308,26 @@ class Page:
     except:
       os.remove(self.pdf_file_name + '.2')
       file_in.write(self.pdf_file_name)
-  def add_jpg_metadata(self, first_number = None):
+
+  def get_jpg_metadata(self, image, first_number=None):
+    exif = image.getexif()
+    exif[0x9286] = \
+      'Nome del periodico:' + self.newspaper.name \
+      + ' ; Anno:' + str(self.year) \
+      + ' ; Mese:' + str(self.month) \
+      + ' ; Giorno:' + str(self.day) \
+      + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number) \
+      + ' ; Anno del quotidiano:' + self.newspaper.year \
+      + ' ; Nome_del_periodico:' + self.newspaper.name \
+      + ' ; Anno:' + str(self.year) \
+      + ' ; Mese:' + str(self.month) \
+      + ' ; Giorno:' + str(self.day) \
+      + ' ; Data:' + str(self.newspaper.date) \
+      + ' ; Pagina:' + str(self.newspaper.n_page) \
+      + ' ; Numero_del_quotidiano:' + str(self.newspaper.number) \
+      + ' ; Anno_del_quotidiano:' + str(self.newspaper.year)
+    return exif
+  def add_jpg_metadata(self, image, first_number = None):
     if not os.path.isfile(self.pdf_file_name):
       return
     if first_number is None:
@@ -318,24 +337,10 @@ class Page:
         filedir, dirs, files = next(os.walk(self.pdf_path))
         for dir in dirs:
           if dir != 'pdf':
-            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.jpg'))
-            exif = image.getexif()
-            exif[0x9286] =\
-              'Nome del periodico:' + self.newspaper.name\
-              + ' ; Anno:' + str(self.year)\
-              + ' ; Mese:' + str(self.month)\
-              + ' ; Giorno:' + str(self.day)\
-              + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)\
-              + ' ; Anno del quotidiano:' + self.newspaper.year\
-              + ' ; Nome_del_periodico:' + self.newspaper.name\
-              + ' ; Anno:' + str(self.year)\
-              + ' ; Mese:' + str(self.month)\
-              + ' ; Giorno:' + str(self.day)\
-              + ' ; Data:' + str(self.newspaper.date)\
-              + ' ; Pagina:' + str(self.newspaper.n_page)\
-              + ' ; Numero_del_quotidiano:' + str(self.newspaper.number)\
-              + ' ; Anno_del_quotidiano:' + str(self.newspaper.year)
-            image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.jpg'), exif=exif)
+            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.tif'))
+            exif = self.get_jpg_metadata(image, first_number)
+            image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.tif'), exif=exif)
+            # image.save(os.path.join(filedir, dir, self.original_file_name + '.jpg'), exif=exif)
             pass
   def check_pages_numbers(self, model):
     if self.isAlreadySeen():
