@@ -37,7 +37,6 @@ import pytesseract
 from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
   NUMBER_IMAGE_SIZE, JPG_PDF_PATH
-import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
