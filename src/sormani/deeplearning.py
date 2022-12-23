@@ -26,6 +26,7 @@ from keras.applications.inception_resnet_v2 import *
 from keras.applications.convnext import *
 from keras.applications.nasnet import *
 from keras.applications.densenet import *
+from numba import cuda
 
 
 import cv2
@@ -266,7 +267,6 @@ def count_tiff():
   return count
 
 def set_GPUs():
-  from numba import cuda
   device = cuda.get_current_device()
   device.reset()
   gpus = tf.config.list_physical_devices('GPU')
