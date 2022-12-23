@@ -180,7 +180,7 @@ class customCallback(keras.callbacks.Callback):
             f' {logs_val}, saving model to {model_path}')
       self.val_sparse_categorical_accuracy = logs_val
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
-    elif logs_val > min:
+    elif logs_val <= min:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
             f' in lower that the minimum value for saving')
     else:
