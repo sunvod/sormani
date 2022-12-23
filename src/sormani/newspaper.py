@@ -154,82 +154,68 @@ class Newspaper():
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
-  def get_grayscale(self, image):
-      return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  def canny(self, image):
-    return cv2.Canny(image, 100, 200)
-  def dilate(self, image, l = 5):
-    kernel = np.ones((l, l), np.uint8)
-    return cv2.dilate(image, kernel, iterations=1)
-  def erode(self, image, l = 5):
-    kernel = np.ones((l, l), np.uint8)
-    return cv2.erode(image, kernel, iterations=1)
-  def remove_noise(self, image, l = 5):
-    return cv2.medianBlur(image, l)
-  def thresholding(self, image):
-    return cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-  def opening(self, image):
-    kernel = np.ones((5, 5), np.uint8)
-    return cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
-  def remove_lines(self, image):
-    kernel_vertical = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 80))
-    temp1 = 255 - cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel_vertical)
-    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 1))
-    temp2 = 255 - cv2.morphologyEx(image, cv2.MORPH_CLOSE, horizontal_kernel)
-    temp3 = cv2.add(temp1, temp2)
-    return cv2.add(temp3, image)
+  # def erode(self, image, l = 5):
+  #   kernel = np.ones((l, l), np.uint8)
+  #   return cv2.erode(image, kernel, iterations=1)
+  # def remove_lines(self, image):
+  #   kernel_vertical = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 80))
+  #   temp1 = 255 - cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel_vertical)
+  #   horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (100, 1))
+  #   temp2 = 255 - cv2.morphologyEx(image, cv2.MORPH_CLOSE, horizontal_kernel)
+  #   temp3 = cv2.add(temp1, temp2)
+  #   return cv2.add(temp3, image)
   def crop_png(self, image):
     image = image.crop(self.get_whole_page_location(image))
     return image
-  def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, oem = 3, count = 0, remove_lines = False, old_y = None):
-    image = Image.open(self.file_path)
-    image = image.crop((left, top, right, bottom))
-    if resize is not None:
-      image = image.resize((int(image.size[0] * resize), int(image.size[1] * resize)), Image.Resampling.LANCZOS)
-    if contrast is not None:
-      image = self.change_contrast(image, contrast)
-    image.save('temp.tif')
-    image = cv2.imread('temp.tif')
-    image = self.erode(image, l = erode)
-    if remove_lines:
-      image = self.remove_lines(image)
-    custom_config = r'-l ita --oem ' + str(oem) + ' --psm 4 --dpi ' + str(dpi)
-    x = pytesseract.image_to_string(image, config = custom_config)
-    x = x.replace("\n", "").strip()
-    x = re.sub('[^0-9]+', ' ', x)
-    ls = x.split(' ')
-    ls = [ r for r in ls if r.isdigit()]
-    y = [r for r in ls if len(r)]
-    repeat = False
-    if len(y) > 1:
-      by = [r for r in y if len(r) == 2]
-      repeat = not len(by)
-      y = by
-    elif len(ls) == 1 and len(ls[0]) > 2:
-      repeat = True
-    if repeat:
-      count += 1
-      if count < 5:
-        if resize is None:
-          resize = 1
-        resize -= 0.1
-        return self.crop(left, top, right, bottom, resize = resize, contrast = contrast, erode = erode, dpi = dpi, count = count)
-      else:
-        if len(y) > 0 and len(y[0]) == 3 and y[0][0] == '1':
-          y = [y[0][1:]]
-        else:
-          y = []
-    if len(y) == 1 and int(y[0]) >= 12 and int(y[0]) <= 20:
-      count += 1
-      if count < 2:
-        return self.crop(left, top, right, bottom, resize=resize, contrast=contrast, erode=erode, dpi=dpi, count=count, remove_lines = True, old_y = y)
-      elif old_y is not None:
-        y = old_y
-    cv2.imwrite('temp.tif', image)
-    dimension = os.path.getsize('temp.tif')
-    image = Image.open('temp.tif')
-    #os.remove('temp.tif')
-    return y, image, dimension
+  # def crop(self, left, top, right, bottom, resize = None, contrast = None, erode = 2, dpi = 600, oem = 3, count = 0, remove_lines = False, old_y = None):
+  #   image = Image.open(self.file_path)
+  #   image = image.crop((left, top, right, bottom))
+  #   if resize is not None:
+  #     image = image.resize((int(image.size[0] * resize), int(image.size[1] * resize)), Image.Resampling.LANCZOS)
+  #   if contrast is not None:
+  #     image = self.change_contrast(image, contrast)
+  #   image.save('temp.tif')
+  #   image = cv2.imread('temp.tif')
+  #   image = self.erode(image, l = erode)
+  #   if remove_lines:
+  #     image = self.remove_lines(image)
+  #   custom_config = r'-l ita --oem ' + str(oem) + ' --psm 4 --dpi ' + str(dpi)
+  #   x = pytesseract.image_to_string(image, config = custom_config)
+  #   x = x.replace("\n", "").strip()
+  #   x = re.sub('[^0-9]+', ' ', x)
+  #   ls = x.split(' ')
+  #   ls = [ r for r in ls if r.isdigit()]
+  #   y = [r for r in ls if len(r)]
+  #   repeat = False
+  #   if len(y) > 1:
+  #     by = [r for r in y if len(r) == 2]
+  #     repeat = not len(by)
+  #     y = by
+  #   elif len(ls) == 1 and len(ls[0]) > 2:
+  #     repeat = True
+  #   if repeat:
+  #     count += 1
+  #     if count < 5:
+  #       if resize is None:
+  #         resize = 1
+  #       resize -= 0.1
+  #       # return self.crop(left, top, right, bottom, resize = resize, contrast = contrast, erode = erode, dpi = dpi, count = count)
+  #     else:
+  #       if len(y) > 0 and len(y[0]) == 3 and y[0][0] == '1':
+  #         y = [y[0][1:]]
+  #       else:
+  #         y = []
+  #   if len(y) == 1 and int(y[0]) >= 12 and int(y[0]) <= 20:
+  #     count += 1
+  #     if count < 2:
+  #       # return self.crop(left, top, right, bottom, resize=resize, contrast=contrast, erode=erode, dpi=dpi, count=count, remove_lines = True, old_y = y)
+  #     elif old_y is not None:
+  #       y = old_y
+  #   cv2.imwrite('temp.tif', image)
+  #   dimension = os.path.getsize('temp.tif')
+  #   image = Image.open('temp.tif')
+  #   #os.remove('temp.tif')
+  #   return y, image, dimension
   def get_number(self):
     folder_count = 0
     for month in range(self.date.month):
@@ -567,18 +553,18 @@ class Il_Foglio(Newspaper):
     Newspaper.__init__(self, newspaper_base, 'Il Foglio', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (0, 100, w, 800)
+    whole = (0, 300, w / 2, 620)
     return whole
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale=200,
-                                min_w=10,
-                                max_w=500,
-                                min_h=10,
-                                max_h=500,
+                                min_w=50,
+                                max_w=100,
+                                min_h=50,
+                                max_h=150,
                                 ts=10,
-                                min_mean=0,
-                                max_mean=1000)
+                                min_mean=10,
+                                max_mean=500)
 
 class Unita(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):

@@ -702,8 +702,8 @@ def transform_images(name):
 
 set_GPUs()
 
-cnn = CNN('Italia Oggi')
-cnn.exec_cnn('Italia Oggi', epochs = 50)
+# cnn = CNN('Italia Oggi')
+# cnn.exec_cnn('Italia Oggi', epochs = 50)
 
 # count_tiff()
 

@@ -144,40 +144,40 @@ class Page:
       return e[0]
     _contours = []
     for i, contour in enumerate(contours):
-      x, _, _, _ = cv2.boundingRect(contour)
-      _contours.append((x, contour))
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
+        roi = img[y:y + h, x:x + w]
+        mean = roi.mean()
+        if mean >= parameters.min_mean and mean <= parameters.max_mean:
+          _contours.append((x, y, contour))
     _contours.sort(key = _get_contours)
-    for i, (_, contour) in enumerate(_contours):
+    for i, (_, _, contour) in enumerate(_contours):
       x, y, w, h = cv2.boundingRect(contour)
       perimeter = cv2.arcLength(contour, True)  # hierarchy[0, i, 3] == -1 and
       roi = img[y:y + h, x:x + w]
-      if w > parameters.box[0] and w < parameters.box[1] and h > \
-          parameters.box[2] and h < parameters.box[3]:
-        mean = roi.mean()
-        if mean >= parameters.min_mean and mean <= parameters.max_mean:
-          name = file_name + '_' + ('0000' + str(i + 1))[-5:]
-          if not no_resize:
-            roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
-          if parameters.internal_box is not None:
-            cnts_inside, hierarchy_inside = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            _cnts_inside = []
-            for i, cnt_inside in enumerate(cnts_inside):
-              _x, _, _, _ = cv2.boundingRect(cnt_inside)
-              _cnts_inside.append((_x, cnt_inside))
-            _cnts_inside.sort(key=_get_contours)
-            for j, (_, cnt_inside) in enumerate(_cnts_inside):
-              _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
-              _roi = roi[_y:_y + _h, _x:_x + _w]
-              name_i = file_name + '_' + ('0000' + str(j + 1))[-5:]
-              if (_w > parameters.internal_box[0] and
-                 _w < parameters.internal_box[1] and
-                 _h > parameters.internal_box[2] and
-                 _h < parameters.internal_box[3]):
-                if not no_resize:
-                  _roi = cv2.resize(_roi, NUMBER_IMAGE_SIZE)
-                images.append((name_i, _roi, perimeter))
-          else:
-            images.append((name, roi, perimeter))
+      name = file_name + '_' + ('0000' + str(i + 1))[-5:]
+      if not no_resize:
+        roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
+      if parameters.internal_box is not None:
+        cnts_inside, hierarchy_inside = cv2.findContours(roi, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        _cnts_inside = []
+        for i, cnt_inside in enumerate(cnts_inside):
+          _x, _, _, _ = cv2.boundingRect(cnt_inside)
+          _cnts_inside.append((_x, cnt_inside))
+        _cnts_inside.sort(key=_get_contours)
+        for j, (_, cnt_inside) in enumerate(_cnts_inside):
+          _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
+          _roi = roi[_y:_y + _h, _x:_x + _w]
+          name_i = file_name + '_' + ('0000' + str(j + 1))[-5:]
+          if (_w > parameters.internal_box[0] and
+             _w < parameters.internal_box[1] and
+             _h > parameters.internal_box[2] and
+             _h < parameters.internal_box[3]):
+            if not no_resize:
+              _roi = cv2.resize(_roi, NUMBER_IMAGE_SIZE)
+            images.append((name_i, _roi, perimeter))
+      else:
+        images.append((name, roi, perimeter))
   def get_boxes(self, image, level=200, no_resize=False):
     img = self.change_contrast_PIL(image, level)
     img = self.change_contrast_cv2(img)
@@ -298,7 +298,7 @@ class Page:
         '/Pagina:': str(self.newspaper.n_page),
         '/Numero_del_quotidiano': str(self.newspaper.number),
         '/Anno_del_quotidiano': str(self.newspaper.year),
-        '/Producer': 'osi-servizi-informatici.cloud - Milano'
+        '/Producer': 'osi-servizi-informatici@cloud - Milano'
       })
       file_out = open(self.pdf_file_name, 'wb')
       pdf_merger.write(file_out)
@@ -308,6 +308,35 @@ class Page:
     except:
       os.remove(self.pdf_file_name + '.2')
       file_in.write(self.pdf_file_name)
+  def add_jpg_metadata(self, first_number = None):
+    if not os.path.isfile(self.pdf_file_name):
+      return
+    if first_number is None:
+      first_number = 0
+    if self.isAlreadySeen():
+      if os.path.isdir(self.pdf_path):
+        filedir, dirs, files = next(os.walk(self.pdf_path))
+        for dir in dirs:
+          if dir != 'pdf':
+            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.jpg'))
+            exif = image.getexif()
+            exif[0x9286] =\
+              'Nome del periodico:' + self.newspaper.name\
+              + ' ; Anno:' + str(self.year)\
+              + ' ; Mese:' + str(self.month)\
+              + ' ; Giorno:' + str(self.day)\
+              + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)\
+              + ' ; Anno del quotidiano:' + self.newspaper.year\
+              + ' ; Nome_del_periodico:' + self.newspaper.name\
+              + ' ; Anno:' + str(self.year)\
+              + ' ; Mese:' + str(self.month)\
+              + ' ; Giorno:' + str(self.day)\
+              + ' ; Data:' + str(self.newspaper.date)\
+              + ' ; Pagina:' + str(self.newspaper.n_page)\
+              + ' ; Numero_del_quotidiano:' + str(self.newspaper.number)\
+              + ' ; Anno_del_quotidiano:' + str(self.newspaper.year)
+            image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.jpg'), exif=exif)
+            pass
   def check_pages_numbers(self, model):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
@@ -403,8 +432,9 @@ class Page:
     next_page = -1
     gui = tk.Tk()
     gui.title('ATTENZIONE ! Se confermi verrà mdificato il nome del file in tutti i formati esistenti: ' + self.file_name)
-    w = 2140  # Width
-    h = 2140  # Height
+    w = 2360  # Width
+    h = 2200  # Height
+    TOTAL_BUTTON_IN_LINE = 10
     screen_width = gui.winfo_screenwidth()
     screen_height = gui.winfo_screenheight()
     x = (screen_width / 2) - (w / 2)
@@ -434,11 +464,11 @@ class Page:
     label2.bind('<Button-1>', on_start_hover)
     button_frame_1 = tk.Frame(button_frame)
     button_frame_1.grid(row=1, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
-    n_lines = (self.newspaper.n_pages + 2) // 6 + 2
-    buttons = [[0 for x in range(6)] for x in range(n_lines)]
+    n_lines = (self.newspaper.n_pages + 2) // TOTAL_BUTTON_IN_LINE + 2
+    buttons = [[0 for x in range(TOTAL_BUTTON_IN_LINE)] for x in range(n_lines)]
     for i in range(n_lines):
-      for j in range(6):
-        text = i * 6 + j + 1
+      for j in range(TOTAL_BUTTON_IN_LINE):
+        text = i * TOTAL_BUTTON_IN_LINE + j + 1
         if text == self.newspaper.n_pages + 1:
           text = 'ok'
         elif text > self.newspaper.n_pages:
@@ -453,11 +483,11 @@ class Page:
                                   padx=0,
                                   pady=0,
                                   command=lambda number=str(text): number_chosen(number))
-        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
+        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(2, 2), pady=(2, 2))
     button_frame_2 = tk.Frame(button_frame)
     button_frame_2.grid(row=2, column=0, sticky=tk.W + tk.E, padx=(10, 10), pady=(10, 10))
-    n_lines = self.newspaper.n_pages // 6 + 1
-    buttons = [[0 for x in range(6)] for x in range(n_lines)]
+    n_lines = self.newspaper.n_pages // TOTAL_BUTTON_IN_LINE + 1
+    buttons = [[0 for x in range(TOTAL_BUTTON_IN_LINE)] for x in range(n_lines)]
     lst = [x + 1 for x in range(self.newspaper.n_pages)]
     for old_file, new_file in file_to_be_changing:
       if pathlib.Path(old_file).suffix == '.tif':
@@ -472,8 +502,8 @@ class Page:
         lst.append(nn)
         pass
     for i in range(n_lines):
-      for j in range(6):
-        text = i * 6 + j + 1
+      for j in range(TOTAL_BUTTON_IN_LINE):
+        text = i * TOTAL_BUTTON_IN_LINE + j + 1
         if text > self.newspaper.n_pages:
           break
         pixel = tk.PhotoImage(width=1, height=1)
@@ -488,7 +518,7 @@ class Page:
                                   command=lambda number=str(text): page_chosen(number))
         if not text in lst:
           buttons[i][j].config(bg='#f00', fg='#fff')
-        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(6, 6), pady=(6, 6))
+        buttons[i][j].grid(row=i, column=j, sticky=tk.W + tk.E, padx=(2, 2), pady=(2, 2))
     end_button = Button(button_frame, text="Fine", font=('Arial', 18), command=end, height=2, width=4)
     end_button.grid(row=3, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     exit_button = Button(button_frame, text="Esci", font=('Arial', 18), command=close, height=2, width=4)

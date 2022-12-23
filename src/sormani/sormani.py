@@ -86,6 +86,7 @@ class Sormani():
     self.root = root
     self.i = 0
     self.elements = []
+    self.day = day
     root = os.path.join(root, image_path, newspaper_name)
     self.add_zero_to_dir(root)
     if not os.path.exists(root):
@@ -95,8 +96,8 @@ class Sormani():
       root = os.path.join(root, str(year))
       if month is not None:
         root = os.path.join(root, self.add_zero(month))
-        if day is not None:
-          root = os.path.join(root, self.add_zero(day))
+        # if day is not None:
+        #   root = os.path.join(root, self.add_zero(day))
     self.rename_folder(root)
     if rename_only:
       return None
@@ -179,11 +180,23 @@ class Sormani():
   def get_elements(self, root):
     elements = []
     filedirs = []
-    for filedir, dirs, files in os.walk(root):
-      if filedir in self.path_exclude or len(files) == 0 or len(dirs) > 0:
-        continue
-      files.sort(key = self._get_elements)
-      filedirs.append((filedir, files))
+    roots = []
+    if self.day is not None:
+      for filedir, dirs, files in os.walk(root):
+        for dir in dirs:
+          n = dir.split(' ')[0]
+          if n.isdigit():
+            if int(n) == self.day:
+              roots.append(os.path.join(root, dir))
+    else:
+      roots.append(root)
+    roots.sort()
+    for root in roots:
+      for filedir, dirs, files in os.walk(root):
+        if filedir in self.path_exclude or len(files) == 0 or len(dirs) > 0:
+          continue
+        files.sort(key = self._get_elements)
+        filedirs.append((filedir, files))
     filedirs.sort()
     for filedir, files in filedirs:
       if self.check_if_image(filedir, files):
@@ -365,6 +378,33 @@ class Sormani():
     count = 0
     for page in page_pool:
       page.add_pdf_metadata(self.first_number)
+      count += 1
+    with global_count.get_lock():
+      global_count.value += count
+  def add_jpg_metadata(self, first_number = None):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(
+      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    selfforce = self.force
+    self.force = True
+    self.first_number = first_number
+    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
+    #   mp_pool.map(self._add_pdf_metadata, self)
+    for page_pool in self:
+      self._add_jpg_metadata(page_pool)
+    if global_count.value:
+      print(f'It has redefined Metadata of {global_count.value} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
+    self.force = selfforce
+  def _add_jpg_metadata(self, page_pool):
+    count = 0
+    for page in page_pool:
+      page.add_jpg_metadata(self.first_number)
       count += 1
     with global_count.get_lock():
       global_count.value += count
