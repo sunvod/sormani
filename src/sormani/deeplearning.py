@@ -30,7 +30,6 @@ from keras.applications.densenet import *
 
 import cv2
 import numpy as np
-import keras_ocr
 import matplotlib.pyplot as plt
 import pytesseract
 
