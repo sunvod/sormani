@@ -37,7 +37,7 @@ import pytesseract
 
 from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
-  NUMBER_IMAGE_SIZE
+  NUMBER_IMAGE_SIZE, JPG_PDF_PATH
 import tensorflow_datasets as tfds
 
 BATCH_SIZE = 32
@@ -698,7 +698,12 @@ def transform_images(name):
       # cv2.imwrite(os.path.join(filedir, file), gray)
       cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', file), gray)
 
-
+def change_ins_file_name():
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, JPG_PDF_PATH)):
+    for dir in dirs:
+      if len(dir) > 4 and dir[:2].isdigit() and not dir[:5].isdigit():
+        if dir[3:6] != 'INS':
+          print(dir, ' ', filedir)
 
 set_GPUs()
 
@@ -716,3 +721,5 @@ set_GPUs()
 # delete_name('Avvenire')
 
 # get_max_box()
+
+change_ins_file_name()

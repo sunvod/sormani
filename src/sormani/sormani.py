@@ -63,7 +63,7 @@ class Sormani():
         newspaper_names = []
         newspaper_names.append(name)
       else:
-        newspaper_names = ['La Stampa', 'Il Giornale', 'Il Manifesto', 'Avvenire', 'Milano Finanza', 'Il Fatto Quotidiano', 'Italia Oggi', 'Libero', 'Alias', 'Alias Domenica']
+        newspaper_names = NEWSPAPERS
         rename_only = True
     if not isinstance(months, list):
       months = [months]
@@ -514,21 +514,24 @@ class Sormani():
             pass
   def rename_folder(self, root):
     number = 1
-    for filedir, dirs, files in os.walk(root):
-      dirs.sort()
-      for dir in dirs:
-        if dir.isdigit():
-          number = 1
-          continue
-        p = re.search(r'[^0-9]', dir).start()
-        old_folder = os.path.join(filedir, dir)
-        new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
-        if old_folder != new_folder:
-          try:
-            os.rename(old_folder, new_folder)
-          except:
-            raise OSError('La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).')
-        number += 1
+    pdf_root = root.replace(IMAGE_PATH, JPG_PDF_PATH)
+    for one_root in [pdf_root, root]:
+      for filedir, dirs, files in os.walk(one_root):
+        dirs.sort()
+        for dir in dirs:
+          if dir.isdigit() or not dir[:2].isdigit():
+            number = 1
+            continue
+          p = re.search(r'[^0-9]', dir).start()
+          old_folder = os.path.join(filedir, dir)
+          new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
+          if old_folder != new_folder:
+            try:
+              os.rename(old_folder, new_folder)
+              pass
+            except:
+              raise OSError('La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).')
+          number += 1
   def set_GPUs(self):
     from numba import cuda
     device = cuda.get_current_device()
