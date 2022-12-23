@@ -533,18 +533,21 @@ class Osservatore_Romano(Newspaper):
     Newspaper.__init__(self, newspaper_base, 'Osservatore Romano', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (0, 100, w, 800)
+    if self.n_page % 2 == 0:
+      whole = [0, 100, 1000, 800]
+    else:
+      whole = [w - 1000, 150, w, 800]
     return whole
   @staticmethod
   def get_parameters():
-    return Newspaper_parameters(scale = 200,
-                                min_w = 91 - 50,
-                                max_w = 206 + 50,
-                                min_h = 235 - 50,
-                                max_h = 321 + 50,
-                                ts = 170,
-                                min_mean = 183.9 - 50,
-                                max_mean = 220.4 + 50)
+    return Newspaper_parameters(scale=200,
+                                min_w=35,
+                                max_w=70,
+                                min_h=45,
+                                max_h=130,
+                                ts=250,
+                                min_mean=100,
+                                max_mean=200)
 
 class Il_Foglio(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):

@@ -144,8 +144,8 @@ class Page:
       return e[0]
     _contours = []
     for i, contour in enumerate(contours):
-      x, y, w, h = cv2.boundingRect(contour)
-      if w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
+      x, y, w, h = cv2.boundingRect(contour) # hierarchy[0, i, 3] == -1 and
+      if hierarchy[0, i, 3] == -1 and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
         roi = img[y:y + h, x:x + w]
         mean = roi.mean()
         if mean >= parameters.min_mean and mean <= parameters.max_mean:
@@ -190,7 +190,7 @@ class Page:
       if int(p) in parameters.exclude:
         return None, img
     img = self.cv2_resize(img, parameters.scale)
-    bimg = img.copy()
+    # bimg = img.copy()
     # Questo cancella tutto ciò che non è
     if parameters.exclude_colors is not None and len(parameters.exclude_colors) == 3:
       if parameters.exclude_colors[0] >= 0:
@@ -205,15 +205,15 @@ class Page:
         blue = np.where(img[:, :, 2] > parameters.exclude_colors[2])
       else:
         blue = np.where(img[:, :, 2] < -parameters.exclude_colors[2])
-      black_pixels = (np.concatenate((red[0], green[0], blue[0]), axis = 0),\
-                     np.concatenate((red[1], green[1], blue[1]), axis = 0))
+      black_pixels = (np.concatenate((red[0], green[0], blue[0]), axis = 0), np.concatenate((red[1], green[1], blue[1]), axis = 0))
       img[black_pixels] = [255, 255, 255]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # bimg = img.copy()
     # Questo riempie i buchi
     if parameters.fill_hole is not None:
       thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
       kernel = np.ones((parameters.fill_hole, parameters.fill_hole), np.uint8)
-      binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
+      # binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
       gray = 255 - gray
     img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
@@ -224,10 +224,11 @@ class Page:
         cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
     if not parameters.invert:
       img = 255 - img
+    bimg = img.copy()
     edges = cv2.Canny(img, 1, 50)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-    contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     for c in contours:
       x, y, w, h = cv2.boundingRect(c)
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)

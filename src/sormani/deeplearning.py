@@ -113,6 +113,7 @@ class CNN:
     else:
       name = ''
     model, model_name = self.create_model_cnn(len(self.class_names), type = 'DenseNet201')
+    Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     model.compile(
       optimizer='adam',
@@ -172,16 +173,19 @@ class customCallback(keras.callbacks.Callback):
     self.val_sparse_categorical_accuracy = None
   def on_epoch_end(self, epoch, logs=None):
     logs_val = logs['val_sparse_categorical_accuracy']
-    if logs_val > 0.98 and (self.val_sparse_categorical_accuracy is None or logs_val > self.val_sparse_categorical_accuracy):
+    min = 0.95
+    if logs_val > min and (self.val_sparse_categorical_accuracy is None or logs_val > self.val_sparse_categorical_accuracy):
       model_path = os.path.join(STORAGE_BASE, 'models', self.name, 'best_model_' + self.model_name)
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy improved from {self.val_sparse_categorical_accuracy} to'
             f' {logs_val}, saving model to {model_path}')
       self.val_sparse_categorical_accuracy = logs_val
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
-    else:
-      logs_val = logs['val_sparse_categorical_accuracy']
+    elif logs_val > min:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
-            f' did not improved from {self.val_sparse_categorical_accuracy}')
+            f' in lower that the minimum value for saving')
+    else:
+      print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
+            f' did not improve from {self.val_sparse_categorical_accuracy}')
 
 def distribute_cnn(name, validation = 0.0, test = 0.1):
   seed(28362)
@@ -544,7 +548,7 @@ def open_win_rename_images_files(count, filedir, file):
     gui.destroy()
   gui = tk.Tk()
   gui.title('')
-  w = 1000  # Width
+  w = 1200  # Width
   h = 500  # Height
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
@@ -558,14 +562,26 @@ def open_win_rename_images_files(count, filedir, file):
   button_frame.columnconfigure(0, weight=1)
   button_frame.pack(fill=tk.X, side=tk.BOTTOM)
   button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
-  buttons = [[0 for x in range(4)] for x in range(3)]
+  buttons = [[0 for x in range(6)] for x in range(3)]
   for i in range(3):
-    for j in range(4):
-      text = i * 4 + j
+    for j in range(6):
+      text = i * 6 + j
       if text == 10:
         text = 'X'
       if text == 11:
         text = 'ok'
+      if text == 12:
+        text = 'P'
+      if text == 13:
+        text = 'A'
+      if text == 14:
+        text = 'G'
+      if text == 15:
+        text = 'I'
+      if text == 16:
+        text = 'N'
+      if text == 17:
+        text = 'A'
       pixel = tk.PhotoImage(width=1, height=1)
       buttons[i][j] = tk.Button(button_frame,
                                 text=text,
@@ -592,9 +608,9 @@ def open_win_rename_images_files(count, filedir, file):
 
 def rename_images_files(name):
   count = 1
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     for file in files:
       open_win_rename_images_files(count, filedir, file)
@@ -713,19 +729,19 @@ def change_ins_file_name():
 
 set_GPUs()
 
-# cnn = CNN('Italia Oggi')
-# cnn.exec_cnn('Italia Oggi', epochs = 50)
+cnn = CNN('Osservatore Romano')
+cnn.exec_cnn('Osservatore Romano', epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# rename_images_files('Italia Oggi')
+# rename_images_files('Osservatore Romano')
 
-# to_11_classes('Italia Oggi')
+# to_11_classes('Osservatore Romano')
 
 # delete_name('Avvenire')
 
 # get_max_box()
 
-change_ins_file_name()
+# change_ins_file_name()
