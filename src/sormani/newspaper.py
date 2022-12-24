@@ -412,8 +412,19 @@ class Il_Fatto_Quotidiano(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    w, h = image.size
+    whole = [100, 100, w, 500]
     return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=40,
+                                max_w=130,
+                                min_h=100,
+                                max_h=170,
+                                ts=150,
+                                min_mean=140,
+                                max_mean=250)
 
 class Italia_Oggi(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):

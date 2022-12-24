@@ -489,6 +489,9 @@ def to_11_classes(name = 'all', source = None, resize = False):
     sources = [source]
   else:
     sources = source
+  for i in range(10):
+    os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(i)), exist_ok=True)
+  os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), 'X'), exist_ok=True)
   for source in sources:
     for filedir, dirs, files in os.walk(source):
       for file in files:
@@ -497,9 +500,6 @@ def to_11_classes(name = 'all', source = None, resize = False):
           image = Image.open(os.path.join(filedir, file))
           image = image.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
           image.save(os.path.join(filedir, file))
-          for n in range(10):
-            os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
-          os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), 'X'), exist_ok=True)
           if n == 'X':
             image.save(os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
           else:
@@ -551,14 +551,18 @@ def open_win_rename_images_files(count, filedir, file):
     exit()
   def number_chosen(button_press, filedir, file):
     if button_press != 'ok':
-      new_file = Path(file).stem + '_' + str(button_press) + '.jpg'
+      file_name = Path(file).stem
+      n = file_name.split('_')[-1]
+      if len(n) == 1:
+        file_name = '_'.join(file_name.split('_')[:-1])
+      new_file = file_name + '_' + str(button_press) + '.jpg'
     else:
       new_file = file
     os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', new_file))
     gui.destroy()
   gui = tk.Tk()
   gui.title('')
-  w = 1200  # Width
+  w = 1000  # Width
   h = 500  # Height
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
@@ -572,10 +576,11 @@ def open_win_rename_images_files(count, filedir, file):
   button_frame.columnconfigure(0, weight=1)
   button_frame.pack(fill=tk.X, side=tk.BOTTOM)
   button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
-  buttons = [[0 for x in range(6)] for x in range(3)]
+  n_col = 3
+  buttons = [[0 for x in range(n_col + 1)] for x in range(3)]
   for i in range(3):
-    for j in range(6):
-      text = i * 6 + j
+    for j in range(n_col + 1):
+      text = i * (n_col + 1) + j
       if text == 10:
         text = 'X'
       if text == 11:
@@ -605,6 +610,7 @@ def open_win_rename_images_files(count, filedir, file):
       buttons[i][j].columnconfigure(i)
       buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(5, 5), pady=(5, 5))
   image = Image.open(os.path.join(filedir, file))
+  image = image.resize(NUMBER_IMAGE_SIZE)
   img = ImageTk.PhotoImage(image)
   label = Label(gui_frame, image = img)
   label.columnconfigure(1, weight=1)
@@ -739,16 +745,18 @@ def change_ins_file_name():
 
 set_GPUs()
 
-cnn = CNN('Osservatore Romano')
-cnn.exec_cnn('Osservatore Romano', epochs = 50)
+ns = 'Il Fatto Quotidiano'
+
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# rename_images_files('Osservatore Romano')
+# rename_images_files(ns)
 
-# to_11_classes('Osservatore Romano', resize=True)
+# to_11_classes(ns, resize=True)
 
 # delete_name('Avvenire')
 
