@@ -182,7 +182,7 @@ class customCallback(keras.callbacks.Callback):
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
     elif logs_val <= min:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
-            f' in lower that the minimum value for saving')
+            f' is lower than the minimum value for saving')
     else:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
             f' did not improve from {self.val_sparse_categorical_accuracy}')
@@ -477,7 +477,7 @@ def to_X(name = 'all'):
       if n == 'X':
         os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
-def to_11_classes(name = 'all', source = None):
+def to_11_classes(name = 'all', source = None, resize = False):
   name = name.lower().replace(' ', '_')
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
@@ -493,12 +493,22 @@ def to_11_classes(name = 'all', source = None):
     for filedir, dirs, files in os.walk(source):
       for file in files:
         n = Path(file).stem.split('_')[-1]
-        if n == 'X':
+        if resize:
+          image = Image.open(os.path.join(filedir, file))
+          image = image.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
+          image.save(os.path.join(filedir, file))
+          for n in range(10):
+            os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
           os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), 'X'), exist_ok=True)
-          os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+          if n == 'X':
+            image.save(os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+          else:
+            image.save(os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
         else:
-          os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
-          os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
+          if n == 'X':
+            os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+          else:
+            os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
 def move_to_test(name = 'numbers'):
   dest_path = os.path.join(STORAGE_BASE, 'test/images')
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
@@ -738,7 +748,7 @@ cnn.exec_cnn('Osservatore Romano', epochs = 50)
 
 # rename_images_files('Osservatore Romano')
 
-# to_11_classes('Osservatore Romano')
+# to_11_classes('Osservatore Romano', resize=True)
 
 # delete_name('Avvenire')
 

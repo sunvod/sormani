@@ -268,9 +268,7 @@ class Page:
         f[l + 6: l + 9] in MONTHS and\
         f[l + 9] == '_' and\
         f[l + 10: l + 12].isdigit() and\
-        f[l+12] == '_' and\
-        f[l+13] == 'p' and\
-        f[l  + 14: l + 16].isdigit()
+        f[l+12] == '_'
   def extract_page(self):
     return self.newspaper.get_page()
   def add_pdf_metadata(self, first_number = None):
