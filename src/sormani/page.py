@@ -371,19 +371,24 @@ class Page:
       return None, None
     b = None
     predictions = []
+    last = len(self.newspaper.get_dictionary()) - 1
     for e in original_predictions:
       if b is None:
         b = e
         if e == 0:
           continue
-      elif e ==  0 and (b == 0 or (b == 10 and  len(predictions) == 0) or len(predictions) >= 2):
+      elif e ==  0 and (b == 0 or (b == last and  len(predictions) == 0) or len(predictions) >= 2):
         continue
-      if e != 10:
+      if e != last:
         predictions.append(str(e))
       b = e
-    predictions = ''.join(predictions)
-    if len(predictions):
-      prediction = int(predictions)
+    _predictions = [self.newspaper.get_dictionary()[int(p)] for p in predictions]
+    prefix = self.newspaper.get_prefix()
+    init = ''.join(_predictions).find(prefix)
+    if prefix != '' and init >= 0:
+      _predictions = _predictions[init + len(prefix) : ]
+    if len(_predictions) and ''.join(_predictions).isdigit():
+      prediction = int(''.join(_predictions))
     else:
       prediction = None
     return prediction, original_predictions

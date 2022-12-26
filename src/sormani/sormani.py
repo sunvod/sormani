@@ -546,7 +546,7 @@ class Sormani():
       except RuntimeError as e:  # Memory growth must be set before GPUs have been initialized
         print(e)
         exit(0)
-  def check_page_numbers(self, save_images = False, model_path = 'best_model_DenseNet201', assume_newspaper = True, newspaper_name = None):
+  def check_page_numbers(self, save_images = False, model_path = 'best_model_DenseNet201', assume_newspaper = True, newspaper_name = None, exclude_ins = False):
     if not len(self.elements):
       return
     self.set_GPUs()
@@ -568,6 +568,8 @@ class Sormani():
       model_path = os.path.join('models', model_path)
     model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     for page_pool in self:
+      if exclude_ins and page_pool.isins:
+        continue
       page_pool.check_pages_numbers(model, save_images = save_images)
     if len(images):
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')

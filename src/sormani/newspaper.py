@@ -286,6 +286,10 @@ class Newspaper():
           l -= 1
         r = 2
         count_zero += 1
+  def get_dictionary(self):
+    return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X']
+  def get_prefix(self):
+    return ''
 
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -569,6 +573,10 @@ class Il_Foglio(Newspaper):
     w, h = image.size
     whole = (0, 300, w / 2, 620)
     return whole
+  def get_dictionary(self):
+    return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'G', 'P', 'X']
+  def get_prefix(self):
+    return 'PAG'
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale=200,

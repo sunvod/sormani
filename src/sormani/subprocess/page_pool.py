@@ -93,7 +93,8 @@ class Page_pool(list):
         Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NO_NUMBERS)).mkdir(parents=True, exist_ok=True)
         Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NUMBERS)).mkdir(parents=True, exist_ok=True)
         for i, image in enumerate(images):
-          n = 'X' if predictions[i] == 10 else str(predictions[i])
+          # n = 'X' if predictions[i] == 10 else str(predictions[i])
+          n = page.newspaper.get_dictionary()[predictions[i]]
           if n == 'X':
             dir = NO_NUMBERS
           else:

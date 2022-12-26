@@ -496,19 +496,11 @@ def to_11_classes(name = 'all', source = None, resize = False):
     for filedir, dirs, files in os.walk(source):
       for file in files:
         n = Path(file).stem.split('_')[-1]
+        image = Image.open(os.path.join(filedir, file))
         if resize:
-          image = Image.open(os.path.join(filedir, file))
           image = image.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
-          image.save(os.path.join(filedir, file))
-          if n == 'X':
-            image.save(os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
-          else:
-            image.save(os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
-        else:
-          if n == 'X':
-            os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
-          else:
-            os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
+        os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
+        image.save(os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
 def move_to_test(name = 'numbers'):
   dest_path = os.path.join(STORAGE_BASE, 'test/images')
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
@@ -551,18 +543,20 @@ def open_win_rename_images_files(count, filedir, file):
     exit()
   def number_chosen(button_press, filedir, file):
     if button_press != 'ok':
-      file_name = Path(file).stem
-      n = file_name.split('_')[-1]
-      if len(n) == 1:
-        file_name = '_'.join(file_name.split('_')[:-1])
-      new_file = file_name + '_' + str(button_press) + '.jpg'
+      for i in range(4 if button_press == '4X' else 1):
+        file_name = Path(file[i]).stem
+        n = file_name.split('_')[-1]
+        if len(n) == 1:
+          file_name = '_'.join(file_name.split('_')[:-1])
+        new_file = file_name + '_' + str(button_press[-1]) + '.jpg'
+        os.rename(os.path.join(filedir, file[i]), os.path.join(STORAGE_BASE, 'numbers', new_file))
     else:
       new_file = file
-    os.rename(os.path.join(filedir, file), os.path.join(STORAGE_BASE, 'numbers', new_file))
+      os.rename(os.path.join(filedir, file[0]), os.path.join(STORAGE_BASE, 'numbers', new_file))
     gui.destroy()
   gui = tk.Tk()
   gui.title('')
-  w = 1000  # Width
+  w = 1300  # Width
   h = 500  # Height
   screen_width = gui.winfo_screenwidth()  # Width of the screen
   screen_height = gui.winfo_screenheight()  # Height of the screen
@@ -576,11 +570,11 @@ def open_win_rename_images_files(count, filedir, file):
   button_frame.columnconfigure(0, weight=1)
   button_frame.pack(fill=tk.X, side=tk.BOTTOM)
   button_frame.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(10,10), pady=(10,10))
-  n_col = 3
-  buttons = [[0 for x in range(n_col + 1)] for x in range(3)]
+  n_col = 6
+  buttons = [[0 for x in range(n_col)] for x in range(3)]
   for i in range(3):
-    for j in range(n_col + 1):
-      text = i * (n_col + 1) + j
+    for j in range(n_col):
+      text = i * (n_col) + j
       if text == 10:
         text = 'X'
       if text == 11:
@@ -596,7 +590,7 @@ def open_win_rename_images_files(count, filedir, file):
       if text == 16:
         text = 'N'
       if text == 17:
-        text = 'A'
+        text = '4X'
       pixel = tk.PhotoImage(width=1, height=1)
       buttons[i][j] = tk.Button(button_frame,
                                 text=text,
@@ -609,13 +603,35 @@ def open_win_rename_images_files(count, filedir, file):
                                 command=lambda number=str(text): number_chosen(number, filedir, file))
       buttons[i][j].columnconfigure(i)
       buttons[i][j].grid(row=i, column=j, sticky=tk.W+tk.E, padx=(5, 5), pady=(5, 5))
-  image = Image.open(os.path.join(filedir, file))
+  image = Image.open(os.path.join(filedir, file[0]))
   image = image.resize(NUMBER_IMAGE_SIZE)
   img = ImageTk.PhotoImage(image)
-  label = Label(gui_frame, image = img)
+  image_frame = tk.Frame(gui_frame)
+  image_frame.grid(row=0, column=1, sticky=tk.W + tk.E)
+  label = Label(image_frame, image = img)
   label.columnconfigure(1, weight=1)
-  label.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(50, 50))
-  label2 = Label(gui, text = str(count) + '. ' + file, font = ('Arial', 14))
+  label.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(50, 50))
+  small_image_frame = tk.Frame(image_frame)
+  small_image_frame.grid(row=1, column=0, sticky=tk.W + tk.E)
+  if len(file) > 1:
+    image_1 = Image.open(os.path.join(filedir, file[len(file) - 3]))
+    image_1 = image_1.resize((95, 95))
+    img_1 = ImageTk.PhotoImage(image_1)
+    small_label_1 = Label(small_image_frame, image = img_1)
+    small_label_1.grid(row=0, column=0, sticky=tk.W + tk.E, padx=(3, 3), pady=(6, 6))
+  if len(file) > 2:
+    image_2 = Image.open(os.path.join(filedir, file[len(file) - 2]))
+    image_2 = image_2.resize((95, 95))
+    img_2 = ImageTk.PhotoImage(image_2)
+    small_label_2 = Label(small_image_frame, image = img_2)
+    small_label_2.grid(row=0, column=1, sticky=tk.W + tk.E, padx=(3, 3), pady=(6, 6))
+  if len(file) > 3:
+    image_3 = Image.open(os.path.join(filedir, file[len(file) - 1]))
+    image_3 = image_3.resize((95, 95))
+    img_3 = ImageTk.PhotoImage(image_3)
+    small_label_3 = Label(small_image_frame, image = img_3)
+    small_label_3.grid(row=0, column=2, sticky=tk.W + tk.E, padx=(3, 3), pady=(6, 6))
+  label2 = Label(gui, text = str(count) + '. ' + file[0], font = ('Arial', 14))
   label2.pack(pady=20)
   exit_button = Button(gui_frame, text="Exit", font = ('Arial', 18), command=close)
   exit_button.columnconfigure(2, weight=1)
@@ -624,12 +640,22 @@ def open_win_rename_images_files(count, filedir, file):
 
 def rename_images_files(name):
   count = 1
+  _files = []
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
+    i = 0
     for file in files:
-      open_win_rename_images_files(count, filedir, file)
+      if i > 3:
+        open_win_rename_images_files(count, filedir, np.array(_files))
+        if os.path.isfile(os.path.join(filedir, _files[len(_files) - 1])):
+          _files.pop(0)
+        else:
+          _files = []
+          i = 0
+      _files.append(file)
+      i += 1
       count += 1
 
 def open_win_pages_files(count, filedir, file):
@@ -745,7 +771,7 @@ def change_ins_file_name():
 
 set_GPUs()
 
-ns = 'Il Fatto Quotidiano'
+ns = 'Il Foglio'
 
 cnn = CNN(ns)
 cnn.exec_cnn(ns, epochs = 50)
