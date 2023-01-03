@@ -64,8 +64,10 @@ class Page_pool(list):
     countminusone = 0
     countzero = 0
     for page in self:
-      images, _, predictions = page.check_pages_numbers(model)
+      head_image, images, _, predictions = page.check_pages_numbers(model)
       if page.page_control == 0:
+        if head_image is not None:
+          plt.imshow(head_image)
         countzero += 1
         errors.append(page.newspaper.n_page)
         col = 6
@@ -78,8 +80,9 @@ class Page_pool(list):
             ax[i][j].set_axis_off()
         title = str(self.date.strftime("%d/%m")) + ' ' + str(page.newspaper.n_page)
         for i, image in enumerate(images):
-          ax[i // col][i % col].imshow(image[1])
-          ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
+          if image is not None:
+            ax[i // col][i % col].imshow(image[1])
+            ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
         plt.axis("off")
         plt.show()
       if save_images and images is not None and predictions is not None:

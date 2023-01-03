@@ -346,19 +346,20 @@ class Page:
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped)
+      head_image = None
       prediction = None
       predictions = None
       if images is not None:
-        prediction, predictions = self.get_page_numbers(model, images)
+        head_image, prediction, predictions = self.get_page_numbers(model, images)
       if images is None or prediction is None:
         self.page_control = -1
       elif prediction == self.newspaper.n_page:
         self.page_control = 1
       else:
         self.page_control = 0
-      return images, prediction, predictions
+      return head_image, images, prediction, predictions
   def get_page_numbers(self, model, images):
-    images.pop(0)
+    head_image = images.pop(0)
     dataset = []
     for image in images:
       img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
@@ -368,7 +369,10 @@ class Page:
     try:
       original_predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
     except:
-      return None, None
+      return None, None, None
+    head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
+    head_image = Image.fromarray(head_image)
+    head_image = tf.image.convert_image_dtype(head_image, dtype=tf.float32)
     b = None
     predictions = []
     last = len(self.newspaper.get_dictionary()) - 1
@@ -391,7 +395,7 @@ class Page:
       prediction = int(''.join(_predictions))
     else:
       prediction = None
-    return prediction, original_predictions
+    return head_image, prediction, original_predictions
   def open_win_pages_files(self, image, file_to_be_changing, prediction = None):
     def close():
       gui.destroy()
@@ -546,7 +550,7 @@ class Page:
         image = Image.open(self.original_image)
       prediction = None
       if model is not None:
-        _, prediction, _ = self.check_pages_numbers(model)
+        _, _, prediction, _ = self.check_pages_numbers(model)
       file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing, prediction = prediction)
     return file_to_be_changing, end_flag, next_page
 
