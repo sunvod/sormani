@@ -370,6 +370,7 @@ class Page:
       original_predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
     except:
       return None, None, None
+    title = head_image[0]
     head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
     head_image = Image.fromarray(head_image)
     head_image = tf.image.convert_image_dtype(head_image, dtype=tf.float32)
@@ -395,7 +396,7 @@ class Page:
       prediction = int(''.join(_predictions))
     else:
       prediction = None
-    return head_image, prediction, original_predictions
+    return (title, head_image), prediction, original_predictions
   def open_win_pages_files(self, image, file_to_be_changing, prediction = None):
     def close():
       gui.destroy()

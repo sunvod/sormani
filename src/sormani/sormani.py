@@ -56,7 +56,9 @@ class Sormani():
                rename_only = False,
                rename_file_names =  True,
                divide_only = False,
-               notdivide = False):
+               notdivide = False,
+               exclude_ins=False,
+               only_ins=False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -73,7 +75,22 @@ class Sormani():
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
-          e = self._init(newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names, divide_only, notdivide)
+          e = self._init(newspaper_name,
+                         root,
+                         year,
+                         month,
+                         day,
+                         ext,
+                         image_path,
+                         path_exclude,
+                         path_exist,
+                         force,
+                         rename_only,
+                         rename_file_names,
+                         divide_only,
+                         notdivide,
+                         exclude_ins,
+                         only_ins)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -81,7 +98,23 @@ class Sormani():
       for e in element:
         self.elements.append(e)
     pass
-  def _init(self, newspaper_name, root, year, month, day, ext, image_path, path_exclude, path_exist, force, rename_only, rename_file_names, divide_only, notdivide):
+  def _init(self,
+            newspaper_name,
+            root,
+            year,
+            month,
+            day,
+            ext,
+            image_path,
+            path_exclude,
+            path_exist,
+            force,
+            rename_only,
+            rename_file_names,
+            divide_only,
+            notdivide,
+            exclude_ins=False,
+            only_ins=False):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -107,19 +140,19 @@ class Sormani():
     self.path_exist = path_exist
     self.force = force
     self.converts = None
-    self.elements = self.get_elements(root)
+    self.elements = self.get_elements(root, exclude_ins, only_ins)
     self.new_root = root
     if not notdivide:
       self.divide_all_image()
     if divide_only:
       return None
-    self.elements = self.get_elements(root)
+    self.elements = self.get_elements(root, exclude_ins, only_ins)
     # if contrast:
     #   self.change_all_contrasts()
-    # self.elements = self.get_elements(root)
+    # self.elements = self.get_elements(root, exclude_ins, only_ins)
     if rename_file_names:
       self.set_all_images_names()
-    self.elements = self.get_elements(root)
+    self.elements = self.get_elements(root, exclude_ins, only_ins)
     return self.elements
     pass
   def __len__(self):
@@ -177,7 +210,7 @@ class Sormani():
             pass
     if to_repeat:
       self.add_zero_to_dir(root)
-  def get_elements(self, root):
+  def get_elements(self, root, exclude_ins = False, only_ins = False):
     elements = []
     filedirs = []
     roots = []
@@ -193,7 +226,12 @@ class Sormani():
     roots.sort()
     for root in roots:
       for filedir, dirs, files in os.walk(root):
-        if filedir in self.path_exclude or len(files) == 0 or len(dirs) > 0:
+        dir = filedir.split('/')[-1]
+        if filedir in self.path_exclude or \
+            len(files) == 0 or \
+            len(dirs) > 0 or \
+            (exclude_ins and not dir.isdigit()) or \
+            (only_ins and dir.isdigit()):
           continue
         files.sort(key = self._get_elements)
         filedirs.append((filedir, files))
@@ -546,7 +584,13 @@ class Sormani():
       except RuntimeError as e:  # Memory growth must be set before GPUs have been initialized
         print(e)
         exit(0)
-  def check_page_numbers(self, save_images = False, model_path = 'best_model_DenseNet201', assume_newspaper = True, newspaper_name = None, exclude_ins = False):
+  def check_page_numbers(self,
+                         save_images = False,
+                         model_path = 'best_model_DenseNet201',
+                         assume_newspaper = True,
+                         newspaper_name = None,
+                         exclude_ins = False,
+                         only_ins = False):
     if not len(self.elements):
       return
     self.set_GPUs()
@@ -568,7 +612,7 @@ class Sormani():
       model_path = os.path.join('models', model_path)
     model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     for page_pool in self:
-      if exclude_ins and page_pool.isins:
+      if (exclude_ins and page_pool.isins) or (only_ins and not page_pool.isins):
         continue
       page_pool.check_pages_numbers(model, save_images = save_images)
     if len(images):

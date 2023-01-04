@@ -482,8 +482,8 @@ def to_11_classes(name = 'all', source = None, resize = False):
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
                os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'no_numbers'),
-               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
-               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
+               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
+               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
                os.path.join(STORAGE_BASE, 'numbers')]
   elif isinstance(source, str):
     sources = [source]
@@ -501,6 +501,7 @@ def to_11_classes(name = 'all', source = None, resize = False):
           image = image.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
         os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
         image.save(os.path.join(os.path.join(STORAGE_DL, name), str(n), file))
+        # os.remove(os.path.join(filedir, file))
 def move_to_test(name = 'numbers'):
   dest_path = os.path.join(STORAGE_BASE, 'test/images')
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'repository', 'sure', 'X')):
@@ -641,9 +642,9 @@ def open_win_rename_images_files(count, filedir, file):
 def rename_images_files(name):
   count = 1
   _files = []
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
     files.sort()
     i = 0
     for file in files:
@@ -771,7 +772,7 @@ def change_ins_file_name():
 
 set_GPUs()
 
-ns = 'Il Foglio'
+ns = 'Il Fatto Quotidiano'
 
 cnn = CNN(ns)
 cnn.exec_cnn(ns, epochs = 50)
@@ -781,7 +782,7 @@ cnn.exec_cnn(ns, epochs = 50)
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
 # rename_images_files(ns)
-
+#
 # to_11_classes(ns, resize=True)
 
 # delete_name('Avvenire')
