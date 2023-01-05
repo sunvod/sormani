@@ -87,6 +87,8 @@ class Newspaper():
       newspaper = Unita(newspaper_base, file_path, date, year, number)
     elif name == 'Tutto Libri':
       newspaper = Tutto_Libri(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Giorno':
+      newspaper = Il_Giorno(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -122,6 +124,8 @@ class Newspaper():
       parameters = Unita.get_parameters()
     elif name == 'Tutto Libri':
       parameters = Tutto_Libri.get_parameters()
+    elif name == 'Il Giorno':
+      parameters = Il_Giorno.get_parameters()
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -319,7 +323,8 @@ class Il_Giornale(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_path, date, year, number, init_page = 3)
   def get_whole_page_location(self, image):
-    whole = (0, 100, 5000, 500)
+    w, h = image.size
+    whole = (0, 100, w, 500)
     return whole
   @staticmethod
   def get_parameters():
@@ -340,6 +345,7 @@ class Il_manifesto(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Manifesto', file_path, date, year, number, init_page = 3)
   def get_whole_page_location(self, image):
+    w, h = image.size
     if self.n_page % 2 == 0:
       whole = [0, 150, 1000, 450]
     else:
@@ -399,7 +405,8 @@ class Milano_Finanza(Newspaper):
         f += 1
         r = -2
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    w, h = image.size
+    whole = [0, 100, w, 400]
     return whole
   @staticmethod
   def get_parameters():
@@ -472,7 +479,8 @@ class Italia_Oggi(Newspaper):
         f += 1
         r = 2
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    w, h = image.size
+    whole = [0, 100, w, 400]
     return whole
   @staticmethod
   def get_parameters():
@@ -490,7 +498,8 @@ class Libero(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Libero', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 520]
+    w, h = image.size
+    whole = [0, 100, w, 520]
     return whole
   @staticmethod
   def get_parameters():
@@ -512,7 +521,8 @@ class Alias(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Alias', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    w, h = image.size
+    whole = [0, 100, w, 400]
     return whole
 
 class Alias_Domenica(Newspaper):
@@ -620,3 +630,25 @@ class Tutto_Libri(Newspaper):
   def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
+
+class Il_Giorno(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 61
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Giorno', file_path, date, year, number, init_page = 3)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 100, w, 500)
+    return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 75,
+                                max_w = 150,
+                                min_h = 120,
+                                max_h = 240,
+                                ts = 220,
+                                min_mean = 50,
+                                fill_hole=3,
+                                invert_fill_hole=True,
+                                max_mean = 250)
