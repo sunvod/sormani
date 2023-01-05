@@ -3,7 +3,7 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
   # sormani = Sormani('Italia Oggi', year=2016, months=12, days=27)  # [x for x in range(1,13)]
-  sormani = Sormani('Il Giornale', year=2016, months=[x for x in range(1,13)], days=None, only_ins=False)
+  sormani = Sormani('Il Giornale', year=2016, months=[x for x in range(6,13)], days=None, only_ins=False)
   # sormani.get_pages_numbers()
   # sormani.add_pdf_metadata()
   # sormani.save_pages_images()
@@ -17,3 +17,6 @@ if __name__ == '__main__':
   # sormani.check_page_numbers(save_images = True, model_path = 'best_model_SimpleCNN', assume_newspaper = True, newspaper_name = None)
   # sormani.update_date_creation()
   # sormani.add_jpg_metadata()
+
+
+

@@ -153,7 +153,7 @@ class Page:
     _contours.sort(key = _get_contours)
     for i, (_, _, contour) in enumerate(_contours):
       x, y, w, h = cv2.boundingRect(contour)
-      perimeter = cv2.arcLength(contour, True)  # hierarchy[0, i, 3] == -1 and
+      perimeter = cv2.arcLength(contour, True)
       roi = img[y:y + h, x:x + w]
       name = file_name + '_' + ('0000' + str(i + 1))[-5:]
       if not no_resize:
@@ -211,11 +211,15 @@ class Page:
     # bimg = img.copy()
     # Questo riempie i buchi
     if parameters.fill_hole is not None:
-      thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      if not parameters.invert_fill_hole:
+        thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      else:
+        thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
       kernel = np.ones((parameters.fill_hole, parameters.fill_hole), np.uint8)
       # binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-      gray = 255 - gray
+      if not parameters.invert_fill_hole:
+        gray = 255 - gray
     img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
     cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]

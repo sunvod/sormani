@@ -477,13 +477,18 @@ def to_X(name = 'all'):
       if n == 'X':
         os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(n)), exist_ok=True)
         os.rename(os.path.join(filedir, file), os.path.join(os.path.join(STORAGE_DL, name), 'X', file))
+def force_to_X():
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'no_numbers')):
+    for file in files:
+      new_file = '_'.join(file.split('_')[:-1]) + '_X.jpg'
+      os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 def to_11_classes(name = 'all', source = None, resize = False):
   name = name.lower().replace(' ', '_')
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
                os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'no_numbers'),
-               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
-               # os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'numbers'),
+               os.path.join(STORAGE_BASE, REPOSITORY, name, 'notsure', 'no_numbers'),
                os.path.join(STORAGE_BASE, 'numbers')]
   elif isinstance(source, str):
     sources = [source]
@@ -644,11 +649,12 @@ def rename_images_files(name):
   _files = []
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
     files.sort()
     i = 0
-    for file in files:
-      if i > 3:
+    for j, file in enumerate(files):
+      if i > 3 or j == len(files) - 1:
         open_win_rename_images_files(count, filedir, np.array(_files))
         if os.path.isfile(os.path.join(filedir, _files[len(_files) - 1])):
           _files.pop(0)
@@ -772,7 +778,7 @@ def change_ins_file_name():
 
 set_GPUs()
 
-ns = 'Il Fatto Quotidiano'
+ns = 'Il Giornale'
 
 cnn = CNN(ns)
 cnn.exec_cnn(ns, epochs = 50)
@@ -790,3 +796,5 @@ cnn.exec_cnn(ns, epochs = 50)
 # get_max_box()
 
 # change_ins_file_name()
+
+# force_to_X()

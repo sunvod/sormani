@@ -31,6 +31,7 @@ class Newspaper_parameters():
                invert = False,
                internal_box = None,
                fill_hole = None,
+               invert_fill_hole=False,
                exclude_colors = None):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
@@ -43,6 +44,7 @@ class Newspaper_parameters():
     self.invert = invert
     self.internal_box = internal_box
     self.fill_hole = fill_hole
+    self.invert_fill_hole = invert_fill_hole,
     self.exclude_colors = exclude_colors
 
 class Newspaper():
@@ -322,15 +324,15 @@ class Il_Giornale(Newspaper):
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_w = 40,
+                                min_w = 75,
                                 max_w = 150,
                                 min_h = 120,
                                 max_h = 240,
                                 ts = 220,
                                 min_mean = 50,
-                                max_mean = 250,
                                 fill_hole=3,
-                                max_fillarea = 0)
+                                invert_fill_hole=True,
+                                max_mean = 250)
 
 class Il_manifesto(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
