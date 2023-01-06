@@ -646,7 +646,7 @@ class Sormani():
     print(f'Update date creation ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
     return images
-  def check_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
+  def check_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], integrate=False):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -656,7 +656,7 @@ class Sormani():
     for page_pool in self:
       if not len(page_pool):
         continue
-      page_pool.check_jpg(converts)
+      page_pool.check_jpg(converts, integrate)
     self.force = selfforce
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')

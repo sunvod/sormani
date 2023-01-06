@@ -165,21 +165,7 @@ class Page_pool(list):
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
   def convert_image(self, page):
-    image = Image.open(page.original_image)
-    for convert in page.conversions:
-      path_image = os.path.join(page.jpg_path, convert.image_path)
-      Path(path_image).mkdir(parents=True, exist_ok=True)
-      file = os.path.join(path_image, page.file_name) + '.jpg'
-      if self.force or not Path(file).is_file():
-        if image.size[0] < image.size[1]:
-          wpercent = (convert.resolution / float(image.size[1]))
-          xsize = int((float(image.size[0]) * float(wpercent)))
-          image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
-        else:
-          wpercent = (convert.resolution / float(image.size[0]))
-          ysize = int((float(image.size[1]) * float(wpercent)))
-          image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
-        image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
+    page.convert_image(self.force)
   def extract_pages(self, range, mute = True, image_mute = True):
     pages = []
     for i, page in enumerate(self):
@@ -281,7 +267,7 @@ class Page_pool(list):
           for file in files:
             os.utime(os.path.join(os.path.join(filedir, file)), (modTime, modTime))
       return
-  def check_jpg(self, converts):
+  def check_jpg(self, converts, integrate=False):
     if converts is None:
       return
     if not len(self):
@@ -289,6 +275,10 @@ class Page_pool(list):
     for page in self:
       jpg_path = page.jpg_path
       break
+    if not Path(os.path.join(jpg_path, 'pdf')).is_dir():
+      type = jpg_path.split('/')[-1]
+      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il pdf.')
+      return
     _, dirs, files = next(os.walk(os.path.join(jpg_path, 'pdf')))
     file_count = len(files)
     if file_count:
@@ -297,4 +287,7 @@ class Page_pool(list):
         if exist:
           _, _, files = next(os.walk(os.path.join(jpg_path, convert.image_path)))
         if not exist or file_count != len(files):
-          print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
+          type = jpg_path.split('/')[-1]
+          print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
+          if integrate:
+            self.convert_images([convert])

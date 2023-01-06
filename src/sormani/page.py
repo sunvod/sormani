@@ -557,6 +557,25 @@ class Page:
         _, _, prediction, _ = self.check_pages_numbers(model)
       file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing, prediction = prediction)
     return file_to_be_changing, end_flag, next_page
+  def convert_image(self, force):
+    image = Image.open(self.original_image)
+    for convert in self.conversions:
+      self.convert_image_single_conversion(convert, image, force)
+
+  def convert_image_single_conversion(self, convert, image, force):
+    path_image = os.path.join(self.jpg_path, convert.image_path)
+    Path(path_image).mkdir(parents=True, exist_ok=True)
+    file = os.path.join(path_image, self.file_name) + '.jpg'
+    if force or not Path(file).is_file():
+      if image.size[0] < image.size[1]:
+        wpercent = (convert.resolution / float(image.size[1]))
+        xsize = int((float(image.size[0]) * float(wpercent)))
+        image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
+      else:
+        wpercent = (convert.resolution / float(image.size[0]))
+        ysize = int((float(image.size[1]) * float(wpercent)))
+        image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
+      image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
 
 
 
