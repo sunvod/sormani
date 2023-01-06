@@ -1,32 +1,15 @@
 import multiprocessing
 import time
 import datetime
-import cv2
-import portalocker
 import pathlib
 import re
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 
-import tkinter as tk
-from PIL import Image, ImageTk
 from multiprocessing import Pool
-from pathlib import Path
-import numpy as np
 
-from tensorflow import keras
-from keras.callbacks import ModelCheckpoint
-from keras.applications.inception_v3 import InceptionV3
-from keras.layers import Dense, GlobalAveragePooling2D
-from keras.models import Model
-from keras.datasets import mnist
-
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.efficientnet_v2 import EfficientNetV2M, EfficientNetV2L
-from keras.applications.convnext import ConvNeXtXLarge
-
-from src.sormani.subprocess.image_group import Images_group
+from src.sormani.image_group import Images_group
 from src.sormani.system import *
 
 import warnings
