@@ -186,8 +186,7 @@ class Page:
     if parameters.include is not None:
       if not int(p) in parameters.include:
         return None, img
-    if parameters.exclude is not None:
-      if int(p) in parameters.exclude:
+    if parameters.exclude is not None and p.isdigit() and int(p) in parameters.exclude:
         return None, img
     img = self.cv2_resize(img, parameters.scale)
     # bimg = img.copy()
@@ -309,8 +308,8 @@ class Page:
       file_out.close()
       os.remove(self.pdf_file_name + '.2')
     except:
-      os.remove(self.pdf_file_name + '.2')
-      file_in.write(self.pdf_file_name)
+      os.rename(self.pdf_file_name + '.2', self.pdf_file_name)
+      # file_in.write(self.pdf_file_name)
 
   def get_jpg_metadata(self, image, first_number=None):
     exif = image.getexif()
@@ -558,5 +557,6 @@ class Page:
         _, _, prediction, _ = self.check_pages_numbers(model)
       file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing, prediction = prediction)
     return file_to_be_changing, end_flag, next_page
+
 
 

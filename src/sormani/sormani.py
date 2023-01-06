@@ -259,6 +259,19 @@ class Sormani():
         continue
       page_pool.create_pdf(number, ocr = ocr)
       page_pool.convert_images(converts)
+  def convert_all_images(self,
+                        ocr = True,
+                        converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
+                        number = None):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    self.force = True
+    for page_pool in self:
+      if not len(page_pool):
+        continue
+      page_pool.convert_images(converts)
+    self.force = selfforce
   def set_all_images_names(self):
     if not len(self.elements):
       return
@@ -333,7 +346,7 @@ class Sormani():
         break
     if flag:
       for file_name in image_group.files:
-        last = file_name.split('_')[-1]
+        last = Path(file_name).stem.split('_')[-1]
         if last == '0' or last == '1' or last == '2':
           error = '\'' + file_name + '\' into folder \'' + image_group.filedir + '\' seems to be inconsistent because images into the folder are only partially divided.' \
                                                                                  '\nIt is necessary reload all the folder from backup data in order to have consistency again.'
@@ -633,3 +646,17 @@ class Sormani():
     print(f'Update date creation ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
     return images
+  def check_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)]):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    self.force = True
+    start_time = time.time()
+    print(f'Starting checking pdf at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      if not len(page_pool):
+        continue
+      page_pool.check_jpg(converts)
+    self.force = selfforce
+    print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')

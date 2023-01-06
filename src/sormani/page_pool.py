@@ -151,27 +151,6 @@ class Page_pool(list):
           os.rename(page.original_image, new_file_name)
           page.file_name = new_file_name
           page.newspaper.file_path = new_file_name
-  def convert_image(self, page):
-    try:
-      image = Image.open(page.original_image)
-      for convert in page.conversions:
-        path_image = os.path.join(page.jpg_path, convert.image_path)
-        Path(path_image).mkdir(parents=True, exist_ok=True)
-        file = os.path.join(path_image, page.file_name) + '.jpg'
-        if self.force or not Path(file).is_file():
-          if image.size[0] < image.size[1]:
-            wpercent = (convert.resolution / float(image.size[1]))
-            xsize = int((float(image.size[0]) * float(wpercent)))
-            image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
-          else:
-            wpercent = (convert.resolution / float(image.size[0]))
-            ysize = int((float(image.size[1]) * float(wpercent)))
-            image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
-          exif = page.get_jpg_metadata(image)
-          image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality, exif=exif)
-    except Exception:
-      tb = sys.exc_info()
-      pass
   def convert_images(self, converts):
     if converts is None:
       return
@@ -180,11 +159,27 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       print(f'Starting converting images of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-      with Pool(processes=14) as mp_pool:
+      with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.convert_image, self)
-        print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
+  def convert_image(self, page):
+    image = Image.open(page.original_image)
+    for convert in page.conversions:
+      path_image = os.path.join(page.jpg_path, convert.image_path)
+      Path(path_image).mkdir(parents=True, exist_ok=True)
+      file = os.path.join(path_image, page.file_name) + '.jpg'
+      if self.force or not Path(file).is_file():
+        if image.size[0] < image.size[1]:
+          wpercent = (convert.resolution / float(image.size[1]))
+          xsize = int((float(image.size[0]) * float(wpercent)))
+          image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
+        else:
+          wpercent = (convert.resolution / float(image.size[0]))
+          ysize = int((float(image.size[1]) * float(wpercent)))
+          image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
+        image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
   def extract_pages(self, range, mute = True, image_mute = True):
     pages = []
     for i, page in enumerate(self):
@@ -286,3 +281,20 @@ class Page_pool(list):
           for file in files:
             os.utime(os.path.join(os.path.join(filedir, file)), (modTime, modTime))
       return
+  def check_jpg(self, converts):
+    if converts is None:
+      return
+    if not len(self):
+      return
+    for page in self:
+      jpg_path = page.jpg_path
+      break
+    _, dirs, files = next(os.walk(os.path.join(jpg_path, 'pdf')))
+    file_count = len(files)
+    if file_count:
+      for convert in converts:
+        exist = Path(os.path.join(jpg_path, convert.image_path)).is_dir()
+        if exist:
+          _, _, files = next(os.walk(os.path.join(jpg_path, convert.image_path)))
+        if not exist or file_count != len(files):
+          print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
