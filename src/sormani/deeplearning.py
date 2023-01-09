@@ -778,10 +778,10 @@ def change_ins_file_name():
 
 set_GPUs()
 
-ns = 'Il Giornale'
+ns = 'Il Giorno'
 
-cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 50)
+# cnn = CNN(ns)
+# cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
@@ -793,7 +793,7 @@ cnn.exec_cnn(ns, epochs = 50)
 
 # delete_name('Avvenire')
 
-# get_max_box()
+get_max_box()
 
 # change_ins_file_name()
 

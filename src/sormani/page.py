@@ -143,13 +143,22 @@ class Page:
     def _get_contours(e):
       return e[0]
     _contours = []
+    _check = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour) # hierarchy[0, i, 3] == -1 and
-      if hierarchy[0, i, 3] == -1 and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
+      if (parameters.can_be_internal or hierarchy[0, i, 3] == -1) and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
         roi = img[y:y + h, x:x + w]
         mean = roi.mean()
         if mean >= parameters.min_mean and mean <= parameters.max_mean:
-          _contours.append((x, y, contour))
+          # if (parameters.can_be_internal and not (x, y, w, h) in _check) or hierarchy[0, i, 3] == -1:
+          add = True
+          for _x, _y in _check:
+            if abs(x - _x) <= 2 and abs(y - _y) <= 2:
+              add = False
+              break
+          if add:
+            _contours.append((x, y, contour))
+            _check.append((x, y))
     _contours.sort(key = _get_contours)
     for i, (_, _, contour) in enumerate(_contours):
       x, y, w, h = cv2.boundingRect(contour)

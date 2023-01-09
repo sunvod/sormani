@@ -41,7 +41,8 @@ class Sormani():
                divide_only = False,
                notdivide = False,
                exclude_ins=False,
-               only_ins=False):
+               only_ins=False,
+               notcheckimages=False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -73,7 +74,8 @@ class Sormani():
                          divide_only,
                          notdivide,
                          exclude_ins,
-                         only_ins)
+                         only_ins,
+                         notcheckimages)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -96,8 +98,9 @@ class Sormani():
             rename_file_names,
             divide_only,
             notdivide,
-            exclude_ins=False,
-            only_ins=False):
+            exclude_ins,
+            only_ins,
+            notcheckimages):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -123,7 +126,7 @@ class Sormani():
     self.path_exist = path_exist
     self.force = force
     self.converts = None
-    self.elements = self.get_elements(root, exclude_ins, only_ins)
+    self.elements = self.get_elements(root, exclude_ins, only_ins, notcheckimages)
     self.new_root = root
     if not notdivide:
       self.divide_all_image()
@@ -193,7 +196,7 @@ class Sormani():
             pass
     if to_repeat:
       self.add_zero_to_dir(root)
-  def get_elements(self, root, exclude_ins = False, only_ins = False):
+  def get_elements(self, root, exclude_ins = False, only_ins = False, notcheckimages=True):
     elements = []
     filedirs = []
     roots = []
@@ -220,7 +223,7 @@ class Sormani():
         filedirs.append((filedir, files))
     filedirs.sort()
     for filedir, files in filedirs:
-      if self.check_if_image(filedir, files):
+      if notcheckimages or self.check_if_image(filedir, files):
         elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
     # if len(elements) > 1:
     #   elements.sort(key=self._elements_sort)
@@ -310,9 +313,8 @@ class Sormani():
       i = page.change_contrast()
       with global_count.get_lock():
         global_count.value += i
-    print('.', end='')
     if global_count.value % 100 == 0:
-      print()
+      print(f'It has changed the contrast of {page_pool.date.strftime("%d/%m/%y %H:%M:%S")}.')
 
   def divide_all_image(self):
     if not len(self.elements):
