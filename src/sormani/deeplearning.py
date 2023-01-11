@@ -758,7 +758,6 @@ def transform_images(name):
       binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
       gray = 255 - gray
-      # cv2.imwrite(os.path.join(filedir, file), gray)
       cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', file), gray)
 
 def change_ins_file_name():
@@ -792,16 +791,18 @@ def set_bobine_images():
       img1 = cv2.imread(os.path.join(filedir, file1), cv2.IMREAD_GRAYSCALE)
       img2 = cv2.imread(os.path.join(filedir, file2), cv2.IMREAD_GRAYSCALE)
       vis = np.concatenate((img1, img2), axis=1)
-      file3 = os.path.join(filedir, 'merge_' + str(i) + '.tif')
-      cv2.imwrite(os.path.join(filedir, file3), vis)
+      file3 = os.path.join(filedir, 'merge', 'merge_' + str(i) + '.tif')
+      Path(os.path.join(filedir, 'merge')).mkdir(parents=True, exist_ok=True)
+      cv2.imwrite(file3, vis)
       i += 1
 
 def set_bobine_merges():
   def _order(e):
       return e[0]
-  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE, 'merge')):
     files.sort()
-    for count, file in enumerate(files):
+    count = 1
+    for file in files:
       img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
       ret, thresh = cv2.threshold(img, 127, 255, 0)
       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -844,15 +845,25 @@ def set_bobine_merges():
           if w == bw:
             cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
             break
-      else:
+      elif len(books) == 1:
         book = books[0]
         x = book[0]
         y = book[1]
         w = book[2]
         h = book[3]
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-      file3 = os.path.join(filedir, 'contours_' + str(count) + '.tif')
-      cv2.imwrite(os.path.join(filedir, file3), bimg)
+      else:
+        continue
+      file3 = os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'contours', 'contours_' + str(count) + '.tif')
+      Path(os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'contours')).mkdir(parents=True, exist_ok=True)
+      cv2.imwrite(file3, bimg)
+      Path(os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'fotogrammi')).mkdir(parents=True, exist_ok=True)
+      file4 = os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'fotogrammi', 'fotogramma_' + str(count) + '.tif')
+      _x, _y, _w, _h = cv2.boundingRect(img)
+      if x != 0 and x + w != _w:
+        roi = img[y:y + h, x:x + w]
+        cv2.imwrite(file4, roi)
+      count += 1
 
 
 set_GPUs()
@@ -878,6 +889,6 @@ ns = 'Il Giorno'
 
 # force_to_X()
 
-# set_bobine_images()
+set_bobine_images()
 
 set_bobine_merges()
