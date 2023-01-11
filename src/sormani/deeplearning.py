@@ -787,7 +787,7 @@ def set_bobine_images():
         continue
       couple_files.append((file1, file))
       file1 = file
-    i = 0
+    i = 1
     for file1, file2 in couple_files:
       img1 = cv2.imread(os.path.join(filedir, file1), cv2.IMREAD_GRAYSCALE)
       img2 = cv2.imread(os.path.join(filedir, file2), cv2.IMREAD_GRAYSCALE)
@@ -800,6 +800,7 @@ def set_bobine_merges():
   def _order(e):
       return e[0]
   for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
+    files.sort()
     for count, file in enumerate(files):
       img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
       ret, thresh = cv2.threshold(img, 127, 255, 0)
@@ -812,35 +813,44 @@ def set_bobine_merges():
         if w > 4000 and h > 4000:
           books.append((x, y, w, h))
       books.sort(key=_order)
-      couple_books = []
-      book1 = None
-      for i, book in enumerate(books):
-        if book1 is None:
+      if len(books) > 1:
+        couple_books = []
+        book1 = None
+        for i, book in enumerate(books):
+          if book1 is None:
+            book1 = book
+            continue
+          couple_books.append((book1, book))
           book1 = book
-          continue
-        couple_books.append((book1, book))
-        book1 = book
-        if i == len(books) - 1:
-          couple_books.append((book, None))
-          break
-      books = []
-      bw = 0
-      for book1, book2 in couple_books:
-        if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
-          _x = book1[0]
-          _y = book1[1]
-          _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
-          _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
-          books.append((_x, _y, _w, _h))
-          if _w > bw:
-            bw = _w
-        else:
-          books.append(book1)
-          if book1[2] > bw:
-            bw = book1[2]
-      for x, y, w, h in books:
-        if w == bw:
-          cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+          if i == len(books) - 1:
+            couple_books.append((book, None))
+            break
+        books = []
+        bw = 0
+        for book1, book2 in couple_books:
+          if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
+            _x = book1[0]
+            _y = book1[1]
+            _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
+            _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
+            books.append((_x, _y, _w, _h))
+            if _w > bw:
+              bw = _w
+          else:
+            books.append(book1)
+            if book1[2] > bw:
+              bw = book1[2]
+        for x, y, w, h in books:
+          if w == bw:
+            cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+            break
+      else:
+        book = books[0]
+        x = book[0]
+        y = book[1]
+        w = book[2]
+        h = book[3]
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
       file3 = os.path.join(filedir, 'contours_' + str(count) + '.tif')
       cv2.imwrite(os.path.join(filedir, file3), bimg)
 
