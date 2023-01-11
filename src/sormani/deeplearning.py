@@ -865,6 +865,55 @@ def set_bobine_merges():
         cv2.imwrite(file4, roi)
       count += 1
 
+def rotate_bobine_fotogrammi():
+  def _order(e):
+      return e[0]
+
+  def rotate(points, angle):
+    ANGLE = np.deg2rad(angle)
+    c_x, c_y = np.mean(points, axis=0)
+    return np.array(
+      [
+        [
+          c_x + np.cos(ANGLE) * (px - c_x) - np.sin(ANGLE) * (py - c_x),
+          c_y + np.sin(ANGLE) * (px - c_y) + np.cos(ANGLE) * (py - c_y)
+        ]
+        for px, py in points
+      ]
+    ).astype(int)
+
+  def rotate_image(image, angle):
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+    return result
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE, 'fotogrammi')):
+    files.sort()
+    count = 1
+    for file in files:
+      img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
+      ret, thresh = cv2.threshold(img, 127, 255, 0)
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+      bimg = img.copy()
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      books = []
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 4000 and h > 4000:
+          books.append(contour)
+      for contour in books:
+        # cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+        rect = cv2.minAreaRect(contour)
+        box = np.int0(cv2.boxPoints(rect))
+        # cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
+      Path(os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'fotogrammi_ruotati')).mkdir(parents=True, exist_ok=True)
+      file4 = os.path.join(os.path.join(IMAGE_ROOT, STORAGE_BOBINE), 'fotogrammi_ruotati', 'fotogramma_ruotato_' + str(count) + '.tif')
+      angle = rect[2]
+      if angle < 45:
+        angle = 90 - angle
+      bimg = rotate_image(bimg, angle - 90)
+      cv2.imwrite(file4, bimg)
+      count += 1
 
 set_GPUs()
 
@@ -889,6 +938,8 @@ ns = 'Il Giorno'
 
 # force_to_X()
 
-set_bobine_images()
+# set_bobine_images()
 
-set_bobine_merges()
+# set_bobine_merges()
+
+rotate_bobine_fotogrammi()
