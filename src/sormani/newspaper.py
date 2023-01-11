@@ -33,7 +33,8 @@ class Newspaper_parameters():
                fill_hole = None,
                invert_fill_hole=False,
                exclude_colors = None,
-               can_be_internal=False):
+               can_be_internal=False,
+               max_distance = None):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -45,9 +46,10 @@ class Newspaper_parameters():
     self.invert = invert
     self.internal_box = internal_box
     self.fill_hole = fill_hole
-    self.invert_fill_hole = invert_fill_hole,
+    self.invert_fill_hole = invert_fill_hole
     self.exclude_colors = exclude_colors
     self.can_be_internal = can_be_internal
+    self.max_distance = max_distance
 
 class Newspaper():
   @staticmethod
@@ -338,7 +340,7 @@ class Il_Giornale(Newspaper):
                                 ts = 220,
                                 min_mean = 50,
                                 fill_hole=3,
-                                invert_fill_hole=True,
+                                # invert_fill_hole=False,
                                 max_mean = 250)
 
 class Il_manifesto(Newspaper):
@@ -640,19 +642,23 @@ class Il_Giorno(Newspaper):
     Newspaper.__init__(self, newspaper_base, 'Il Giorno', file_path, date, year, number, init_page = 3)
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (0, 100, w, 500)
+    if self.n_page % 2 == 0:
+      whole = [0, 150, 1000, 500]
+    else:
+      whole = [w - 1000, 150, w, 500]
     return whole
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_w = 50,
+                                min_w = 10,
                                 max_w = 120,
-                                min_h = 60,
+                                min_h = 90,
                                 max_h = 150,
-                                ts = 250,
-                                min_mean = 80,
-                                max_mean = 200,
-                                fill_hole=4,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
                                 # invert_fill_hole=True,
                                 invert=True,
+                                max_distance=10,
                                 can_be_internal=True)

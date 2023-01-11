@@ -152,10 +152,11 @@ class Page:
         if mean >= parameters.min_mean and mean <= parameters.max_mean:
           # if (parameters.can_be_internal and not (x, y, w, h) in _check) or hierarchy[0, i, 3] == -1:
           add = True
-          for _x, _y in _check:
-            if abs(x - _x) <= 2 and abs(y - _y) <= 2:
-              add = False
-              break
+          if parameters.max_distance is not None:
+            for _x, _y in _check:
+              if abs(x - _x) <= parameters.max_distance and abs(y - _y) <= parameters.max_distance:
+                add = False
+                break
           if add:
             _contours.append((x, y, contour))
             _check.append((x, y))
@@ -219,30 +220,26 @@ class Page:
     # bimg = img.copy()
     # Questo riempie i buchi
     if parameters.fill_hole is not None:
-      if not parameters.invert_fill_hole:
+      if parameters.invert_fill_hole:
         thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
       else:
         thresh, binaryImage = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
       kernel = np.ones((parameters.fill_hole, parameters.fill_hole), np.uint8)
       # binaryImage = cv2.morphologyEx(binaryImage, cv2.MORPH_DILATE, kernel, iterations=5)
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-      if not parameters.invert_fill_hole:
+      if parameters.invert_fill_hole:
         gray = 255 - gray
     img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
-    cnts = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    for c in cnts:
-      if cv2.contourArea(c) < parameters.max_fillarea:
-        cv2.drawContours(img, [c], -1, (255, 255, 255), -1)
     if not parameters.invert:
       img = 255 - img
     bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     edges = cv2.Canny(img, 1, 50)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    for c in contours:
-      x, y, w, h = cv2.boundingRect(c)
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
     images = [(self.file_name + '_00000', bimg)]

@@ -37,7 +37,7 @@ import pytesseract
 
 from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
-  NUMBER_IMAGE_SIZE, JPG_PDF_PATH
+  NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE
 
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
@@ -647,10 +647,10 @@ def open_win_rename_images_files(count, filedir, file):
 def rename_images_files(name):
   count = 1
   _files = []
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
     files.sort()
     i = 0
     for j, file in enumerate(files):
@@ -776,6 +776,75 @@ def change_ins_file_name():
                   new_file = '_'.join(file.split('_')[:-2]) + '_' + _dir + '_' + file.split('_')[-1]
                   os.rename(os.path.join(fd, file), os.path.join(fd, new_file))
 
+def set_bobine_images():
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
+    files.sort()
+    couple_files = []
+    file1 = None
+    for i, file in enumerate(files):
+      if file1 is None:
+        file1 = file
+        continue
+      couple_files.append((file1, file))
+      file1 = file
+    i = 0
+    for file1, file2 in couple_files:
+      img1 = cv2.imread(os.path.join(filedir, file1), cv2.IMREAD_GRAYSCALE)
+      img2 = cv2.imread(os.path.join(filedir, file2), cv2.IMREAD_GRAYSCALE)
+      vis = np.concatenate((img1, img2), axis=1)
+      file3 = os.path.join(filedir, 'merge_' + str(i) + '.tif')
+      cv2.imwrite(os.path.join(filedir, file3), vis)
+      i += 1
+
+def set_bobine_merges():
+  def _order(e):
+      return e[0]
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
+    for count, file in enumerate(files):
+      img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
+      ret, thresh = cv2.threshold(img, 127, 255, 0)
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+      bimg = img.copy()
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      books = []
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 4000 and h > 4000:
+          books.append((x, y, w, h))
+      books.sort(key=_order)
+      couple_books = []
+      book1 = None
+      for i, book in enumerate(books):
+        if book1 is None:
+          book1 = book
+          continue
+        couple_books.append((book1, book))
+        book1 = book
+        if i == len(books) - 1:
+          couple_books.append((book, None))
+          break
+      books = []
+      bw = 0
+      for book1, book2 in couple_books:
+        if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
+          _x = book1[0]
+          _y = book1[1]
+          _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
+          _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
+          books.append((_x, _y, _w, _h))
+          if _w > bw:
+            bw = _w
+        else:
+          books.append(book1)
+          if book1[2] > bw:
+            bw = book1[2]
+      for x, y, w, h in books:
+        if w == bw:
+          cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+      file3 = os.path.join(filedir, 'contours_' + str(count) + '.tif')
+      cv2.imwrite(os.path.join(filedir, file3), bimg)
+
+
 set_GPUs()
 
 ns = 'Il Giorno'
@@ -793,8 +862,12 @@ ns = 'Il Giorno'
 
 # delete_name('Avvenire')
 
-get_max_box()
+# get_max_box()
 
 # change_ins_file_name()
 
 # force_to_X()
+
+# set_bobine_images()
+
+set_bobine_merges()

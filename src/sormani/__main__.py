@@ -12,7 +12,7 @@ if __name__ == '__main__':
   # sormani.change_all_contrasts()
   # sormani.create_all_images()
   # sormani.convert_all_images()
-  sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 4, no_resize = True, save_head = True)
+  sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = True, save_head = True)
   # sormani.rename_pages_files(do_prediction=False)
   # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.check_page_numbers(save_images = True, model_path = 'best_model_SimpleCNN', assume_newspaper = True, newspaper_name = None)
