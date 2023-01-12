@@ -241,7 +241,7 @@ class Page_pool(list):
           n = int(n)
           page.newspaper.n_page = n
           page.add_pdf_metadata()
-          page.add_jpg_metadata()
+          # page.add_jpg_metadata()
       os.rename(old_file, new_file + '.***')
     for dir in filedirs:
       for filedir, dirs, files in os.walk(dir):
