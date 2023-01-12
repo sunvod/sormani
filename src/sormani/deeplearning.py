@@ -777,24 +777,6 @@ def change_ins_file_name():
                   new_file = '_'.join(file.split('_')[:-2]) + '_' + _dir + '_' + file.split('_')[-1]
                   os.rename(os.path.join(fd, file), os.path.join(fd, new_file))
 
-def set_avvenire_ins_4():
-  for filedir, dirs, files in os.walk('/mnt/storage01/sormani/TIFF/Avvenire/2016'):
-    files.sort()
-    if len(files) == 4:
-      month = filedir.split('/')[-2]
-      if month == '01':
-        continue
-      file_name = files[0]
-      ext = Path(file_name).suffix
-      file_name = '_'.join(file_name.split('_')[:-1])
-      # os.rename(os.path.join(filedir, file_name + '_p2' + ext), os.path.join(filedir, file_name + '_p5' + ext))
-      # os.rename(os.path.join(filedir, file_name + '_p4' + ext), os.path.join(filedir, file_name + '_p2' + ext))
-      # os.rename(os.path.join(filedir, file_name + '_p5' + ext), os.path.join(filedir, file_name + '_p4' + ext))
-      date = datetime.datetime.now()
-      modTime = time.mktime(date.timetuple())
-      os.utime(os.path.join(filedir, file_name + '_p2' + ext), (modTime, modTime))
-      os.utime(os.path.join(filedir, file_name + '_p4' + ext), (modTime, modTime))
-
 def set_bobine_images():
   for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
     files.sort()
@@ -963,5 +945,3 @@ ns = 'Il Giorno'
 # set_bobine_merges()
 
 # rotate_bobine_fotogrammi()
-
-set_avvenire_ins_4()
