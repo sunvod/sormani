@@ -4,6 +4,8 @@ import datetime
 import pathlib
 import re
 import os
+import cv2
+import numpy as np
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 
@@ -36,13 +38,10 @@ class Sormani():
                path_exclude = [],
                path_exist ='pdf',
                force = False,
-               rename_only = False,
-               rename_file_names =  True,
-               divide_only = False,
-               notdivide = False,
                exclude_ins=False,
                only_ins=False,
-               notcheckimages=False):
+               notcheckimages=False,
+               bobina=False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -69,13 +68,10 @@ class Sormani():
                          path_exclude,
                          path_exist,
                          force,
-                         rename_only,
-                         rename_file_names,
-                         divide_only,
-                         notdivide,
                          exclude_ins,
                          only_ins,
-                         notcheckimages)
+                         notcheckimages,
+                         bobina)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -94,53 +90,42 @@ class Sormani():
             path_exclude,
             path_exist,
             force,
-            rename_only,
-            rename_file_names,
-            divide_only,
-            notdivide,
             exclude_ins,
             only_ins,
-            notcheckimages):
+            notcheckimages,
+            bobina):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
     self.elements = []
     self.day = day
-    root = os.path.join(root, image_path, newspaper_name)
-    self.add_zero_to_dir(root)
-    if not os.path.exists(root):
+    new_root = os.path.join(root, image_path, newspaper_name)
+    self.add_zero_to_dir(new_root)
+    if not os.path.exists(new_root):
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
     if year is not None:
-      root = os.path.join(root, str(year))
+      new_root = os.path.join(new_root, str(year))
+      self.complete_root = new_root
       if month is not None:
-        root = os.path.join(root, self.add_zero(month))
-        # if day is not None:
-        #   root = os.path.join(root, self.add_zero(day))
-    self.rename_folder(root)
-    if rename_only:
-      return None
+        new_root = os.path.join(new_root, self.add_zero(month))
+        self.complete_root = new_root
+        if day is not None:
+          self.complete_root = os.path.join(new_root, self.add_zero(day))
+    self.dir_name = self.complete_root.split('/')[-1]
+    self.new_root = new_root
+    self.rename_folder()
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
     self.path_exist = path_exist
     self.force = force
     self.converts = None
-    self.elements = self.get_elements(root, exclude_ins, only_ins, notcheckimages)
-    self.new_root = root
-    if not notdivide:
-      self.divide_all_image()
-    if divide_only:
-      return None
-    self.elements = self.get_elements(root, exclude_ins, only_ins)
-    # if contrast:
-    #   self.change_all_contrasts()
-    # self.elements = self.get_elements(root, exclude_ins, only_ins)
-    if rename_file_names:
-      self.set_all_images_names()
-    self.elements = self.get_elements(root, exclude_ins, only_ins)
+    self.exclude_ins = exclude_ins
+    self.only_ins = only_ins
+    self.notcheckimages = notcheckimages
+    self.elements = self.get_elements()
     return self.elements
-    pass
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -196,19 +181,20 @@ class Sormani():
             pass
     if to_repeat:
       self.add_zero_to_dir(root)
-  def get_elements(self, root, exclude_ins = False, only_ins = False, notcheckimages=True):
+  def get_elements(self):
     elements = []
     filedirs = []
     roots = []
     if self.day is not None:
-      for filedir, dirs, files in os.walk(root):
+      for filedir, dirs, files in os.walk(self.new_root):
+        dirs.sort()
         for dir in dirs:
           n = dir.split(' ')[0]
           if n.isdigit():
             if int(n) == self.day:
-              roots.append(os.path.join(root, dir))
+              roots.append(os.path.join(self.new_root, dir))
     else:
-      roots.append(root)
+      roots.append(self.new_root)
     roots.sort()
     for root in roots:
       for filedir, dirs, files in os.walk(root):
@@ -216,14 +202,14 @@ class Sormani():
         if filedir in self.path_exclude or \
             len(files) == 0 or \
             len(dirs) > 0 or \
-            (exclude_ins and not dir.isdigit()) or \
-            (only_ins and dir.isdigit()):
+            (self.exclude_ins and not dir.isdigit()) or \
+            (self.only_ins and dir.isdigit()):
           continue
         files.sort(key = self._get_elements)
         filedirs.append((filedir, files))
     filedirs.sort()
     for filedir, files in filedirs:
-      if notcheckimages or self.check_if_image(filedir, files):
+      if self.notcheckimages or self.check_if_image(filedir, files):
         elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
     # if len(elements) > 1:
     #   elements.sort(key=self._elements_sort)
@@ -290,7 +276,7 @@ class Sormani():
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     global global_count
     global_count.value = 0
@@ -299,22 +285,22 @@ class Sormani():
     with Pool(processes=N_PROCESSES) as mp_pool:
       mp_pool.map(self.change_contrast, self)
     if global_count.value:
-      print()
-      print(f'It has changed the contrast of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      if global_count.value >= 100:
+        print()
+      print(f'It has changed the contrast of {global_count.value} images of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
     self.force = selfforce
   def change_contrast(self, page_pool):
     global global_count
-    end = 0
     for page in page_pool:
       page.contrast = self.contrast
       page.force = self.force
       i = page.change_contrast()
       with global_count.get_lock():
-        global_count.value += i
+        global_count.value += 1
     if global_count.value % 100 == 0:
-      print(f'It has changed the contrast of {page_pool.date.strftime("%d/%m/%y %H:%M:%S")}.')
+      print('.')
 
   def divide_all_image(self):
     if not len(self.elements):
@@ -323,7 +309,7 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(
-      f'Starting division of \'{self.newspaper_name}\' ({self.new_root}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Starting division of \'{self.newspaper_name}\' ({self.dir_name}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
       mp_pool.map(self.divide_image, self.elements)
     # for image_group in self.elements:
@@ -332,6 +318,9 @@ class Sormani():
       print()
       print(
         f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.elements = self.get_elements()
+      self.set_all_images_names()
+      self.elements = self.get_elements()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
     return
@@ -397,7 +386,7 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(
-      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     self.force = True
     self.first_number = first_number
@@ -424,7 +413,7 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(
-      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     self.force = True
     self.first_number = first_number
@@ -458,7 +447,7 @@ class Sormani():
         return
     start_time = time.time()
     if not mute:
-      print(f'Starting extracting page number from \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Starting extracting page number from \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
@@ -479,7 +468,7 @@ class Sormani():
       return
     start_time = time.time()
     print(
-      f'Start extract pages images of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start extract pages images of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
@@ -498,7 +487,7 @@ class Sormani():
       filedir += '_' + self.newspaper_name.lower().replace(' ', '_')
     start_time = time.time()
     print(
-      f'Start extract pages numbers of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start extract pages numbers of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
@@ -517,7 +506,7 @@ class Sormani():
       return
     start_time = time.time()
     print(
-      f'Start extract pages head of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start extract pages head of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
@@ -548,10 +537,10 @@ class Sormani():
             old_file = os.path.join(filedir, file)
             os.rename(old_file, new_file)
             pass
-  def rename_folder(self, root):
+  def rename_folder(self):
     number = 1
-    pdf_root = root.replace(IMAGE_PATH, JPG_PDF_PATH)
-    for one_root in [pdf_root, root]:
+    pdf_root = self.new_root.replace(IMAGE_PATH, JPG_PDF_PATH)
+    for one_root in [pdf_root, self.new_root]:
       for filedir, dirs, files in os.walk(one_root):
         dirs.sort()
         for dir in dirs:
@@ -662,3 +651,25 @@ class Sormani():
     self.force = selfforce
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
+
+  def set_bobine_images(self):
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
+      files.sort()
+      couple_files = []
+      file1 = None
+      for i, file in enumerate(files):
+        if file1 is None:
+          file1 = file
+          continue
+        couple_files.append((file1, file))
+        file1 = file
+      i = 1
+      for file1, file2 in couple_files:
+        img1 = cv2.imread(os.path.join(filedir, file1), cv2.IMREAD_GRAYSCALE)
+        img2 = cv2.imread(os.path.join(filedir, file2), cv2.IMREAD_GRAYSCALE)
+        vis = np.concatenate((img1, img2), axis=1)
+        file3 = os.path.join(filedir, 'merge', 'merge_' + str(i) + '.tif')
+        Path(os.path.join(filedir, 'merge')).mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(file3, vis)
+        i += 1
+    self.elements = self.get_elements(root)

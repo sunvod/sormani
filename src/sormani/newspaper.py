@@ -93,6 +93,8 @@ class Newspaper():
       newspaper = Tutto_Libri(newspaper_base, file_path, date, year, number)
     elif name == 'Il Giorno':
       newspaper = Il_Giorno(newspaper_base, file_path, date, year, number)
+    elif name == 'Scenario':
+      newspaper = Scenario(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -574,7 +576,8 @@ class Tutto_Libri(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Tutto Libri', file_path, date, year, number, init_page = 5)
   def get_whole_page_location(self, image):
-    whole = [0, 100, 4850, 400]
+    w, h = image.size
+    whole = [0, 100, w, 400]
     return whole
 
 class Il_Giorno(Newspaper):
@@ -588,6 +591,28 @@ class Il_Giorno(Newspaper):
       whole = [0, 150, 1000, 500]
     else:
       whole = [w - 1000, 150, w, 500]
+    return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
+class Scenario(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Giorno', file_path, date, year, number, init_page = 3)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
     return whole
   @staticmethod
   def get_parameters():
