@@ -380,8 +380,8 @@ class Page:
     except:
       return None, None, None
     title = head_image[0]
-    head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
-    head_image = Image.fromarray(head_image)
+    # head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
+    head_image = Image.fromarray(head_image[1])
     head_image = tf.image.convert_image_dtype(head_image, dtype=tf.float32)
     b = None
     predictions = []

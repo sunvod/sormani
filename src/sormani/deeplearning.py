@@ -921,15 +921,15 @@ set_GPUs()
 
 ns = 'Il Giorno'
 
-# cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 50)
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
 # rename_images_files(ns)
-#
+
 # to_11_classes(ns, resize=True)
 
 # delete_name('Avvenire')
@@ -945,3 +945,4 @@ ns = 'Il Giorno'
 # set_bobine_merges()
 
 # rotate_bobine_fotogrammi()
+

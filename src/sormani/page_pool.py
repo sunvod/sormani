@@ -14,8 +14,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, date, force = False):
+  def __init__(self, newspaper_name, name_complete, date, force = False):
     self.newspaper_name = newspaper_name
+    self.name_complete = name_complete
     self.date = date
     self.force = force
   def set_pages(self):
@@ -108,9 +109,9 @@ class Page_pool(list):
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
     if len(errors) < 2:
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
+      print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
-      msg = '{} del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(self.newspaper_name, str(self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
+      msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
       print(msg)
       with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
         sormani_log.write(msg + '\n')
