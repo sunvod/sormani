@@ -385,9 +385,10 @@ class Page_pool(list):
       else:
         continue
       n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-      file3 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
+      file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
       _x, _y, _w, _h = cv2.boundingRect(img)
       if x != 0 and x + w != _w:
         roi = img[y:y + h, x:x + w]
-        cv2.imwrite(file3, roi)
+        cv2.imwrite(file2, roi)
+        os.remove(file)
       j += 1

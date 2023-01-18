@@ -14,7 +14,7 @@ if __name__ == '__main__':
   # sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])
   # sormani.add_pdf_metadata()
   # sormani.change_all_contrasts()
-  # sormani.create_all_images()
+  sormani.create_all_images()
   # sormani.convert_all_images()
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = False, save_head = False)
   # sormani.rename_pages_files(do_prediction=False)
@@ -24,7 +24,8 @@ if __name__ == '__main__':
   # sormani.add_jpg_metadata()
   # sormani.check_jpg(integrate=False)
   # sormani.set_bobine_images()
-  sormani.set_bobine_merges()
+  # sormani.set_bobine_merges()
+  # sormani.create_all_images()
 
 
 

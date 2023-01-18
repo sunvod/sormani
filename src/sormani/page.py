@@ -72,19 +72,33 @@ class Page:
                      + '_p' + page
     self.txt_file_name = os.path.join(self.txt_path, self.file_name) + '.txt'
   def change_contrast(self):
+    def isgray(image):
+      img = np.asarray(image)
+      if len(img.shape) < 3:
+        return True
+      if img.shape[2] == 1:
+        return True
+      r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+      if np.allclose(r, g) and np.allclose(r, b):
+        return True
+      return False
     if self.force or not self.isAlreadySeen():
       try:
         contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
         image = Image.open(self.original_image)
         # pixel_map = image.load()
-        # pixel_map = (np.array(image.crop([0,0,1,1])), np.array(image.crop([image.size[0] - 1, image.size[1] - 1, image.size[0], image.size[1]])))
-        # if (pixel_map[0] == (64, 62, 22)).all() and (pixel_map[1] == (64, 62, 22)).all():
-        if (np.array(image.crop([0,0,1,1])) == (64, 62, 22)).all():
+        pixel_map = (np.array(image.crop([0,0,1,1])), np.array(image.crop([image.size[0] - 1, image.size[1] - 1, image.size[0], image.size[1]])))
+        if (pixel_map[0] == (64, 62, 22)).all() and (pixel_map[1] == (64, 62, 22)).all():
+        # if (np.array(image.crop([0,0,1,1])) == (64, 62, 22)).all():
           return 0
         image = self._change_contrast(image, contrast)
         pixel_map = image.load()
-        pixel_map[0, 0] = (64, 62, 22)
-        pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
+        if not isgray(pixel_map):
+          pixel_map[0, 0] = (64, 62, 22)
+          pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
+        else:
+          pixel_map[0, 0] = (64)
+          pixel_map[image.size[0] - 1, image.size[1] - 1] = (62)
         image.save(self.original_image)
         return 1
       except Exception as e:
