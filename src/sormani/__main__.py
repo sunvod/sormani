@@ -3,7 +3,7 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
   # sormani = Sormani('Italia Oggi', year=2016, months=12, days=27)  # [x for x in range(1,13)]
-  sormani = Sormani('Il Giornale', year=2017, months=1, days=6)
+  sormani = Sormani('Il Giornale', year=2017, months=[2,3], days=None)
   # sormani.divide_all_image()
   sormani.change_all_contrasts()
   sormani.create_all_images()

@@ -14,8 +14,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, name_complete, date, force = False):
+  def __init__(self, newspaper_name, name_complete, dir_name, date, force = False):
     self.newspaper_name = newspaper_name
+    self.dir_name = dir_name
     self.name_complete = name_complete
     self.date = date
     self.force = force
@@ -125,10 +126,10 @@ class Page_pool(list):
       self.number = number
       self.ocr = ocr
       start_time = time.time()
-      print(f'Start creating pdf/a of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Start creating pdf/a of of \'{self.newspaper_name}\' ({self.dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-      print(f'The creation of {len(self)} pdf/a files for \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
@@ -159,10 +160,10 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting converting images of \'{self.newspaper_name}\' of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.convert_image, self)
-      print(f'Conversion of {len(self)} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Conversion of {len(self)} images of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
   def convert_image(self, page):

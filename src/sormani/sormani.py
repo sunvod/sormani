@@ -18,6 +18,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 global_count = multiprocessing.Value('I', 0)
+global_count_contrast = multiprocessing.Value('I', 0)
 
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
@@ -40,8 +41,7 @@ class Sormani():
                force = False,
                exclude_ins=False,
                only_ins=False,
-               notcheckimages=False,
-               bobina=False):
+               notcheckimages=False):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -55,6 +55,7 @@ class Sormani():
     if not isinstance(days, list):
       days = [days]
     elements = []
+    self.dir_name = ''
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
@@ -70,8 +71,7 @@ class Sormani():
                          force,
                          exclude_ins,
                          only_ins,
-                         notcheckimages,
-                         bobina)
+                         notcheckimages)
           if e is not None:
             elements.append(e)
     self.elements = []
@@ -92,8 +92,7 @@ class Sormani():
             force,
             exclude_ins,
             only_ins,
-            notcheckimages,
-            bobina):
+            notcheckimages):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -112,7 +111,7 @@ class Sormani():
         self.complete_root = new_root
         if day is not None:
           self.complete_root = os.path.join(new_root, self.add_zero(day))
-    self.dir_name = self.complete_root.split('/')[-1]
+    self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
     self.rename_folder()
     self.ext = ext
@@ -132,7 +131,7 @@ class Sormani():
     return self
   def __next__(self):
     if self.i < len(self.elements):
-      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
+      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.dir_name, self.ext, self.image_path, self.path_exist, self.force)
       if len(page_pool):
         if page_pool.isAlreadySeen():
           page_pool.set_pages_already_seen()
@@ -152,7 +151,7 @@ class Sormani():
     if len(self.elements) == 0:
       return 'ND'
     page_pool = self.elements[self.i].get_page_pool(
-      self.newspaper_name, self.root, self.ext, self.image_path, self.path_exist, self.force)
+      self.newspaper_name, self.dir_name, self.ext, self.image_path, self.path_exist, self.force)
     page_pool.set_pages()
     self.i += 1
     return page_pool[0].newspaper.number
@@ -278,29 +277,30 @@ class Sormani():
     start_time = time.time()
     print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
-    global global_count
-    global_count.value = 0
+    global global_count_contrast
+    global_count_contrast.value = 0
     self.contrast = contrast
     self.force = True
     with Pool(processes=N_PROCESSES) as mp_pool:
       mp_pool.map(self.change_contrast, self)
-    if global_count.value:
-      if global_count.value >= 100:
+    if global_count_contrast.value:
+      if global_count_contrast.value >= 100:
         print()
-      print(f'It has changed the contrast of {global_count.value} images of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'It has changed the contrast of {global_count_contrast.value} images of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
     self.force = selfforce
   def change_contrast(self, page_pool):
-    global global_count
+    global global_count_contrast
     for page in page_pool:
       page.contrast = self.contrast
       page.force = self.force
       i = page.change_contrast()
-      with global_count.get_lock():
-        global_count.value += 1
-    if global_count.value % 100 == 0:
-      print('.')
+      with global_count_contrast.get_lock():
+        global_count_contrast.value += i
+    print('.', end='')
+    if global_count_contrast.value != 0 and global_count_contrast.value % 100 == 0:
+      print()
 
   def divide_all_image(self):
     if not len(self.elements):

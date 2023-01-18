@@ -76,18 +76,20 @@ class Page:
       try:
         contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
         image = Image.open(self.original_image)
-        pixel_map = image.load()
-        if pixel_map[0, 0] == (64, 62, 22) and pixel_map[image.size[0] - 1, image.size[1] - 1] == (64, 62, 22):
-          return False
+        # pixel_map = image.load()
+        # pixel_map = (np.array(image.crop([0,0,1,1])), np.array(image.crop([image.size[0] - 1, image.size[1] - 1, image.size[0], image.size[1]])))
+        # if (pixel_map[0] == (64, 62, 22)).all() and (pixel_map[1] == (64, 62, 22)).all():
+        if (np.array(image.crop([0,0,1,1])) == (64, 62, 22)).all():
+          return 0
         image = self._change_contrast(image, contrast)
         pixel_map = image.load()
         pixel_map[0, 0] = (64, 62, 22)
         pixel_map[image.size[0] - 1, image.size[1] - 1] = (64, 62, 22)
         image.save(self.original_image)
-        return True
-      except:
+        return 1
+      except Exception as e:
         pass
-    return False
+    return 0
   def _change_contrast(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):

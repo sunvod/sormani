@@ -35,8 +35,8 @@ class Images_group():
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date)
-  def get_page_pool(self, newspaper_name, root, ext, image_path, path_exist, force):
-    page_pool = Page_pool(newspaper_name, self.filedir.split('/')[-1], self.date, force)
+  def get_page_pool(self, newspaper_name, dir_name, ext, image_path, path_exist, force):
+    page_pool = Page_pool(newspaper_name, self.filedir.split('/')[-1], dir_name, self.date, force)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
