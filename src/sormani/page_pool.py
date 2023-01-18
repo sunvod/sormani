@@ -5,6 +5,7 @@ import pathlib
 import time
 import datetime
 import cv2
+import numpy as np
 
 from multiprocessing import Pool
 from src.sormani.system import *
@@ -14,8 +15,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, name_complete, dir_name, date, force = False):
+  def __init__(self, newspaper_name, filedir, name_complete, dir_name, date, force = False):
     self.newspaper_name = newspaper_name
+    self.filedir = filedir
     self.dir_name = dir_name
     self.name_complete = name_complete
     self.date = date
@@ -293,3 +295,99 @@ class Page_pool(list):
           print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
           if integrate:
             self.convert_images([convert])
+  def set_bobine_images(self):
+    couple_files = []
+    file1 = None
+    files = []
+    for page in self:
+      if Path(page.original_image).stem[:5] != 'merge':
+        files.append(page.original_image)
+    files.sort()
+    for file in files:
+      if file1 is None:
+        file1 = file
+        continue
+      couple_files.append((file1, file))
+      file1 = file
+    i = 1
+    file2 = None
+    for file1, file2 in couple_files:
+      img1 = cv2.imread(file1, cv2.IMREAD_GRAYSCALE)
+      img2 = cv2.imread(file2, cv2.IMREAD_GRAYSCALE)
+      vis = np.concatenate((img1, img2), axis=1)
+      n = '00' + str(i) if i < 10 else '0' + str(i) if i < 100 else str(i)
+      file3 = os.path.join(self.filedir, 'merge_' + n + '.tif')
+      cv2.imwrite(file3, vis)
+      i += 1
+      os.remove(file1)
+    if file2 is not None:
+      os.remove(file2)
+
+  def set_bobine_merges(self):
+    def _order(e):
+      return e[0]
+    files = []
+    for page in self:
+      if Path(page.original_image).stem[:5] == 'merge':
+        files.append(page.original_image)
+    files.sort()
+    j = 1
+    for file in files:
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      ret, thresh = cv2.threshold(img, 127, 255, 0)
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+      bimg = img.copy()
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      books = []
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 4000 and h > 4000:
+          books.append((x, y, w, h))
+      books.sort(key=_order)
+      if len(books) > 1:
+        couple_books = []
+        book1 = None
+        for i, book in enumerate(books):
+          if book1 is None:
+            book1 = book
+            continue
+          couple_books.append((book1, book))
+          book1 = book
+          if i == len(books) - 1:
+            couple_books.append((book, None))
+            break
+        books = []
+        bw = 0
+        for book1, book2 in couple_books:
+          if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
+            _x = book1[0]
+            _y = book1[1]
+            _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
+            _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
+            books.append((_x, _y, _w, _h))
+            if _w > bw:
+              bw = _w
+          else:
+            books.append(book1)
+            if book1[2] > bw:
+              bw = book1[2]
+        for x, y, w, h in books:
+          if w == bw:
+            cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+            break
+      elif len(books) == 1:
+        book = books[0]
+        x = book[0]
+        y = book[1]
+        w = book[2]
+        h = book[3]
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+      else:
+        continue
+      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      file3 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
+      _x, _y, _w, _h = cv2.boundingRect(img)
+      if x != 0 and x + w != _w:
+        roi = img[y:y + h, x:x + w]
+        cv2.imwrite(file3, roi)
+      j += 1

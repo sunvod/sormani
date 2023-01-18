@@ -3,10 +3,10 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
   # sormani = Sormani('Italia Oggi', year=2016, months=12, days=27)  # [x for x in range(1,13)]
-  sormani = Sormani('Il Giornale', year=2017, months=[2,3], days=None)
+  sormani = Sormani('Scenario', year=1932, months=2, days=None)
   # sormani.divide_all_image()
-  sormani.change_all_contrasts()
-  sormani.create_all_images()
+  # sormani.change_all_contrasts()
+  # sormani.create_all_images()
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()
   # sormani.add_pdf_metadata()
@@ -23,6 +23,8 @@ if __name__ == '__main__':
   # sormani.update_date_creation()
   # sormani.add_jpg_metadata()
   # sormani.check_jpg(integrate=False)
+  # sormani.set_bobine_images()
+  sormani.set_bobine_merges()
 
 
 

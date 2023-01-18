@@ -21,10 +21,19 @@ class Images_group():
     self.filedir = filedir
     self.files = files
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
-    month = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
-    day_folder = filedir.split('/')[-1]
-    pos = re.search(r'[^0-9]', day_folder + 'a').start()
-    day = day_folder[ : pos]
+    i = -2
+    if not len(year):
+      year = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
+      month = ''.join(filter(str.isdigit, filedir.split('/')[-1]))
+      day = '01'
+      if not len(year):
+        error = 'Non esiste una directory per l\'anno.'
+        raise OSError(error)
+    else:
+      month = ''.join(filter(str.isdigit, filedir.split('/')[i]))
+      day_folder = filedir.split('/')[-1]
+      pos = re.search(r'[^0-9]', day_folder + 'a').start()
+      day = day_folder[ : pos]
     if year.isdigit() and month.isdigit() and day.isdigit():
       try:
         self.date = datetime.date(int(year), int(month), int(day))
@@ -34,9 +43,9 @@ class Images_group():
     else:
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
-    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date)
+    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
   def get_page_pool(self, newspaper_name, dir_name, ext, image_path, path_exist, force):
-    page_pool = Page_pool(newspaper_name, self.filedir.split('/')[-1], dir_name, self.date, force)
+    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], dir_name, self.date, force)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))

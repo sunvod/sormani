@@ -53,8 +53,8 @@ class Newspaper_parameters():
 
 class Newspaper():
   @staticmethod
-  def create(name, file_path, newspaper_base = None, date = None, year = None, number = None):
-    if date is None:
+  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
+    if date is None and month is None:
       file_name = Path(file_path).stem
       year = ''.join(filter(str.isdigit, file_name.split('_')[-4]))
       month = MONTHS.index(file_name.split('_')[-3]) + 1
@@ -98,6 +98,7 @@ class Newspaper():
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
+    newspaper.month = month
     return newspaper
 
   @staticmethod

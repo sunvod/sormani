@@ -6,6 +6,8 @@ import re
 import os
 import cv2
 import numpy as np
+from PIL.Image import DecompressionBombError
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 
@@ -210,13 +212,13 @@ class Sormani():
     for filedir, files in filedirs:
       if self.notcheckimages or self.check_if_image(filedir, files):
         elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
-    # if len(elements) > 1:
-    #   elements.sort(key=self._elements_sort)
     return elements
   def check_if_image(self, filedir, files):
     for file_name in files:
       try:
         Image.open(os.path.join(filedir, file_name))
+      except DecompressionBombError:
+        pass
       except:
         with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
           sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
@@ -301,7 +303,6 @@ class Sormani():
     print('.', end='')
     if global_count_contrast.value != 0 and global_count_contrast.value % 100 == 0:
       print()
-
   def divide_all_image(self):
     if not len(self.elements):
       return
@@ -653,23 +654,11 @@ class Sormani():
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
 
   def set_bobine_images(self):
-    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, STORAGE_BOBINE)):
-      files.sort()
-      couple_files = []
-      file1 = None
-      for i, file in enumerate(files):
-        if file1 is None:
-          file1 = file
-          continue
-        couple_files.append((file1, file))
-        file1 = file
-      i = 1
-      for file1, file2 in couple_files:
-        img1 = cv2.imread(os.path.join(filedir, file1), cv2.IMREAD_GRAYSCALE)
-        img2 = cv2.imread(os.path.join(filedir, file2), cv2.IMREAD_GRAYSCALE)
-        vis = np.concatenate((img1, img2), axis=1)
-        file3 = os.path.join(filedir, 'merge', 'merge_' + str(i) + '.tif')
-        Path(os.path.join(filedir, 'merge')).mkdir(parents=True, exist_ok=True)
-        cv2.imwrite(file3, vis)
-        i += 1
-    self.elements = self.get_elements(root)
+    for page_pool in self:
+      page_pool.set_bobine_images()
+    self.elements = self.get_elements()
+
+  def set_bobine_merges(self):
+    for page_pool in self:
+      page_pool.set_bobine_merges()
+    self.elements = self.get_elements()
