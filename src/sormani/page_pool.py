@@ -172,7 +172,7 @@ class Page_pool(list):
         page.force = force
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self._change_contrast, self)
-      print(f'Changing the contrast of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Changing the contrast of {len(self)} for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to changing the contrast for \'{self.newspaper_name}\'.')
   def _change_contrast(self, page):
@@ -180,10 +180,6 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
-    if global_count_contrast.value != 0:
-      print('.', end='')
-      if global_count_contrast.value % 100 == 0:
-        print()
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()

@@ -270,36 +270,14 @@ class Sormani():
   def change_all_contrasts(self, contrast = None):
     if not len(self.elements):
       return
-    start_time = time.time()
-    # print(f'Start changing the contrast of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     global global_count_contrast
     global_count_contrast.value = 0
     self.contrast = contrast
     self.force = True
-    # with Pool(processes=N_PROCESSES) as mp_pool:
-    #   mp_pool.map(self.change_contrast, self)
     for page_pool in self:
       page_pool.change_contrast(contrast=self.contrast, force=self.force)
-    # if global_count_contrast.value:
-    #   if global_count_contrast.value >= 100:
-    #     print()
-    #   print(f'It has changed the contrast of {global_count_contrast.value} images of \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    # else:
-    #   print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def change_contrast(self, page_pool):
-    global global_count_contrast
-    for page in page_pool:
-      page.contrast = self.contrast
-      page.force = self.force
-      i = page.change_contrast()
-      with global_count_contrast.get_lock():
-        global_count_contrast.value += i
-    if global_count_contrast.value != 0:
-      print('.', end='')
-      if global_count_contrast.value % 100 == 0:
-        print()
   def divide_all_image(self):
     if not len(self.elements):
       return
