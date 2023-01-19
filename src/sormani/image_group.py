@@ -16,10 +16,11 @@ warnings.filterwarnings("ignore")
 
 class Images_group():
 
-  def __init__(self,  newspaper_base, newspaper_name, filedir, files):
+  def __init__(self,  newspaper_base, newspaper_name, filedir, files, new_root):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
+    self.new_root = new_root
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
     i = -2
     if not len(year):
@@ -44,8 +45,8 @@ class Images_group():
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
-  def get_page_pool(self, newspaper_name, dir_name, ext, image_path, path_exist, force):
-    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], dir_name, self.date, force)
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force):
+    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))

@@ -88,9 +88,12 @@ class Page:
         image = Image.open(self.original_image)
         # pixel_map = image.load()
         pixel_map = (np.array(image.crop([0,0,1,1])), np.array(image.crop([image.size[0] - 1, image.size[1] - 1, image.size[0], image.size[1]])))
-        if (pixel_map[0] == (64, 62, 22)).all() and (pixel_map[1] == (64, 62, 22)).all():
-        # if (np.array(image.crop([0,0,1,1])) == (64, 62, 22)).all():
-          return 0
+        if not isgray(pixel_map):
+          if (pixel_map[0] == (64, 62, 22)).all() and (pixel_map[1] == (64, 62, 22)).all():
+            return 0
+        else:
+          if (pixel_map[0] == (64, 0, 0)).all() and (pixel_map[1] == (62, 0, 0)).all():
+            return 0
         image = self._change_contrast(image, contrast)
         pixel_map = image.load()
         if not isgray(pixel_map):
@@ -329,7 +332,7 @@ class Page:
       file_in.close()
       file_out.close()
       os.remove(self.pdf_file_name + '.2')
-    except:
+    except Exception as e:
       os.rename(self.pdf_file_name + '.2', self.pdf_file_name)
       # file_in.write(self.pdf_file_name)
 
@@ -393,7 +396,7 @@ class Page:
       dataset.append(img)
     try:
       original_predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
-    except:
+    except Exception as e:
       return None, None, None
     title = head_image[0]
     # head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)

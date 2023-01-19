@@ -43,7 +43,7 @@ class Sormani():
                force = False,
                exclude_ins=False,
                only_ins=False,
-               notcheckimages=False):
+               notcheckimages=True):
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -56,31 +56,25 @@ class Sormani():
       months = [months]
     if not isinstance(days, list):
       days = [days]
-    elements = []
     self.dir_name = ''
+    self.roots = []
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
-          e = self._init(newspaper_name,
-                         root,
-                         year,
-                         month,
-                         day,
-                         ext,
-                         image_path,
-                         path_exclude,
-                         path_exist,
-                         force,
-                         exclude_ins,
-                         only_ins,
-                         notcheckimages)
-          if e is not None:
-            elements.append(e)
-    self.elements = []
-    for element in elements:
-      for e in element:
-        self.elements.append(e)
-    pass
+          self._init(newspaper_name,
+                     root,
+                     year,
+                     month,
+                     day,
+                     ext,
+                     image_path,
+                     path_exclude,
+                     path_exist,
+                     force,
+                     exclude_ins,
+                     only_ins,
+                     notcheckimages)
+    self.set_elements()
   def _init(self,
             newspaper_name,
             root,
@@ -125,15 +119,14 @@ class Sormani():
     self.exclude_ins = exclude_ins
     self.only_ins = only_ins
     self.notcheckimages = notcheckimages
-    self.elements = self.get_elements()
-    return self.elements
+    self.roots.append(self.new_root)
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
     return self
   def __next__(self):
     if self.i < len(self.elements):
-      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.dir_name, self.ext, self.image_path, self.path_exist, self.force)
+      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.new_root, self.ext, self.image_path, self.path_exist, self.force)
       if len(page_pool):
         if page_pool.isAlreadySeen():
           page_pool.set_pages_already_seen()
@@ -182,37 +175,37 @@ class Sormani():
             pass
     if to_repeat:
       self.add_zero_to_dir(root)
-  def get_elements(self):
-    elements = []
-    filedirs = []
-    roots = []
-    if self.day is not None:
-      for filedir, dirs, files in os.walk(self.new_root):
-        dirs.sort()
-        for dir in dirs:
-          n = dir.split(' ')[0]
-          if n.isdigit():
-            if int(n) == self.day:
-              roots.append(os.path.join(self.new_root, dir))
-    else:
-      roots.append(self.new_root)
-    roots.sort()
-    for root in roots:
-      for filedir, dirs, files in os.walk(root):
-        dir = filedir.split('/')[-1]
-        if filedir in self.path_exclude or \
-            len(files) == 0 or \
-            len(dirs) > 0 or \
-            (self.exclude_ins and not dir.isdigit()) or \
-            (self.only_ins and dir.isdigit()):
-          continue
-        files.sort(key = self._get_elements)
-        filedirs.append((filedir, files))
-    filedirs.sort()
-    for filedir, files in filedirs:
-      if self.notcheckimages or self.check_if_image(filedir, files):
-        elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files,))
-    return elements
+  def set_elements(self):
+    self.elements = []
+    for root in self.roots:
+      filedirs = []
+      roots = []
+      if self.day is not None:
+        for filedir, dirs, files in os.walk(root):
+          dirs.sort()
+          for dir in dirs:
+            n = dir.split(' ')[0]
+            if n.isdigit():
+              if int(n) == self.day:
+                roots.append(os.path.join(root, dir))
+      else:
+        roots.append(root)
+      roots.sort()
+      for root in roots:
+        for filedir, dirs, files in os.walk(root):
+          dir = filedir.split('/')[-1]
+          if filedir in self.path_exclude or \
+              len(files) == 0 or \
+              len(dirs) > 0 or \
+              (self.exclude_ins and not dir.isdigit()) or \
+              (self.only_ins and dir.isdigit()):
+            continue
+          files.sort(key = self._get_elements)
+          filedirs.append((filedir, files))
+      filedirs.sort()
+      for filedir, files in filedirs:
+        if self.notcheckimages or self.check_if_image(filedir, files):
+          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, self.new_root))
   def check_if_image(self, filedir, files):
     for file_name in files:
       try:
@@ -273,24 +266,27 @@ class Sormani():
           page_pool.set_image_file_name()
         else:
           page_pool.set_pages_already_seen()
+    self.set_elements()
   def change_all_contrasts(self, contrast = None):
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Start changing the contrast of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    # print(f'Start changing the contrast of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     global global_count_contrast
     global_count_contrast.value = 0
     self.contrast = contrast
     self.force = True
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self.change_contrast, self)
-    if global_count_contrast.value:
-      if global_count_contrast.value >= 100:
-        print()
-      print(f'It has changed the contrast of {global_count_contrast.value} images of \'{self.newspaper_name}\' ({self.dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
+    # with Pool(processes=N_PROCESSES) as mp_pool:
+    #   mp_pool.map(self.change_contrast, self)
+    for page_pool in self:
+      page_pool.change_contrast(contrast=self.contrast, force=self.force)
+    # if global_count_contrast.value:
+    #   if global_count_contrast.value >= 100:
+    #     print()
+    #   print(f'It has changed the contrast of {global_count_contrast.value} images of \'{self.newspaper_name}\' ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    # else:
+    #   print(f'There are no images to change the contrast for \'{self.newspaper_name}\'.')
     self.force = selfforce
   def change_contrast(self, page_pool):
     global global_count_contrast
@@ -300,32 +296,27 @@ class Sormani():
       i = page.change_contrast()
       with global_count_contrast.get_lock():
         global_count_contrast.value += i
-    print('.', end='')
-    if global_count_contrast.value != 0 and global_count_contrast.value % 100 == 0:
-      print()
+    if global_count_contrast.value != 0:
+      print('.', end='')
+      if global_count_contrast.value % 100 == 0:
+        print()
   def divide_all_image(self):
     if not len(self.elements):
       return
     global global_count
     global_count.value = 0
     start_time = time.time()
-    print(
-      f'Starting division of \'{self.newspaper_name}\' ({self.dir_name}) in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting division of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
       mp_pool.map(self.divide_image, self.elements)
-    # for image_group in self.elements:
-    #   self.divide_image(image_group)
     if global_count.value:
       print()
       print(
         f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-      self.elements = self.get_elements()
+      self.set_elements()
       self.set_all_images_names()
-      self.elements = self.get_elements()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
-    return
-
   def divide_image(self, image_group):
     i = 0
     flag = False
@@ -387,7 +378,7 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(
-      f'Start redefine Metadata of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start redefine Metadata of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     self.force = True
     self.first_number = first_number
@@ -652,13 +643,24 @@ class Sormani():
     self.force = selfforce
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
-
+  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
+    selfforce = self.force
+    self.force = True
+    if not no_division:
+      self.divide_all_image()
+    if not no_set_names:
+      self.set_all_images_names()
+    if not no_change_contrast:
+      self.change_all_contrasts()
+    self.force = selfforce
+    self.set_elements()
+    self.create_all_images()
   def set_bobine_images(self):
     for page_pool in self:
       page_pool.set_bobine_images()
-    self.elements = self.get_elements()
+    self.set_elements()
 
   def set_bobine_merges(self):
     for page_pool in self:
       page_pool.set_bobine_merges()
-    self.elements = self.get_elements()
+    self.set_elements()

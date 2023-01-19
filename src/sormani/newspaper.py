@@ -145,6 +145,8 @@ class Newspaper():
     self.contrast = CONTRAST
     if year is not None:
       self.year = year
+      if number is None:
+        _, number = self.get_head()
       self.number = number
     else:
       self.year, self.number = self.get_head()
