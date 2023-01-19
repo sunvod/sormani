@@ -131,21 +131,10 @@ class Page_pool(list):
       self.number = number
       self.ocr = ocr
       start_time = time.time()
-      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({self.filedir}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({self.filedir}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({self.filedir}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    else:
-      print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
-  def create_pdf(self, number = None, ocr = True):
-    if len(self):
-      self.number = number
-      self.ocr = ocr
-      start_time = time.time()
-      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        mp_pool.map(self.to_pdfa, self)
-      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({self.new_root}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({self.filedir}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
@@ -166,13 +155,13 @@ class Page_pool(list):
       self.ocr = ocr
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start changing the contrast of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Start changing the contrast of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.contrast = contrast
         page.force = force
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self._change_contrast, self)
-      print(f'The {len(self)} pages contrast change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'The {len(self)} pages contrast change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to changing the contrast for \'{self.newspaper_name}\'.')
   def _change_contrast(self, page):
@@ -196,10 +185,10 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.convert_image, self)
-      print(f'Conversion of {len(self)} images of \'{self.newspaper_name}\' ({self.new_root}) ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Conversion of {len(self)} images of \'{self.newspaper_name}\' ({self.new_root}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')
   def convert_image(self, page):

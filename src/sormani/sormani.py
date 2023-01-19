@@ -637,7 +637,6 @@ class Sormani():
     for page_pool in self:
       page_pool.set_bobine_images()
     self.set_elements()
-
   def set_bobine_merges(self):
     for page_pool in self:
       page_pool.set_bobine_merges()
