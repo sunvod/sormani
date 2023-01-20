@@ -417,3 +417,39 @@ class Page_pool(list):
         cv2.imwrite(file2, roi)
         os.remove(file)
       j += 1
+
+  def rotate_fotogrammi(self):
+    def rotate_image(image, angle):
+      image_center = tuple(np.array(image.shape[1::-1]) / 2)
+      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+      return result
+    files = []
+    for page in self:
+      if Path(page.original_image).stem[:len('fotogrammi')] == 'fotogrammi':
+        files.append(page.original_image)
+    files.sort()
+    j = 1
+    count = 1
+    for file in files:
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      ret, thresh = cv2.threshold(img, 127, 255, 0)
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+      bimg = img.copy()
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      books = []
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > 4000 and h > 4000:
+          books.append(contour)
+      for contour in books:
+        # cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+        rect = cv2.minAreaRect(contour)
+        box = np.int0(cv2.boxPoints(rect))
+        # cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
+      angle = rect[2]
+      if angle < 45:
+        angle = 90 - angle
+      bimg = rotate_image(bimg, angle - 90)
+      cv2.imwrite(file, bimg)
+      count += 1

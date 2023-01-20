@@ -648,6 +648,12 @@ class Sormani():
       page_pool.set_bobine_merges()
     self.set_elements()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  def rotate_fotogrammi(self):
+    start_time = time.time()
+    print(f'Start Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    for page_pool in self:
+      page_pool.rotate_fotogrammi()
+    print(f'End Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
 
   def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
     self.set_bobine_images()
