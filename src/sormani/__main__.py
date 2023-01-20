@@ -7,9 +7,9 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline(no_division=True, no_change_contrast = False)
 
   sormani = Sormani('Scenario', year=1932, months=2)
-  # sormani.set_bobine_images()
-  # sormani.set_bobine_merges()
-  rotate_bobine_fotogrammi()
+  sormani.set_bobine_images()
+  sormani.set_bobine_merges()
+  # sormani.rotate_bobine_fotogrammi()
 
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()
