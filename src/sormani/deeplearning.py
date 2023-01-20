@@ -868,22 +868,6 @@ def set_bobine_merges():
       count += 1
 
 def rotate_bobine_fotogrammi():
-  def _order(e):
-      return e[0]
-
-  def rotate(points, angle):
-    ANGLE = np.deg2rad(angle)
-    c_x, c_y = np.mean(points, axis=0)
-    return np.array(
-      [
-        [
-          c_x + np.cos(ANGLE) * (px - c_x) - np.sin(ANGLE) * (py - c_x),
-          c_y + np.sin(ANGLE) * (px - c_y) + np.cos(ANGLE) * (py - c_y)
-        ]
-        for px, py in points
-      ]
-    ).astype(int)
-
   def rotate_image(image, angle):
     image_center = tuple(np.array(image.shape[1::-1]) / 2)
     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)

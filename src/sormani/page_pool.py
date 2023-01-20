@@ -131,10 +131,11 @@ class Page_pool(list):
       self.number = number
       self.ocr = ocr
       start_time = time.time()
-      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({self.filedir}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      dir_name = self.filedir.split('/')[-1]
+      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({self.filedir}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
@@ -406,6 +407,7 @@ class Page_pool(list):
         h = book[3]
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
       else:
+        os.remove(file)
         continue
       n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
       file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')

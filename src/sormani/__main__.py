@@ -2,9 +2,15 @@
 from src.sormani.sormani import *
 
 if __name__ == '__main__':
-  # sormani = Sormani('Italia Oggi', year=2016, months=12, days=27)  # [x for x in range(1,13)]
-  sormani = Sormani('Il Giornale', year=2017, months=9, days=None)
-  sormani.set_giornali_pipeline(no_division=True, no_change_contrast = False)
+
+  # sormani = Sormani('Il Giornale', year=2017, months=9, days=None)
+  # sormani.set_giornali_pipeline(no_division=True, no_change_contrast = False)
+
+  sormani = Sormani('Scenario', year=1932, months=2)
+  # sormani.set_bobine_images()
+  # sormani.set_bobine_merges()
+  rotate_bobine_fotogrammi()
+
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()
   # sormani.add_pdf_metadata()

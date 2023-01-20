@@ -596,7 +596,7 @@ class Sormani():
       return
     start_time = time.time()
     print(
-      f'Start update data creation of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+      f'Start update data creation of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     selfforce = self.force
     self.force = True
@@ -604,7 +604,7 @@ class Sormani():
     for page_pool in self:
       page_pool.update_date_creation()
     print()
-    print(f'Update date creation ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    print(f'Update date creation ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce
     return images
   def check_jpg(self, converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)], integrate=False):
@@ -613,13 +613,13 @@ class Sormani():
     selfforce = self.force
     self.force = True
     start_time = time.time()
-    print(f'Starting checking pdf at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting checking pdf at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
       if not len(page_pool):
         continue
       page_pool.check_jpg(converts, integrate)
     self.force = selfforce
-    print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
   def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
     selfforce = self.force
@@ -634,10 +634,32 @@ class Sormani():
     self.set_elements()
     self.create_all_images()
   def set_bobine_images(self):
+    start_time = time.time()
+    print(f'Starting merging images at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
       page_pool.set_bobine_images()
     self.set_elements()
+    print(f'Merging ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+
   def set_bobine_merges(self):
+    start_time = time.time()
+    print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
       page_pool.set_bobine_merges()
     self.set_elements()
+    print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+
+  def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
+    self.set_bobine_images()
+    self.set_bobine_merges()
+    selfforce = self.force
+    self.force = True
+    if not no_division:
+      self.divide_all_image()
+    if not no_set_names:
+      self.set_all_images_names()
+    if not no_change_contrast:
+      self.change_all_contrasts()
+    self.force = selfforce
+    self.set_elements()
+    self.create_all_images()
