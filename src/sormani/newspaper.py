@@ -270,9 +270,37 @@ class La_stampa(Newspaper):
 
 class Il_Giornale(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 150
+    self.init_year = (43, 36)
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Giornale', file_path, date, year, number, init_page = 3)
+  def get_number(self):
+    folder_count = 0
+    for month in range(self.date.month):
+      m = str(month + 1)
+      input_path = os.path.join(self.newspaper_base, str(self.date.year), m if len(m) == 2 else '0' + m)
+      if os.path.exists(input_path):
+        listdir = os.listdir(input_path)
+        listdir.sort()
+        listdir = [x for x in listdir if x.isdigit()]
+        listdir.sort(key=self._get_number_sort)
+        for folders in listdir:
+          if month + 1 == self.date.month and int(folders) > self.date.day:
+            return str(folder_count)
+          if os.path.isdir(os.path.join(input_path, folders)):
+            if self.date.weekday() != 0:
+              if datetime.datetime(self.date.year, month + 1 , self.date.day).weekday() != 0:
+                folder_count += 1
+            else:
+              if datetime.datetime(self.date.year, month + 1, self.date.day).weekday() == 0:
+                folder_count += 1
+    return str(folder_count)
+  def get_head(self):
+    number = self.get_number()
+    if self.date.weekday() != 0:
+      year = self.init_year[0] + self.date.year - 2016
+    else:
+      year = self.init_year[1] + self.date.year - 2016
+    return str(year), number
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 100, w, 500)
