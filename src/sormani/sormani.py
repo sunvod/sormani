@@ -365,7 +365,7 @@ class Sormani():
     for page_pool in self:
       self._add_pdf_metadata(page_pool)
     if global_count.value:
-      print(f'It has redefined Metadata of {global_count.value} ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      print(f'Redefinition Metadata of {global_count.value} pages ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
     self.force = selfforce
