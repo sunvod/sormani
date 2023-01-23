@@ -287,11 +287,12 @@ class Il_Giornale(Newspaper):
           if month + 1 == self.date.month and int(folders) > self.date.day:
             return str(folder_count)
           if os.path.isdir(os.path.join(input_path, folders)):
+            day = int(folders)
             if self.date.weekday() != 0:
-              if datetime.datetime(self.date.year, month + 1 , self.date.day).weekday() != 0:
+              if datetime.datetime(self.date.year, month + 1 , day).weekday() != 0:
                 folder_count += 1
             else:
-              if datetime.datetime(self.date.year, month + 1, self.date.day).weekday() == 0:
+              if datetime.datetime(self.date.year, month + 1, day).weekday() == 0:
                 folder_count += 1
     return str(folder_count)
   def get_head(self):
