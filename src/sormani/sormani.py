@@ -19,7 +19,6 @@ from src.sormani.system import *
 import warnings
 warnings.filterwarnings("ignore")
 
-global_count = multiprocessing.Value('I', 0)
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Conversion:
@@ -285,70 +284,18 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(f'Starting division of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
-      mp_pool.map(self.divide_image, self.elements)
+    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
+    #   mp_pool.map(self.divide_image, self.elements)
+    for page_pool in self:
+      page_pool.divide_image()
     if global_count.value:
       print()
       print(
         f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
-      self.set_all_images_names()
+      # self.set_all_images_names()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
-  def divide_image(self, image_group):
-    i = 0
-    flag = False
-    for file_name in image_group.files:
-      file_path = os.path.join(image_group.filedir, file_name)
-      im = Image.open(file_path)
-      width, height = im.size
-      if width > height:
-        flag = True
-        break
-    if flag:
-      for file_name in image_group.files:
-        last = Path(file_name).stem.split('_')[-1]
-        if last == '0' or last == '1' or last == '2':
-          error = '\'' + file_name + '\' into folder \'' + image_group.filedir + '\' seems to be inconsistent because images into the folder are only partially divided.' \
-                                                                                 '\nIt is necessary reload all the folder from backup data in order to have consistency again.'
-          raise ValueError(error)
-    for file_name in image_group.files:
-      try:
-        file_path = os.path.join(image_group.filedir, file_name)
-        file_name_no_ext = Path(file_path).stem
-        file_path_no_ext = os.path.join(image_group.filedir, file_name_no_ext)
-        ext = Path(file_name).suffix
-        im = Image.open(file_path)
-        width, height = im.size
-        if width < height:
-          if flag:
-            os.rename(file_path, file_path_no_ext + '_0' + ext)
-          continue
-        left = 0
-        top = 0
-        right = width // 2
-        bottom = height
-        im1 = im.crop((left, top, right, bottom))
-        im1.save(file_path_no_ext + '_2' + ext)
-        left = width // 2 + 1
-        top = 0
-        right = width
-        bottom = height
-        im2 = im.crop((left, top, right, bottom))
-        im2.save(file_path_no_ext + '_1' + ext)
-        os.remove(file_path)
-        i += 1
-      except:
-        with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
-          sormani_log.write('No valid Image: ' + file_path + '\n')
-        print(f'Not a valid image: {file_path}')
-    if i:
-      print('.', end='')
-      with global_count.get_lock():
-        global_count.value += i
-        if global_count.value % 100 == 0:
-          print()
-
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return

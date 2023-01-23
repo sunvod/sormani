@@ -3,15 +3,16 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Il Giornale', year=2016, months=1, days=None)
-  sormani.add_pdf_metadata()
+  # sormani = Sormani('Il Giornale', year=2016, months=1, days=None)
+  # sormani.add_pdf_metadata()
   # sormani.set_giornali_pipeline(no_division=True, no_change_contrast = False)
 
-  # sormani = Sormani('Scenario', year=1932, months=2)
+  sormani = Sormani('Scenario', year=1932, months=3)
   # sormani.set_bobine_images()
   # sormani.set_bobine_merges()
   # sormani.rotate_fotogrammi()
-  # sormani.divide_all_image()
+  sormani.divide_all_image()
+  # sormani.change_all_contrasts()
 
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()

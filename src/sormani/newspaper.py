@@ -247,6 +247,23 @@ class Newspaper():
     return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'X']
   def get_prefix(self):
     return ''
+  def get_crop_parameters(self, i, width, height):
+    if i == 0:
+      left = width // 2 + 1
+      top = 0
+      right = width
+      bottom = height
+    elif i == 1:
+      left = 0
+      top = 0
+      right = width // 2
+      bottom = height
+    else:
+      left = None
+      top = None
+      right = None
+      bottom = None
+    return left, right, top, bottom
 
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -642,10 +659,30 @@ class Scenario(Newspaper):
     self.init_year = 17
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
+    self.contrast = 100
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
+  def get_crop_parameters(self, i, width, height):
+    o = 300
+    if i == 0:
+      left = o * 2
+      top = o
+      right = width // 2
+      bottom = height - o
+    elif i == 1:
+      left = width // 2 + 200
+      top = o
+      right = width - (o * 2)
+      bottom = height - o
+    else:
+      left = None
+      top = None
+      right = None
+      bottom = None
+    return left, right, top, bottom
+
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

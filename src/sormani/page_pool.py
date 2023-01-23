@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
 
+# global_count = multiprocessing.Value('I', 0)
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
@@ -170,6 +171,61 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
+  def divide_image(self):
+    flag = False
+    for page in self:
+      image = Image.open(page.original_image)
+      width, height = image.size
+      if width > height:
+        flag = True
+        break
+    if flag:
+      for page in self:
+        last = Path(page.original_image).stem.split('_')[-1]
+        if last == '0' or last == '1' or last == '2':
+          error = '\'' + page.original_image + '\' into folder \'' + self.filedir + '\' seems to be inconsistent because images into the folder are only partially divided.' \
+                                                                                 '\nIt is necessary reload all the folder from backup data in order to have consistency again.'
+          raise ValueError(error)
+    pages = []
+    for page in self:
+      file_name_no_ext = Path(page.original_image).stem
+      file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
+      ext = Path(page.original_image).suffix
+      image = Image.open(page.original_image)
+      width, height = image.size
+      if width < height:
+        if flag:
+          os.rename(page.original_image, file_path_no_ext + '_0' + ext)
+        continue
+      pages.append(page)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      mp_pool.map(self._divide_image, pages)
+  def _divide_image(self, page):
+    i = 0
+    try:
+      file_name_no_ext = Path(page.original_image).stem
+      file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
+      ext = Path(page.original_image).suffix
+      image = Image.open(page.original_image)
+      width, height = image.size
+      left, right, top, bottom = page.newspaper.get_crop_parameters(0, width, height)
+      im1 = image.crop((left, top, right, bottom))
+      im1.save(file_path_no_ext + '_1' + ext)
+      left, right, top, bottom = page.newspaper.get_crop_parameters(1, width, height)
+      im2 = image.crop((left, top, right, bottom))
+      im2.save(file_path_no_ext + '_2' + ext)
+      os.remove(page.original_image)
+      i += 1
+    except Exception as e:
+      with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
+        sormani_log.write('No valid Image: ' + page.original_image + '\n')
+      print(f'Not a valid image: {page.original_image}')
+    if i:
+      print('.', end='')
+      with global_count.get_lock():
+        global_count.value += i
+        if global_count.value % 100 == 0:
+          print()
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
@@ -418,7 +474,7 @@ class Page_pool(list):
         os.remove(file)
       j += 1
 
-  def rotate_fotogrammi(self):
+  def rotate_fotogrammi(self, verbose = False):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -443,10 +499,12 @@ class Page_pool(list):
         if w > 4000 and h > 4000:
           books.append(contour)
       for contour in books:
-        # cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+        if verbose:
+          cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
         rect = cv2.minAreaRect(contour)
-        box = np.int0(cv2.boxPoints(rect))
-        # cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
+        if verbose:
+          box = np.int0(cv2.boxPoints(rect))
+          cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
       angle = rect[2]
       if angle < 45:
         angle = 90 - angle

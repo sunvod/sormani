@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import signal
 import sys
@@ -45,6 +46,8 @@ NEWSPAPERS = ['Alias',
               'Unita',
               'Osservatore Romano',
               'Il Foglio']
+
+global_count = multiprocessing.Value('I', 0)
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")
