@@ -10,9 +10,10 @@ if __name__ == '__main__':
   sormani = Sormani('Scenario', year=1932, months=3)
   # sormani.set_bobine_images()
   # sormani.set_bobine_merges()
-  # sormani.rotate_fotogrammi()
   sormani.divide_all_image()
+  sormani.change_threshold(limit=200, color=255)
   # sormani.change_all_contrasts()
+  # sormani.rotate_fotogrammi(verbose=True, limit=1500)
 
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()

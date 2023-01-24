@@ -112,6 +112,26 @@ class Page:
     def contrast(c):
       return 128 + factor * (c - 128)
     return img.point(contrast)
+  def change_threshold(self):
+    def isgray(image):
+      img = np.asarray(image)
+      if len(img.shape) < 3:
+        return True
+      if img.shape[2] == 1:
+        return True
+      r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+      if np.allclose(r, g) and np.allclose(r, b):
+        return True
+      return False
+    if self.force or not self.isAlreadySeen():
+      try:
+        img = cv2.imread(self.original_image)
+        ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
+        cv2.imwrite(self.original_image, img)
+        return 1
+      except Exception as e:
+        pass
+    return 0
   def save_pages_images(self, storage):
     if self.isAlreadySeen():
       pos = self.newspaper.get_whole_page_location()

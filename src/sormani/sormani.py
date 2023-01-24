@@ -277,6 +277,18 @@ class Sormani():
     for page_pool in self:
       page_pool.change_contrast(contrast=self.contrast, force=self.force)
     self.force = selfforce
+  def change_threshold(self, limit = None, color = 255):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    global global_count_contrast
+    global_count_contrast.value = 0
+    self.limit = limit
+    self.color = color
+    self.force = True
+    for page_pool in self:
+      page_pool.change_threshold(limit=limit, color=color)
+    self.force = selfforce
   def divide_all_image(self):
     if not len(self.elements):
       return
@@ -595,11 +607,11 @@ class Sormani():
       page_pool.set_bobine_merges()
     self.set_elements()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_fotogrammi(self):
+  def rotate_fotogrammi(self, verbose=False, limit=4000):
     start_time = time.time()
     print(f'Start Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
-      page_pool.rotate_fotogrammi()
+      page_pool.rotate_fotogrammi(verbose, limit)
     print(f'End Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
 
   def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):

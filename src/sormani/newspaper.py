@@ -659,7 +659,7 @@ class Scenario(Newspaper):
     self.init_year = 17
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
-    self.contrast = 100
+    self.contrast = 50
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

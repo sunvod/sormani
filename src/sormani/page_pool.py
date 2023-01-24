@@ -171,6 +171,25 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
+  def change_threshold(self, force = True, limit = 50, color = 255):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      print(f'Start changing the threshold of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.limit = limit
+        page.color = color
+        page.force = force
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        mp_pool.map(self._change_threshold, self)
+      print(f'The {len(self)} pages threshold change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no files to changing the threshold for \'{self.newspaper_name}\'.')
+  def _change_threshold(self, page):
+    global global_count_contrast
+    i = page.change_threshold()
+    with global_count_contrast.get_lock():
+      global_count_contrast.value += i
   def divide_image(self):
     flag = False
     for page in self:
@@ -474,7 +493,7 @@ class Page_pool(list):
         os.remove(file)
       j += 1
 
-  def rotate_fotogrammi(self, verbose = False):
+  def rotate_fotogrammi(self, verbose = False, limit=4000):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -496,7 +515,7 @@ class Page_pool(list):
       books = []
       for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        if w > 4000 and h > 4000:
+        if w > limit and h > limit:
           books.append(contour)
       for contour in books:
         if verbose:
