@@ -321,7 +321,7 @@ class Page:
     return self.newspaper.get_page()
   def add_pdf_metadata(self, first_number = None):
     if not os.path.isfile(self.pdf_file_name):
-      return
+      return False
     if first_number is None:
       first_number = 0
     try:
@@ -355,6 +355,8 @@ class Page:
     except Exception as e:
       os.rename(self.pdf_file_name + '.2', self.pdf_file_name)
       # file_in.write(self.pdf_file_name)
+      return False
+    return True
 
   def get_jpg_metadata(self, image, first_number=None):
     exif = image.getexif()

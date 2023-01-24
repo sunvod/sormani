@@ -306,8 +306,11 @@ class Il_Giornale(Newspaper):
           if os.path.isdir(os.path.join(input_path, folders)):
             day = int(folders)
             if self.date.weekday() != 0:
-              if datetime.datetime(self.date.year, month + 1 , day).weekday() != 0:
-                folder_count += 1
+              try:
+                if datetime.datetime(self.date.year, month + 1 , day).weekday() != 0:
+                  folder_count += 1
+              except Exception as e:
+                pass
             else:
               if datetime.datetime(self.date.year, month + 1, day).weekday() == 0:
                 folder_count += 1

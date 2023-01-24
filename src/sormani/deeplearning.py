@@ -773,6 +773,7 @@ def change_ins_file_name():
             for fd, _, files in os.walk(os.path.join(filedir, dir)):
               files.sort()
               for file in files:
+                print(file)
                 if file.split('_')[-3] != 'INS':
                   new_file = '_'.join(file.split('_')[:-2]) + '_' + _dir + '_' + file.split('_')[-1]
                   os.rename(os.path.join(fd, file), os.path.join(fd, new_file))
@@ -901,14 +902,14 @@ def rotate_bobine_fotogrammi():
       cv2.imwrite(file4, bimg)
       count += 1
 
-set_GPUs()
+# set_GPUs()
 
 ns = 'Il Giorno'
 
-cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 50)
+# cnn = CNN(ns)
+# cnn.exec_cnn(ns, epochs = 50)
 
-# count_tiff()
+count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 

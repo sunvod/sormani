@@ -23,8 +23,8 @@ N_PROCESSES_SHORT = 4
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 JPG_PDF_PATH = 'JPG-PDF'
 IMAGE_PATH = 'TIFF'
-IMAGE_ROOT = '/mnt/storage01/sormani'
-#IMAGE_ROOT = '/home/sormani/giornali/'
+# IMAGE_ROOT = '/mnt/storage01/sormani'
+IMAGE_ROOT = '/home/sormani/giornali/'
 STORAGE_BASE = '/home/sunvod/sormani_CNN/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
 STORAGE_BOBINE = os.path.join(IMAGE_PATH, 'Bobine')
@@ -37,15 +37,17 @@ NEWSPAPERS = ['Alias',
               'Alias Domenica',
               'Avvenire',
               'Il Fatto Quotidiano',
+              'Il Foglio',
               'Il Giornale',
+              'Il Giorno',
               'Il Manifesto',
               'Italia Oggi',
               'La Stampa',
               'Libero',
               'Milano Finanza',
-              'Unita',
               'Osservatore Romano',
-              'Il Foglio']
+              'Tutto Libri',
+              'Unita']
 
 global_count = multiprocessing.Value('I', 0)
 

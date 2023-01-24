@@ -331,8 +331,7 @@ class Sormani():
   def _add_pdf_metadata(self, page_pool):
     count = 0
     for page in page_pool:
-      page.add_pdf_metadata(self.first_number)
-      count += 1
+      count += page.add_pdf_metadata(self.first_number)
     with global_count.get_lock():
       global_count.value += count
   def add_jpg_metadata(self, first_number = None):
