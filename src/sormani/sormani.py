@@ -289,7 +289,7 @@ class Sormani():
     for page_pool in self:
       page_pool.change_threshold(limit=limit, color=color)
     self.force = selfforce
-  def divide_all_image(self):
+  def divide_all_image(self, no_rename = False):
     if not len(self.elements):
       return
     global global_count
@@ -305,7 +305,8 @@ class Sormani():
       print(
         f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
-      # self.set_all_images_names()
+      if not no_rename:
+        self.set_all_images_names()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
   def add_pdf_metadata(self, first_number = None):
@@ -580,7 +581,10 @@ class Sormani():
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
   def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
-    selfforce = self.force
+    try:
+      selfforce = self.force
+    except:
+      return
     self.force = True
     if not no_division:
       self.divide_all_image()

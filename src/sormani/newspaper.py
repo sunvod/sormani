@@ -51,6 +51,20 @@ class Newspaper_parameters():
     self.can_be_internal = can_be_internal
     self.max_distance = max_distance
 
+class Newspaper_crop_parameters():
+  def __init__(self,
+               left,
+               right,
+               top,
+               bottom,
+               limit = 220,
+               color = 255):
+    self.left = left
+    self.right = right
+    self.top = top
+    self.bottom = bottom
+    self.limit = limit
+    self.color = color
 class Newspaper():
   @staticmethod
   def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
@@ -93,6 +107,8 @@ class Newspaper():
       newspaper = Tutto_Libri(newspaper_base, file_path, date, year, number)
     elif name == 'Il Giorno':
       newspaper = Il_Giorno(newspaper_base, file_path, date, year, number)
+    elif name == 'La Gazzetta dello Sport':
+      newspaper = La_Gazzetta(newspaper_base, file_path, date, year, number)
     elif name == 'Scenario':
       newspaper = Scenario(newspaper_base, file_path, date, year, number)
     else:
@@ -133,6 +149,8 @@ class Newspaper():
       parameters = Tutto_Libri.get_parameters()
     elif name == 'Il Giorno':
       parameters = Il_Giorno.get_parameters()
+    elif name == 'La Gazzetta dello Sport':
+      newspaper = La_Gazzetta.get_parameters()
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -263,7 +281,14 @@ class Newspaper():
       top = None
       right = None
       bottom = None
-    return left, right, top, bottom
+    limit = None
+    color = None
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     limit,
+                                     color)
 
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -657,12 +682,37 @@ class Il_Giorno(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
+class La_Gazzetta(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'La Gazzetta dello Sport', file_path, date, year, number, init_page = 3)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    if self.n_page % 2 == 0:
+      whole = [0, 150, 1000, 500]
+    else:
+      whole = [w - 1000, 150, w, 500]
+    return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
 class Scenario(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 17
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
-    self.contrast = 50
+    self.contrast = 10
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -672,7 +722,7 @@ class Scenario(Newspaper):
     if i == 0:
       left = o * 2
       top = o
-      right = width // 2
+      right = width // 2 + (o // 4)
       bottom = height - o
     elif i == 1:
       left = width // 2 + 200
@@ -684,7 +734,14 @@ class Scenario(Newspaper):
       top = None
       right = None
       bottom = None
-    return left, right, top, bottom
+    limit = 210
+    color = 255
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     limit,
+                                     color)
 
   @staticmethod
   def get_parameters():

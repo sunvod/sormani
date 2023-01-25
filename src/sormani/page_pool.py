@@ -227,12 +227,18 @@ class Page_pool(list):
       ext = Path(page.original_image).suffix
       image = Image.open(page.original_image)
       width, height = image.size
-      left, right, top, bottom = page.newspaper.get_crop_parameters(0, width, height)
-      im1 = image.crop((left, top, right, bottom))
-      im1.save(file_path_no_ext + '_1' + ext)
-      left, right, top, bottom = page.newspaper.get_crop_parameters(1, width, height)
-      im2 = image.crop((left, top, right, bottom))
-      im2.save(file_path_no_ext + '_2' + ext)
+      parameters = page.newspaper.get_crop_parameters(0, width, height)
+      img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
+      if parameters.limit is not None:
+        _, img = cv2.threshold(np.asarray(img), parameters.limit, parameters.color, cv2.THRESH_BINARY)
+        img = Image.fromarray(img)
+      img.save(file_path_no_ext + '_1' + ext)
+      parameters = page.newspaper.get_crop_parameters(1, width, height)
+      img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
+      if parameters.limit is not None:
+        _, img = cv2.threshold(np.asarray(img), parameters.limit, parameters.color, cv2.THRESH_BINARY)
+        img = Image.fromarray(img)
+      img.save(file_path_no_ext + '_2' + ext)
       os.remove(page.original_image)
       i += 1
     except Exception as e:
@@ -513,20 +519,22 @@ class Page_pool(list):
       bimg = img.copy()
       bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
       books = []
+      rect = None
       for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         if w > limit and h > limit:
           books.append(contour)
       for contour in books:
-        if verbose:
-          cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+        # if verbose:
+        #   cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
         rect = cv2.minAreaRect(contour)
         if verbose:
           box = np.int0(cv2.boxPoints(rect))
           cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
-      angle = rect[2]
-      if angle < 45:
-        angle = 90 - angle
-      bimg = rotate_image(bimg, angle - 90)
-      cv2.imwrite(file, bimg)
-      count += 1
+      if rect is not None:
+        angle = rect[2]
+        if angle < 45:
+          angle = 90 - angle
+        # bimg = rotate_image(bimg, angle - 90)
+        cv2.imwrite(file, bimg)
+        count += 1

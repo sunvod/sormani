@@ -85,6 +85,8 @@ class Page:
     if self.force or not self.isAlreadySeen():
       try:
         contrast = self.contrast if self.contrast is not None else self.newspaper.contrast
+        if contrast is None:
+          return 0
         image = Image.open(self.original_image)
         # pixel_map = image.load()
         pixel_map = (np.array(image.crop([0,0,1,1])), np.array(image.crop([image.size[0] - 1, image.size[1] - 1, image.size[0], image.size[1]])))
