@@ -3,13 +3,20 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  sormani = Sormani('La Gazzetta dello Sport', year=2017, months=[1], days=2)
-  sormani.set_giornali_pipeline()
+  # sormani = Sormani('La Gazzetta dello Sport', year=2017, months=[8], days=None)
+  # sormani.set_giornali_pipeline()
   # sormani.add_pdf_metadata()
 
-  # sormani = Sormani('Scenario', year=1932, months=3)
-  # sormani.divide_all_image(no_rename=True)
-  # sormani.rotate_fotogrammi(verbose=True, limit=1500)
+  sormani = Sormani('Scenario', year=1932, months=3)
+  # sormani.set_bobine_images()
+  # sormani.set_bobine_merges()
+  # sormani.rotate_page(verbose=False, limit=5000)
+  # sormani.divide_image(no_rename=True, is_bobina=True)
+  sormani.remove_borders()
+  # sormani.change_threshold(limit = 220, color = 255)
+  # sormani.rotate_fotogrammi(verbose=True, limit=4000)
+  # sormani.rotate_page(verbose=True)
+  # sormani.set_bobine_pipeline(no_division = False, no_set_names = True, no_change_contrast = True)
 
   # sormani.set_bobine_images()
   # sormani.get_pages_numbers()

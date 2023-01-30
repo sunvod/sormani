@@ -277,7 +277,7 @@ class Sormani():
     for page_pool in self:
       page_pool.change_contrast(contrast=self.contrast, force=self.force)
     self.force = selfforce
-  def change_threshold(self, limit = None, color = 255):
+  def change_threshold(self, limit = None, color = 255, inversion=False):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -285,11 +285,12 @@ class Sormani():
     global_count_contrast.value = 0
     self.limit = limit
     self.color = color
+    self.inversion = inversion
     self.force = True
     for page_pool in self:
-      page_pool.change_threshold(limit=limit, color=color)
+      page_pool.change_threshold(limit=limit, color=color, inversion=inversion)
     self.force = selfforce
-  def divide_all_image(self, no_rename = False):
+  def divide_image(self, no_rename = False, is_bobina = False):
     if not len(self.elements):
       return
     global global_count
@@ -299,7 +300,7 @@ class Sormani():
     # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
     #   mp_pool.map(self.divide_image, self.elements)
     for page_pool in self:
-      page_pool.divide_image()
+      page_pool.divide_image(is_bobina)
     if global_count.value:
       print()
       print(
@@ -309,6 +310,24 @@ class Sormani():
         self.set_all_images_names()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
+  def remove_borders(self):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting remove borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
+    #   mp_pool.map(self.divide_image, self.elements)
+    for page_pool in self:
+      page_pool.remove_borders()
+    if global_count.value:
+      print()
+      print(
+        f'Removing borders of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
@@ -587,7 +606,7 @@ class Sormani():
       return
     self.force = True
     if not no_division:
-      self.divide_all_image()
+      self.divide_image()
     if not no_set_names:
       self.set_all_images_names()
     if not no_change_contrast:
@@ -602,7 +621,6 @@ class Sormani():
       page_pool.set_bobine_images()
     self.set_elements()
     print(f'Merging ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-
   def set_bobine_merges(self):
     start_time = time.time()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
@@ -616,14 +634,19 @@ class Sormani():
     for page_pool in self:
       page_pool.rotate_fotogrammi(verbose, limit)
     print(f'End Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-
+  def rotate_page(self, verbose=False, limit=10):
+    start_time = time.time()
+    print(f'Start Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    for page_pool in self:
+      page_pool.rotate_page(verbose, limit)
+    print(f'End Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
     self.set_bobine_images()
     self.set_bobine_merges()
     selfforce = self.force
     self.force = True
     if not no_division:
-      self.divide_all_image()
+      self.divide_image()
     if not no_set_names:
       self.set_all_images_names()
     if not no_change_contrast:

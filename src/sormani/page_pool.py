@@ -171,7 +171,7 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
-  def change_threshold(self, force = True, limit = 50, color = 255):
+  def change_threshold(self, force = True, limit = 50, color = 255, inversion = False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -179,6 +179,7 @@ class Page_pool(list):
       for page in self:
         page.limit = limit
         page.color = color
+        page.inversion = inversion
         page.force = force
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self._change_threshold, self)
@@ -190,7 +191,7 @@ class Page_pool(list):
     i = page.change_threshold()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
-  def divide_image(self):
+  def divide_image(self, is_bobina = False):
     flag = False
     for page in self:
       image = Image.open(page.original_image)
@@ -207,6 +208,7 @@ class Page_pool(list):
           raise ValueError(error)
     pages = []
     for page in self:
+      page.is_bobina = is_bobina
       file_name_no_ext = Path(page.original_image).stem
       file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
       ext = Path(page.original_image).suffix
@@ -217,29 +219,45 @@ class Page_pool(list):
           os.rename(page.original_image, file_path_no_ext + '_0' + ext)
         continue
       pages.append(page)
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self._divide_image, pages)
+    # with Pool(processes=N_PROCESSES) as mp_pool:
+    #   mp_pool.map(self._divide_image, pages)
+    for page in pages:
+      self._divide_image(page)
   def _divide_image(self, page):
     i = 0
     try:
       file_name_no_ext = Path(page.original_image).stem
       file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
       ext = Path(page.original_image).suffix
+      img = cv2.imread(page.original_image, cv2.IMREAD_GRAYSCALE)
+      image1, image2 = page.newspaper.divide(img)
+      image1.save(file_path_no_ext + '_1' + ext)
+      image2.save(file_path_no_ext + '_2' + ext)
+      os.remove(page.original_image)
+      i += 1
+    except Exception as e:
+      with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
+        sormani_log.write('No valid Image: ' + page.original_image + '\n')
+      print(f'Not a valid image: {page.original_image}')
+    if i:
+      print('.', end='')
+      with global_count.get_lock():
+        global_count.value += i
+        if global_count.value % 100 == 0:
+          print()
+  def remove_borders(self):
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      mp_pool.map(self._remove_borders, self)
+  def _remove_borders(self, page):
+    i = 0
+    try:
+      file_name_no_ext = Path(page.original_image).stem
       image = Image.open(page.original_image)
       width, height = image.size
-      parameters = page.newspaper.get_crop_parameters(0, width, height)
+      lr = 0 if file_name_no_ext.split('_')[-1] == '1' else 1
+      parameters = page.newspaper.get_remove_borders_parameters(lr, width, height)
       img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-      if parameters.limit is not None:
-        _, img = cv2.threshold(np.asarray(img), parameters.limit, parameters.color, cv2.THRESH_BINARY)
-        img = Image.fromarray(img)
-      img.save(file_path_no_ext + '_1' + ext)
-      parameters = page.newspaper.get_crop_parameters(1, width, height)
-      img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-      if parameters.limit is not None:
-        _, img = cv2.threshold(np.asarray(img), parameters.limit, parameters.color, cv2.THRESH_BINARY)
-        img = Image.fromarray(img)
-      img.save(file_path_no_ext + '_2' + ext)
-      os.remove(page.original_image)
+      img.save(page.original_image)
       i += 1
     except Exception as e:
       with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
@@ -488,7 +506,6 @@ class Page_pool(list):
         h = book[3]
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
       else:
-        os.remove(file)
         continue
       n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
       file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
@@ -496,23 +513,18 @@ class Page_pool(list):
       if x != 0 and x + w != _w:
         roi = img[y:y + h, x:x + w]
         cv2.imwrite(file2, roi)
-        os.remove(file)
       j += 1
-
+    for file in files:
+      os.remove(file)
   def rotate_fotogrammi(self, verbose = False, limit=4000):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
       result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
       return result
-    files = []
-    for page in self:
-      if Path(page.original_image).stem[:len('fotogrammi')] == 'fotogrammi':
-        files.append(page.original_image)
-    files.sort()
-    j = 1
     count = 1
-    for file in files:
+    for page in self:
+      file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
       ret, thresh = cv2.threshold(img, 127, 255, 0)
       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -525,16 +537,66 @@ class Page_pool(list):
         if w > limit and h > limit:
           books.append(contour)
       for contour in books:
-        # if verbose:
-        #   cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
         rect = cv2.minAreaRect(contour)
         if verbose:
           box = np.int0(cv2.boxPoints(rect))
-          cv2.drawContours(bimg, [box], 0, (36, 255, 12), 3)
+          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
       if rect is not None:
         angle = rect[2]
         if angle < 45:
           angle = 90 - angle
-        # bimg = rotate_image(bimg, angle - 90)
+        if angle > 85:
+          bimg = rotate_image(bimg, angle - 90)
+          cv2.imwrite(file, bimg)
+          count += 1
+        elif verbose:
+          cv2.imwrite(file, bimg)
+
+  def rotate_page(self, verbose=False, limit=1000):
+    def _rotate_page(e):
+      return e.original_file_name
+    def rotate_image(image, angle):
+      image_center = tuple(np.array(image.shape[1::-1]) / 2)
+      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+      return result
+    count = 1
+    self.sort(key=_rotate_page)
+    for page in self:
+      file = page.original_image
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      _, thresh = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY_INV)
+      # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (40, 40))
+      # ext = Path(file).suffix
+      # file = '.'.join(file.split('.')[:-1]) + '_' + str(1) + ext
+      # dilation = cv2.dilate(thresh, rect_kernel, iterations=1)
+      # dilation = 255 - dilation
+      # ext = Path(file).suffix
+      # new_file = '.'.join(file.split('.')[:-1]) + '_' + '_' + ext
+      # cv2.imwrite(new_file, dilation)
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+      bimg = img.copy()
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      books = []
+      rect = None
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > limit and h > limit:
+          books.append(contour)
+      angle = None
+      for contour in books:
+        rect = cv2.minAreaRect(contour)
+        if rect[2] > 40:
+          angle = rect[2]
+          if verbose:
+            box = np.int0(cv2.boxPoints(rect))
+            cv2.drawContours(bimg, [box], 0, (0, 255, 0), 10)
+      if rect is not None and angle is not None:
+        if angle < 45:
+          angle = 90 - angle
+        bimg = rotate_image(bimg, angle - 90)
         cv2.imwrite(file, bimg)
+        # ext = Path(file).suffix
+        # new_file = '.'.join(file.split('.')[:-1]) + '_' + str(angle) + ext
+        # os.rename(file, new_file)
         count += 1
