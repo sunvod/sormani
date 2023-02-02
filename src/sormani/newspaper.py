@@ -111,6 +111,10 @@ class Newspaper():
       newspaper = La_Gazzetta(newspaper_base, file_path, date, year, number)
     elif name == 'Scenario':
       newspaper = Scenario(newspaper_base, file_path, date, year, number)
+    elif name == 'La Domenica del Corriere':
+      newspaper = La_Domenica_del_Corriere(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Mondo':
+      newspaper = Il_Mondo(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -766,14 +770,135 @@ class Scenario(Newspaper):
                                      color)
 
   def get_remove_borders_parameters(self, i, width, height):
-    o = 300
+    o = 400
     if i == 0:
       left = o * 2
       top = o
-      right = width - (o // 4)
+      right = width
       bottom = height - o
     elif i == 1:
-      left = 200
+      left = 0
+      top = o
+      right = width - (o * 2)
+      bottom = height - o
+    else:
+      left = o
+      top = o
+      right = width - o
+      bottom = height - o
+    threshold = None
+    color = None
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     threshold,
+                                     color)
+  def divide(self, img, verbose = False):
+    def _divide(e):
+      return e[0]
+    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
+    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
+    # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
+    thresh = 255 - thresh
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    books = []
+    bimg = thresh.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    image = Image.fromarray(img)
+    weight, heigth = image.size
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > 5000 and h > 5000:
+        books.append((x, y, w, h))
+        rect = cv2.minAreaRect(contour)
+        if verbose:
+          # rect = ([rect[0][0], heigth // 2], [rect[1][0], heigth], rect[2])
+          box = np.int0(cv2.boxPoints(rect))
+          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
+    books.sort(key=_divide)
+    if verbose:
+      new_file = '_' + self.file_path.split('/')[-1]
+      cv2.imwrite(os.path.join(os.path.dirname(self.file_path), new_file), bimg)
+    if len(books) == 2:
+      x, y, w, h = books[0]
+      image1 = image.crop((x, y, x + w, y + h))
+      x, y, w, h = books[1]
+      image2 = image.crop((x, y, x + w, y + h))
+    elif len(books) == 1 and books[0][2] < weight / 3 * 2:
+      x, y, w, h = books[0]
+      image1 = image.crop((x, 0, x + w, heigth))
+      if x < weight / 3 * 2:
+        x = x + w
+        w = weight - x
+      else:
+        x = 0
+        w = weight - x
+      image2 = image.crop((x, y, x + w, y + h))
+    else:
+      image1, image2 = super().divide(img)
+    return image1, image2
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
+                                # invert_fill_hole=True,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
+
+class La_Domenica_del_Corriere(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'La Domenica del Corriere', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def get_crop_parameters(self, i, width, height):
+    o = 300
+    if i == 0:
+      left = 0
+      top = 0
+      right = width // 2 + (o // 4)
+      bottom = height
+    elif i == 1:
+      left = width // 2 + 200
+      top = 0
+      right = width
+      bottom = height
+    else:
+      left = None
+      top = None
+      right = None
+      bottom = None
+    limit = 210
+    color = 255
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     limit,
+                                     color)
+
+  def get_remove_borders_parameters(self, i, width, height):
+    o = 200
+    if i == 0:
+      left = o * 2
+      top = o
+      right = width
+      bottom = height - o
+    elif i == 1:
+      left = 0
       top = o
       right = width - (o * 2)
       bottom = height - o
@@ -793,8 +918,129 @@ class Scenario(Newspaper):
   def divide(self, img, verbose = False):
     def _divide(e):
       return e[0]
-    _, thresh = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY_INV)
-    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 10))
+    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
+    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
+    # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
+    thresh = 255 - thresh
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    books = []
+    bimg = thresh.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    image = Image.fromarray(img)
+    weight, heigth = image.size
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > 5000 and h > 5000:
+        books.append((x, y, w, h))
+        rect = cv2.minAreaRect(contour)
+        if verbose:
+          # rect = ([rect[0][0], heigth // 2], [rect[1][0], heigth], rect[2])
+          box = np.int0(cv2.boxPoints(rect))
+          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
+    books.sort(key=_divide)
+    if verbose:
+      new_file = '_' + self.file_path.split('/')[-1]
+      cv2.imwrite(os.path.join(os.path.dirname(self.file_path), new_file), bimg)
+    if len(books) == 2:
+      x, y, w, h = books[0]
+      image1 = image.crop((x, y, x + w, y + h))
+      x, y, w, h = books[1]
+      image2 = image.crop((x, y, x + w, y + h))
+    elif len(books) == 1 and books[0][2] < weight / 3 * 2:
+      x, y, w, h = books[0]
+      image1 = image.crop((x, 0, x + w, heigth))
+      if x < weight / 3 * 2:
+        x = x + w
+        w = weight - x
+      else:
+        x = 0
+        w = weight - x
+      image2 = image.crop((x, y, x + w, y + h))
+    else:
+      image1, image2 = super().divide(img)
+    return image1, image2
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
+                                # invert_fill_hole=True,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
+
+class Il_Mondo(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Mondo', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def get_crop_parameters(self, i, width, height):
+    o = 200
+    if i == 0:
+      left = 0
+      top = 0
+      right = width // 2 + (o // 4)
+      bottom = height
+    elif i == 1:
+      left = width // 2 + 200
+      top = 0
+      right = width
+      bottom = height
+    else:
+      left = (o // 2)
+      top = o
+      right = width + (o // 2)
+      bottom = height - o
+    limit = 210
+    color = 255
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     limit,
+                                     color)
+
+  def get_remove_borders_parameters(self, i, width, height):
+    o = 200
+    if i == 0:
+      left = o * 2
+      top = o
+      right = width
+      bottom = height - o
+    elif i == 1:
+      left = 0
+      top = o
+      right = width - (o * 2)
+      bottom = height - o
+    else:
+      left = None
+      top = None
+      right = None
+      bottom = None
+    threshold = None
+    color = None
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom,
+                                     threshold,
+                                     color)
+  def divide(self, img, verbose = False):
+    def _divide(e):
+      return e[0]
+    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
+    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
     # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
     thresh = 255 - thresh
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)

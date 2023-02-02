@@ -42,7 +42,9 @@ class Sormani():
                force = False,
                exclude_ins=False,
                only_ins=False,
-               notcheckimages=True):
+               notcheckimages=True,
+               thresholding=0):
+    self.thresholding = thresholding
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
         name = newspaper_names
@@ -125,7 +127,13 @@ class Sormani():
     return self
   def __next__(self):
     if self.i < len(self.elements):
-      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name, self.new_root, self.ext, self.image_path, self.path_exist, self.force)
+      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
+                                                      self.new_root,
+                                                      self.ext,
+                                                      self.image_path,
+                                                      self.path_exist,
+                                                      self.force,
+                                                      self.thresholding)
       if len(page_pool):
         if page_pool.isAlreadySeen():
           page_pool.set_pages_already_seen()
@@ -233,12 +241,15 @@ class Sormani():
   def create_all_images(self,
                         ocr = True,
                         converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
-                        number = None):
+                        number = None,
+                        thresholding=None):
     if not len(self.elements):
       return
     for page_pool in self:
       if not len(page_pool):
         continue
+      if thresholding is not None:
+        page_pool.thresholding = thresholding
       page_pool.create_pdf(number, ocr = ocr)
       page_pool.convert_images(converts)
   def convert_all_images(self,
@@ -266,7 +277,7 @@ class Sormani():
         else:
           page_pool.set_pages_already_seen()
     self.set_elements()
-  def change_all_contrasts(self, contrast = None):
+  def change_contrast(self, contrast = None):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -610,22 +621,22 @@ class Sormani():
     if not no_set_names:
       self.set_all_images_names()
     if not no_change_contrast:
-      self.change_all_contrasts()
+      self.change_contrast()
     self.force = selfforce
     self.set_elements()
     self.create_all_images()
-  def set_bobine_images(self):
+  def set_bobine_merge_images(self):
     start_time = time.time()
     print(f'Starting merging images at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
-      page_pool.set_bobine_images()
+      page_pool.set_bobine_merge_images()
     self.set_elements()
     print(f'Merging ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_merges(self):
+  def set_bobine_select_images(self, remove_merge=True):
     start_time = time.time()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
-      page_pool.set_bobine_merges()
+      page_pool.set_bobine_select_images(remove_merge)
     self.set_elements()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def rotate_fotogrammi(self, verbose=False, limit=4000):
@@ -641,8 +652,8 @@ class Sormani():
       page_pool.rotate_page(verbose, limit)
     print(f'End Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
-    self.set_bobine_images()
-    self.set_bobine_merges()
+    self.set_bobine_merge_images()
+    self.set_bobine_select_images()
     selfforce = self.force
     self.force = True
     if not no_division:
@@ -650,7 +661,7 @@ class Sormani():
     if not no_set_names:
       self.set_all_images_names()
     if not no_change_contrast:
-      self.change_all_contrasts()
+      self.change_contrast()
     self.force = selfforce
     self.set_elements()
     self.create_all_images()

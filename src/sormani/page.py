@@ -123,6 +123,7 @@ class Page:
           ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY_INV)
         else:
           ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
+          # ret, img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 6)
         cv2.imwrite(self.original_image, img)
         return 1
       except Exception as e:

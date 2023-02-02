@@ -19,13 +19,14 @@ warnings.filterwarnings("ignore")
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False):
+  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.new_root = new_root
     self.name_complete = name_complete
     self.date = date
     self.force = force
+    self.thresholding = thresholding
   def set_pages(self):
     n_pages = len(self)
     if n_pages > 0:
@@ -145,7 +146,12 @@ class Page_pool(list):
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     if self.ocr:
-      exec_ocrmypdf(page.original_image, page.pdf_file_name, page.txt_file_name, ORIGINAL_DPI, UPSAMPLING_DPI)
+      exec_ocrmypdf(page.original_image,
+                    page.pdf_file_name,
+                    page.txt_file_name,
+                    ORIGINAL_DPI,
+                    UPSAMPLING_DPI,
+                    thresholding=self.thresholding)
     else:
       image = Image.open(page.original_image)
       image.save(page.pdf_file_name, "PDF", resolution=50.0)
@@ -251,11 +257,10 @@ class Page_pool(list):
   def _remove_borders(self, page):
     i = 0
     try:
-      file_name_no_ext = Path(page.original_image).stem
       image = Image.open(page.original_image)
       width, height = image.size
-      lr = 0 if file_name_no_ext.split('_')[-1] == '1' else 1
-      parameters = page.newspaper.get_remove_borders_parameters(lr, width, height)
+      # lr = 0 if file_name_no_ext.split('_')[-1] == '1' else 1
+      parameters = page.newspaper.get_remove_borders_parameters(2, width, height)
       img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
       img.save(page.original_image)
       i += 1
@@ -418,7 +423,7 @@ class Page_pool(list):
           print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
           if integrate:
             self.convert_images([convert])
-  def set_bobine_images(self):
+  def set_bobine_merge_images(self):
     couple_files = []
     file1 = None
     files = []
@@ -446,7 +451,7 @@ class Page_pool(list):
     if file2 is not None:
       os.remove(file2)
 
-  def set_bobine_merges(self):
+  def set_bobine_select_images(self, remove_merge=True):
     def _order(e):
       return e[0]
     files = []
@@ -508,14 +513,17 @@ class Page_pool(list):
       else:
         continue
       n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '_bing.tif')
+      cv2.imwrite(file_bimg, bimg)
       file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
       _x, _y, _w, _h = cv2.boundingRect(img)
       if x != 0 and x + w != _w:
         roi = img[y:y + h, x:x + w]
         cv2.imwrite(file2, roi)
       j += 1
-    for file in files:
-      os.remove(file)
+    if remove_merge:
+      for file in files:
+        os.remove(file)
   def rotate_fotogrammi(self, verbose = False, limit=4000):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
