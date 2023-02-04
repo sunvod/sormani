@@ -55,8 +55,10 @@ class Sormani():
         rename_only = True
     if not isinstance(months, list):
       months = [months]
+    months.sort()
     if not isinstance(days, list):
       days = [days]
+    days.sort()
     self.dir_name = ''
     self.roots = []
     for newspaper_name in newspaper_names:
@@ -645,12 +647,6 @@ class Sormani():
     for page_pool in self:
       page_pool.rotate_fotogrammi(verbose, limit)
     print(f'End Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_page(self, verbose=False, limit=10):
-    start_time = time.time()
-    print(f'Start Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
-    for page_pool in self:
-      page_pool.rotate_page(verbose, limit)
-    print(f'End Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_bobine_pipeline(self, no_set_names = False):
     self.set_bobine_merge_images()
     self.set_bobine_select_images(threshold=5)

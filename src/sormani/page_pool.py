@@ -424,7 +424,7 @@ class Page_pool(list):
           if integrate:
             self.convert_images([convert])
   def set_bobine_merge_images(self):
-    couple_files = []
+    groups_files = []
     file1 = None
     file2 = None
     files = []
@@ -439,25 +439,27 @@ class Page_pool(list):
       if file2 is None:
         file2 = file
         continue
-      couple_files.append((file1, file2, file))
+      groups_files.append((file1, file2, file))
       file1 = file2
       file2 = file
-    i = 1
-    file2 = None
-    for file1, file2, file3 in couple_files:
-      img1 = cv2.imread(file1, cv2.IMREAD_GRAYSCALE)
-      img2 = cv2.imread(file2, cv2.IMREAD_GRAYSCALE)
-      img3 = cv2.imread(file3, cv2.IMREAD_GRAYSCALE)
+    with Pool(processes=N_PROCESSES-4) as mp_pool:
+      mp_pool.map(self._set_bobine_merge_images, groups_files)
+    # for group_files in groups_files:
+    #   self._set_bobine_merge_images(group_files)
+    for file in files:
+      os.remove(file)
+
+  def _set_bobine_merge_images(self, couple_files):
+    try:
+      img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
+      img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
+      img3 = cv2.imread(couple_files[2], cv2.IMREAD_GRAYSCALE)
       vis = np.concatenate((img1, img2, img3), axis=1)
-      height, width = vis.shape
-      # vis = vis[0 : 0 + height, 0 : width - width // 24 * 5]
-      n = '00' + str(i) if i < 10 else '0' + str(i) if i < 100 else str(i)
-      file3 = os.path.join(self.filedir, 'merge_' + n + '.tif')
-      cv2.imwrite(file3, vis)
-      i += 1
-      os.remove(file1)
-    if file2 is not None:
-      os.remove(file2)
+    except Exception as e:
+      pass
+    n = (couple_files[0].split('_')[-1]).split('.')[0]
+    file = os.path.join(self.filedir, 'merge_' + n + '.tif')
+    cv2.imwrite(file, vis)
 
   def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold=None):
     def _order(e):
@@ -470,7 +472,10 @@ class Page_pool(list):
     j = 1
     _w = None
     _h = None
-    for file in files:
+    for page in self:
+      file = page.original_image
+      if Path(page.original_image).stem[:5] != 'merge':
+        continue
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
       if threshold is not None:
         ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
@@ -604,51 +609,3 @@ class Page_pool(list):
         elif verbose:
           cv2.imwrite(file, bimg)
 
-  def rotate_page(self, verbose=False, limit=1000):
-    def _rotate_page(e):
-      return e.original_file_name
-    def rotate_image(image, angle):
-      image_center = tuple(np.array(image.shape[1::-1]) / 2)
-      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-      return result
-    count = 1
-    self.sort(key=_rotate_page)
-    for page in self:
-      file = page.original_image
-      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      _, thresh = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY_INV)
-      # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (40, 40))
-      # ext = Path(file).suffix
-      # file = '.'.join(file.split('.')[:-1]) + '_' + str(1) + ext
-      # dilation = cv2.dilate(thresh, rect_kernel, iterations=1)
-      # dilation = 255 - dilation
-      # ext = Path(file).suffix
-      # new_file = '.'.join(file.split('.')[:-1]) + '_' + '_' + ext
-      # cv2.imwrite(new_file, dilation)
-      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-      bimg = img.copy()
-      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-      books = []
-      rect = None
-      for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        if w > limit and h > limit:
-          books.append(contour)
-      angle = None
-      for contour in books:
-        rect = cv2.minAreaRect(contour)
-        if rect[2] > 40:
-          angle = rect[2]
-          if verbose:
-            box = np.int0(cv2.boxPoints(rect))
-            cv2.drawContours(bimg, [box], 0, (0, 255, 0), 10)
-      if rect is not None and angle is not None:
-        if angle < 45:
-          angle = 90 - angle
-        bimg = rotate_image(bimg, angle - 90)
-        cv2.imwrite(file, bimg)
-        # ext = Path(file).suffix
-        # new_file = '.'.join(file.split('.')[:-1]) + '_' + str(angle) + ext
-        # os.rename(file, new_file)
-        count += 1
