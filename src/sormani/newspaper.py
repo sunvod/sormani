@@ -891,7 +891,7 @@ class La_Domenica_del_Corriere(Newspaper):
                                      color)
 
   def get_remove_borders_parameters(self, i, width, height):
-    o = 200
+    o = 700
     if i == 0:
       left = o * 2
       top = o
@@ -903,10 +903,10 @@ class La_Domenica_del_Corriere(Newspaper):
       right = width - (o * 2)
       bottom = height - o
     else:
-      left = None
-      top = None
-      right = None
-      bottom = None
+      left = o * 1.2
+      top = o
+      right = width - o
+      bottom = height - o
     threshold = None
     color = None
     return Newspaper_crop_parameters(left,

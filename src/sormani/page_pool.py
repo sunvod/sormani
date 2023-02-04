@@ -426,6 +426,7 @@ class Page_pool(list):
   def set_bobine_merge_images(self):
     couple_files = []
     file1 = None
+    file2 = None
     files = []
     for page in self:
       if Path(page.original_image).stem[:5] != 'merge':
@@ -435,14 +436,21 @@ class Page_pool(list):
       if file1 is None:
         file1 = file
         continue
-      couple_files.append((file1, file))
-      file1 = file
+      if file2 is None:
+        file2 = file
+        continue
+      couple_files.append((file1, file2, file))
+      file1 = file2
+      file2 = file
     i = 1
     file2 = None
-    for file1, file2 in couple_files:
+    for file1, file2, file3 in couple_files:
       img1 = cv2.imread(file1, cv2.IMREAD_GRAYSCALE)
       img2 = cv2.imread(file2, cv2.IMREAD_GRAYSCALE)
-      vis = np.concatenate((img1, img2), axis=1)
+      img3 = cv2.imread(file3, cv2.IMREAD_GRAYSCALE)
+      vis = np.concatenate((img1, img2, img3), axis=1)
+      height, width = vis.shape
+      # vis = vis[0 : 0 + height, 0 : width - width // 24 * 5]
       n = '00' + str(i) if i < 10 else '0' + str(i) if i < 100 else str(i)
       file3 = os.path.join(self.filedir, 'merge_' + n + '.tif')
       cv2.imwrite(file3, vis)
@@ -451,7 +459,7 @@ class Page_pool(list):
     if file2 is not None:
       os.remove(file2)
 
-  def set_bobine_select_images(self, remove_merge=True):
+  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold=None):
     def _order(e):
       return e[0]
     files = []
@@ -460,67 +468,103 @@ class Page_pool(list):
         files.append(page.original_image)
     files.sort()
     j = 1
+    _w = None
+    _h = None
     for file in files:
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      ret, thresh = cv2.threshold(img, 127, 255, 0)
+      if threshold is not None:
+        ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+      else:
+        thresh = img.copy()
+      # ret, thresh = cv2.threshold(img, 127, 255, 0)
       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
       bimg = img.copy()
       bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
       books = []
       for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        if w > 4000 and h > 4000:
+        if w > 10000 and h > 5000:
           books.append((x, y, w, h))
       books.sort(key=_order)
-      if len(books) > 1:
-        couple_books = []
-        book1 = None
-        for i, book in enumerate(books):
-          if book1 is None:
-            book1 = book
-            continue
-          couple_books.append((book1, book))
-          book1 = book
-          if i == len(books) - 1:
-            couple_books.append((book, None))
-            break
-        books = []
-        bw = 0
-        for book1, book2 in couple_books:
-          if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
-            _x = book1[0]
-            _y = book1[1]
-            _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
-            _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
-            books.append((_x, _y, _w, _h))
-            if _w > bw:
-              bw = _w
-          else:
-            books.append(book1)
-            if book1[2] > bw:
-              bw = book1[2]
-        for x, y, w, h in books:
-          if w == bw:
-            cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-            break
-      elif len(books) == 1:
-        book = books[0]
+      for book in books:
         x = book[0]
         y = book[1]
         w = book[2]
         h = book[3]
-        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-      else:
-        continue
-      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-      file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '_bing.tif')
-      cv2.imwrite(file_bimg, bimg)
-      file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
-      _x, _y, _w, _h = cv2.boundingRect(img)
-      if x != 0 and x + w != _w:
-        roi = img[y:y + h, x:x + w]
-        cv2.imwrite(file2, roi)
-      j += 1
+        _, _, weight, _ = cv2.boundingRect(img)
+        if x != 0 and x + w != weight:
+          cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+      if write_borders:
+        n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+        file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
+        cv2.imwrite(file_bimg, bimg)
+        j += 1
+      for book in books:
+        x = book[0]
+        y = book[1]
+        w = book[2]
+        h = book[3]
+        n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+        file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
+        if _w is not None and _w == w and _h == h:
+          continue
+        _, _, weight, _ = cv2.boundingRect(img)
+        if x != 0 and x + w != weight:
+          roi = img[y:y + h, x:x + w]
+          cv2.imwrite(file2, roi)
+          _w = w
+          _h = h
+          j += 1
+      # if len(books) > 1:
+      #   couple_books = []
+      #   book1 = None
+      #   for i, book in enumerate(books):
+      #     if book1 is None:
+      #       book1 = book
+      #       continue
+      #     couple_books.append((book1, book))
+      #     book1 = book
+      #     if i == len(books) - 1:
+      #       couple_books.append((book, None))
+      #       # break
+      #   books = []
+      #   bw = 0
+      #   for book1, book2 in couple_books:
+      #     if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
+      #       _x = book1[0]
+      #       _y = book1[1]
+      #       _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
+      #       _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
+      #       books.append((_x, _y, _w, _h))
+      #       if _w > bw:
+      #         bw = _w
+      #     else:
+      #       books.append(book1)
+      #       if book1[2] > bw:
+      #         bw = book1[2]
+      #   for x, y, w, h in books:
+      #     if w == bw:
+      #       cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+      #       break
+      # elif len(books) == 1:
+      #   book = books[0]
+      #   x = book[0]
+      #   y = book[1]
+      #   w = book[2]
+      #   h = book[3]
+      #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+      # else:
+      #   continue
+      # n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      # if not remove_merge:
+      #   file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '_bing.tif')
+      #   cv2.imwrite(file_bimg, bimg)
+      # file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
+      # _x, _y, _w, _h = cv2.boundingRect(img)
+      # if x != 0 and x + w != _w:
+      #   roi = img[y:y + h, x:x + w]
+      #   cv2.imwrite(file2, roi)
+      # j += 1
     if remove_merge:
       for file in files:
         os.remove(file)

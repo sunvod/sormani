@@ -632,11 +632,11 @@ class Sormani():
       page_pool.set_bobine_merge_images()
     self.set_elements()
     print(f'Merging ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True):
+  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold = None):
     start_time = time.time()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     for page_pool in self:
-      page_pool.set_bobine_select_images(remove_merge)
+      page_pool.set_bobine_select_images(remove_merge, write_borders, threshold)
     self.set_elements()
     print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def rotate_fotogrammi(self, verbose=False, limit=4000):
@@ -651,17 +651,12 @@ class Sormani():
     for page_pool in self:
       page_pool.rotate_page(verbose, limit)
     print(f'End Rotate pages at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
+  def set_bobine_pipeline(self, no_set_names = False):
     self.set_bobine_merge_images()
-    self.set_bobine_select_images()
-    selfforce = self.force
-    self.force = True
-    if not no_division:
-      self.divide_image()
-    if not no_set_names:
-      self.set_all_images_names()
-    if not no_change_contrast:
-      self.change_contrast()
-    self.force = selfforce
-    self.set_elements()
-    self.create_all_images()
+    self.set_bobine_select_images(threshold=5)
+    self.rotate_fotogrammi(limit=4000)
+    self.remove_borders()
+    # if not no_set_names:
+    #   self.set_all_images_names()
+    # self.set_elements()
+    # self.create_all_images()
