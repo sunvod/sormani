@@ -448,15 +448,12 @@ class Page_pool(list):
     #   self._set_bobine_merge_images(group_files)
     for file in files:
       os.remove(file)
-
+    pass
   def _set_bobine_merge_images(self, couple_files):
-    try:
-      img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
-      img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
-      img3 = cv2.imread(couple_files[2], cv2.IMREAD_GRAYSCALE)
-      vis = np.concatenate((img1, img2, img3), axis=1)
-    except Exception as e:
-      pass
+    img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
+    img3 = cv2.imread(couple_files[2], cv2.IMREAD_GRAYSCALE)
+    vis = np.concatenate((img1, img2, img3), axis=1)
     n = (couple_files[0].split('_')[-1]).split('.')[0]
     file = os.path.join(self.filedir, 'merge_' + n + '.tif')
     cv2.imwrite(file, vis)
@@ -481,14 +478,24 @@ class Page_pool(list):
         ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
       else:
         thresh = img.copy()
-      # ret, thresh = cv2.threshold(img, 127, 255, 0)
+      # Questo riempie i buchi
+      fill_hole = 8
+      invert_fill_hole = False
+      if invert_fill_hole:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      else:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      kernel = np.ones((fill_hole, fill_hole), np.uint8)
+      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+      if invert_fill_hole:
+        thresh = 255 - thresh
       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
       bimg = img.copy()
       bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
       books = []
       for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        if w > 10000 and h > 5000:
+        if w > 10000 and h > 5000 and w < 15000:
           books.append((x, y, w, h))
       books.sort(key=_order)
       for book in books:
@@ -503,6 +510,7 @@ class Page_pool(list):
         n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
         file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
         cv2.imwrite(file_bimg, bimg)
+        # cv2.imwrite(file_bimg, thresh)
         j += 1
       for book in books:
         x = book[0]

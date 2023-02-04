@@ -43,7 +43,8 @@ class Sormani():
                exclude_ins=False,
                only_ins=False,
                notcheckimages=True,
-               thresholding=0):
+               thresholding=0,
+               no_rename=False):
     self.thresholding = thresholding
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
@@ -76,7 +77,8 @@ class Sormani():
                      force,
                      exclude_ins,
                      only_ins,
-                     notcheckimages)
+                     notcheckimages,
+                     no_rename)
     self.set_elements()
   def _init(self,
             newspaper_name,
@@ -91,7 +93,8 @@ class Sormani():
             force,
             exclude_ins,
             only_ins,
-            notcheckimages):
+            notcheckimages,
+            no_rename):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -109,10 +112,12 @@ class Sormani():
         new_root = os.path.join(new_root, self.add_zero(month))
         self.complete_root = new_root
         if day is not None:
-          self.complete_root = os.path.join(new_root, self.add_zero(day))
+          new_root = os.path.join(new_root, self.add_zero(day))
+          self.complete_root = new_root
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
-    self.rename_folder()
+    if not no_rename:
+      self.rename_folder()
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
@@ -191,12 +196,15 @@ class Sormani():
       roots = []
       if self.day is not None:
         for filedir, dirs, files in os.walk(root):
-          dirs.sort()
-          for dir in dirs:
-            n = dir.split(' ')[0]
-            if n.isdigit():
-              if int(n) == self.day:
-                roots.append(os.path.join(root, dir))
+          if not len(dirs):
+            roots.append(root)
+          else:
+            dirs.sort()
+            for dir in dirs:
+              n = dir.split(' ')[0]
+              if n.isdigit():
+                if int(n) == self.day:
+                  roots.append(os.path.join(root, dir))
       else:
         roots.append(root)
       roots.sort()
