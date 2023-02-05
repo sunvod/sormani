@@ -56,15 +56,11 @@ class Newspaper_crop_parameters():
                left,
                right,
                top,
-               bottom,
-               threshold = 220,
-               color = 255):
+               bottom):
     self.left = left
     self.right = right
     self.top = top
     self.bottom = bottom
-    self.threshold = threshold
-    self.color = color
 class Newspaper():
   @staticmethod
   def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
@@ -285,27 +281,19 @@ class Newspaper():
       top = None
       right = None
       bottom = None
-    limit = None
-    color = None
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,
-                                     bottom,
-                                     limit,
-                                     color)
+                                     bottom)
   def get_remove_borders_parameters(self, i, width, height):
     left = 0
     top = 0
     right = width
     bottom = height
-    limit = None
-    color = None
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,
-                                     bottom,
-                                     limit,
-                                     color)
+                                     bottom)
   def divide(self, img):
     image = Image.fromarray(img)
     width, height = image.size
@@ -773,14 +761,10 @@ class Scenario(Newspaper):
       top = o
       right = width - o
       bottom = height - o
-    threshold = None
-    color = None
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,
-                                     bottom,
-                                     threshold,
-                                     color)
+                                     bottom)
   def divide(self, img, verbose = False):
     def _divide(e):
       return e[0]
@@ -849,11 +833,9 @@ class La_Domenica_del_Corriere(Newspaper):
     self.contrast = 50
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (0, 0, w, 700)
+    whole = (w // 2 + 500, 200, w - 300, 800)
     return whole
   def set_n_pages(self, page_pool, n_pages):
-    l = n_pages
-    count_zero = 0
     for n_page, page in enumerate(page_pool):
       try:
         page.newspaper.n_page
@@ -865,30 +847,14 @@ class La_Domenica_del_Corriere(Newspaper):
       page.newspaper.n_page = n_page
 
   def get_remove_borders_parameters(self, i, width, height):
-    o = 700
-    if i == 0:
-      left = o * 2
-      top = o
-      right = width
-      bottom = height - o
-    elif i == 1:
-      left = 0
-      top = o
-      right = width - (o * 2)
-      bottom = height - o
-    else:
-      left = o * 1.2
-      top = o
-      right = width - o
-      bottom = height - o
-    threshold = None
-    color = None
+    left = 900
+    top = 800
+    right = width - 800
+    bottom = height - 900
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,
-                                     bottom,
-                                     threshold,
-                                     color)
+                                     bottom)
   def divide(self, img, verbose = False):
     def _divide(e):
       return e[0]
@@ -988,14 +954,10 @@ class Il_Mondo(Newspaper):
       top = None
       right = None
       bottom = None
-    threshold = None
-    color = None
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,
-                                     bottom,
-                                     threshold,
-                                     color)
+                                     bottom)
   def divide(self, img, verbose = False):
     def _divide(e):
       return e[0]

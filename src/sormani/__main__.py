@@ -7,10 +7,10 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline()
   # sormani.add_pdf_metadata()
 
-  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
-  sormani.set_bobine_merge_images()
+  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(2,32)])
+  # sormani.set_bobine_merge_images()
   sormani.set_bobine_select_images()
-  sormani.rotate_fotogrammi()
+  # sormani.rotate_fotogrammi(verbose=False)
   # sormani.remove_borders()
 
   # sormani = Sormani('La Domenica del Corriere', year=1900, months=2, days=None)
@@ -50,6 +50,7 @@ if __name__ == '__main__':
   # sormani.add_pdf_metadata()
   # sormani.convert_all_images()
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = False, save_head = False)
+  # sormani.get_crop(filedir=os.path.join(STORAGE_BASE, REPOSITORY), no_resize = False, force=True)
   # sormani.rename_pages_files(do_prediction=False)
   # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.check_page_numbers(save_images = True, model_path = 'best_model_SimpleCNN', assume_newspaper = True, newspaper_name = None)

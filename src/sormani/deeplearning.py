@@ -114,7 +114,7 @@ class CNN:
       name = name.lower().replace(' ', '_')
     else:
       name = ''
-    model, model_name = self.create_model_cnn(len(self.class_names), type = 'DenseNet201')
+    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     model.compile(
@@ -484,7 +484,7 @@ def force_to_X():
     for file in files:
       new_file = '_'.join(file.split('_')[:-1]) + '_X.jpg'
       os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
-def to_11_classes(name = 'all', source = None, resize = False):
+def to_n_classes(name = 'all', n = 11, source = None, resize = False):
   name = name.lower().replace(' ', '_')
   if source is None:
     sources = [os.path.join(STORAGE_BASE, REPOSITORY, name, 'sure', 'numbers'),
@@ -496,7 +496,7 @@ def to_11_classes(name = 'all', source = None, resize = False):
     sources = [source]
   else:
     sources = source
-  for i in range(10):
+  for i in range(n - 1):
     os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), str(i)), exist_ok=True)
   os.makedirs(os.path.join(os.path.join(STORAGE_DL, name), 'X'), exist_ok=True)
   for source in sources:
@@ -782,18 +782,18 @@ def change_ins_file_name():
 
 # set_GPUs()
 
-ns = 'Il Giorno'
+ns = 'La Domenica del Corriere'
 
-# cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 50)
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 100)
 
-count_tiff()
+# count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
 # rename_images_files(ns)
 
-# to_11_classes(ns, resize=True)
+# to_n_classes(ns, n=2, resize=True)
 
 # delete_name('Avvenire')
 

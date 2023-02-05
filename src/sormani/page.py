@@ -217,7 +217,18 @@ class Page:
       else:
         images.append((name, roi, perimeter))
   def get_boxes(self, image, level=200, no_resize=False):
+    def isgray(img):
+      if len(img.shape) < 3:
+        return True
+      if img.shape[2] == 1:
+        return True
+      r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+      if np.allclose(r, g) and np.allclose(r, b):
+        return True
+      return False
     img = self.change_contrast_PIL(image, level)
+    if isgray(img):
+      img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = self.change_contrast_cv2(img)
     parameters = self.newspaper.get_parameters()
     p = self.file_name.split('_')[-1][1:]
@@ -273,8 +284,8 @@ class Page:
     images = [(self.file_name + '_00000', bimg)]
     self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize)
     return images, img
-  def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True):
-    if self.isAlreadySeen():
+  def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True, force=False):
+    if self.isAlreadySeen() or force:
       image = Image.open(self.original_image)
       cropped = self.newspaper.crop_png(image)
       images, img = self.get_boxes(cropped, no_resize = no_resize)
@@ -287,6 +298,16 @@ class Page:
           image.save(os.path.join(filedir, img[0] + '.jpg'), format="JPEG")
         images = None
       return images
+    return None
+  def get_crop(self, no_resize = False, filedir = None, force=False):
+    if self.isAlreadySeen() or force:
+      image = Image.open(self.original_image)
+      cropped = self.newspaper.crop_png(image)
+      Path(filedir).mkdir(parents=True, exist_ok=True)
+      if not no_resize:
+        cropped = cropped.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
+      cropped.save(os.path.join(filedir, self.file_name + '.jpg'), format="JPEG", quality=20)
+      return image
     return None
   def get_head(self):
     if self.isAlreadySeen():
@@ -671,8 +692,9 @@ class Page:
     if self.write_borders:
       n = '00' + str(count_n) if count_n < 10 else '0' + str(count_n) if count_n < 100 else str(count_n)
       file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
+      file_thresh = os.path.join(self.filedir, 'fotogrammi_thresh_' + page_n + '_' + n + '.tif')
       cv2.imwrite(file_bimg, bimg)
-      # cv2.imwrite(file_bimg, thresh)
+      cv2.imwrite(file_thresh, thresh)
       count_n += 1
     global_file_list = []
     for book in books:
@@ -701,8 +723,35 @@ class Page:
       return result
     count = 0
     file = self.original_image
+    file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    ret, thresh = cv2.threshold(img, 127, 255, 0)
+    if self.threshold is not None:
+      ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
+    else:
+      thresh = img.copy()
+    # Questo riempie i buchi bianchi
+    fill_hole = 8
+    invert_fill_hole = False
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    # Questo riempie i buchi neri
+    fill_hole = 32
+    invert_fill_hole = True
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    if invert_fill_hole:
+      thresh = 255 - thresh
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
@@ -720,13 +769,14 @@ class Page:
     if rect is not None:
       angle = rect[2]
       if angle < 45:
-        angle = 90 - angle
-      if angle > 85:
-        bimg = rotate_image(bimg, angle - 90)
-        cv2.imwrite(file, bimg)
+        angle = 90 + angle
+      if angle > 85 and angle < 89.9:
+        img = rotate_image(img, angle - 90)
+        cv2.imwrite(file, img)
         count += 1
-      elif self.verbose:
-        cv2.imwrite(file, bimg)
+      if self.verbose:
+        cv2.imwrite(file_bing, bimg)
+        cv2.imwrite(file_thresh, thresh)
     return count
   def remove_borders(self):
     image = Image.open(self.original_image)

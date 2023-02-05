@@ -57,13 +57,23 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False):
     images = []
     if isinstance(pages, int):
       pages = [pages]
     for page in self:
       if pages is None or page.newspaper.n_page in pages:
-        image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir, save_head = save_head)
+        image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir, save_head = save_head, force=force)
+        if image is not None:
+          images.append(image)
+    return images
+  def get_crop(self, no_resize = False, filedir = None, pages = None, force=False):
+    images = []
+    if isinstance(pages, int):
+      pages = [pages]
+    for page in self:
+      if pages is None or page.newspaper.n_page in pages:
+        image = page.get_crop(no_resize=no_resize, filedir = filedir, force=force)
         if image is not None:
           images.append(image)
     return images
@@ -443,12 +453,16 @@ class Page_pool(list):
       _h = h
     return count
   def _set_bobine_select_images(self, page):
-    return page.set_bobine_select_images()
-  def rotate_fotogrammi(self, verbose = False, limit=4000):
+    try:
+      return page.set_bobine_select_images()
+    except:
+      return 0
+  def rotate_fotogrammi(self, verbose = False, limit=4000, threshold=180):
     count = 0
     for page in self:
       page.verbose = verbose
       page.limit = limit
+      page.threshold = threshold
     with Pool(processes=N_PROCESSES) as mp_pool:
       counts = mp_pool.map(self._rotate_fotogrammi, self)
     for i in counts:
@@ -456,6 +470,9 @@ class Page_pool(list):
     return count
 
   def _rotate_fotogrammi(self, page):
-    return page.rotate_fotogrammi()
+    try:
+      return page.rotate_fotogrammi()
+    except:
+      return 0
 
 

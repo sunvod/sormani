@@ -450,7 +450,7 @@ class Sormani():
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False):
     if not len(self.elements):
       return
     if filedir is not None:
@@ -458,13 +458,32 @@ class Sormani():
     start_time = time.time()
     print(
       f'Start extract pages numbers of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    count = 0
     selfforce = self.force
     self.force = True
     images = []
     for page_pool in self:
       if not page_pool.isins:
-        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head)
+        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head, force=force)
+        if image is not None and len(image):
+          images.append(image)
+        print('.', end='')
+    print()
+    self.force = selfforce
+    return images
+  def get_crop(self, no_resize = False, filedir = None, pages = None, force=False):
+    if not len(self.elements):
+      return
+    if filedir is not None:
+      filedir += '_' + self.newspaper_name.lower().replace(' ', '_')
+    start_time = time.time()
+    print(
+      f'Start extract cropped images of \'{self.newspaper_name}\' ({self.dir_name}) at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    selfforce = self.force
+    self.force = True
+    images = []
+    for page_pool in self:
+      if not page_pool.isins:
+        image = page_pool.get_crop(no_resize = no_resize, filedir = filedir, pages = pages, force=force)
         if image is not None and len(image):
           images.append(image)
         print('.', end='')
