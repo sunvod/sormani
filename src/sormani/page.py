@@ -8,6 +8,10 @@ import datetime
 import time
 
 from PyPDF2 import PdfFileMerger
+
+from multiprocessing import Pool, Manager
+
+from src.sormani.page_pool import global_file_list, global_lock
 from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
 
@@ -21,17 +25,6 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageOps, ImageTk
 import tkinter as tk
 from tkinter import Label, Button, RAISED
-
-from tensorflow import keras
-from keras.callbacks import ModelCheckpoint
-from keras.applications.inception_v3 import InceptionV3
-from keras.layers import Dense, GlobalAveragePooling2D
-from keras.models import Model
-from keras.datasets import mnist
-
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.efficientnet_v2 import EfficientNetV2M, EfficientNetV2L
-from keras.applications.convnext import ConvNeXtXLarge
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -621,6 +614,82 @@ class Page:
         image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
       image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
 
+  def set_bobine_select_images(self):
+    def _order(e):
+      return e[0]
+
+    j = 1
+    file = self.original_image
+    page_n = '00' + str(self.newspaper.n_page) if self.newspaper.n_page < 10 else '0' + str(
+      self.newspaper.n_page) if self.newspaper.n_page < 100 else str(self.newspaper.n_page)
+    if Path(self.original_image).stem[:5] != 'merge':
+      return
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    if self.threshold is not None:
+      ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
+    else:
+      thresh = img.copy()
+    # Questo riempie i buchi bianchi
+    fill_hole = 8
+    invert_fill_hole = False
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    # Questo riempie i buchi neri
+    fill_hole = 32
+    invert_fill_hole = True
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    books = []
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > 10000 and h > 5000 and w < 15000:
+        books.append((x, y, w, h))
+    books.sort(key=_order)
+    for book in books:
+      x = book[0]
+      y = book[1]
+      w = book[2]
+      h = book[3]
+      _, _, weight, _ = cv2.boundingRect(img)
+      if x != 0 and x + w != weight:
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+    if self.write_borders:
+      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
+      cv2.imwrite(file_bimg, bimg)
+      # cv2.imwrite(file_bimg, thresh)
+      j += 1
+    for book in books:
+      x = book[0]
+      y = book[1]
+      w = book[2]
+      h = book[3]
+      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      file2 = os.path.join(self.filedir, 'fotogrammi_' + page_n + '_' + n + '.tif')
+      _, _, weight, _ = cv2.boundingRect(img)
+      if x != 0 and x + w != weight:
+        roi = img[y:y + h, x:x + w]
+        cv2.imwrite(file2, roi)
+        with global_lock.get_lock():
+          global_file_list.append((file2, x, y, w, h))
+        j += 1
+    if self.remove_merge:
+      os.remove(file)
 
 
 

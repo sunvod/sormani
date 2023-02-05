@@ -743,31 +743,18 @@ class Scenario(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
-  def get_crop_parameters(self, i, width, height):
-    o = 300
-    if i == 0:
-      left = 0
-      top = 0
-      right = width // 2 + (o // 4)
-      bottom = height
-    elif i == 1:
-      left = width // 2 + 200
-      top = 0
-      right = width
-      bottom = height
-    else:
-      left = None
-      top = None
-      right = None
-      bottom = None
-    limit = 210
-    color = 255
-    return Newspaper_crop_parameters(left,
-                                     right,
-                                     top,
-                                     bottom,
-                                     limit,
-                                     color)
+  def set_n_pages(self, page_pool, n_pages):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      try:
+        page.newspaper.n_page
+        continue
+      except:
+        pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
 
   def get_remove_borders_parameters(self, i, width, height):
     o = 400
@@ -864,31 +851,18 @@ class La_Domenica_del_Corriere(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
-  def get_crop_parameters(self, i, width, height):
-    o = 300
-    if i == 0:
-      left = 0
-      top = 0
-      right = width // 2 + (o // 4)
-      bottom = height
-    elif i == 1:
-      left = width // 2 + 200
-      top = 0
-      right = width
-      bottom = height
-    else:
-      left = None
-      top = None
-      right = None
-      bottom = None
-    limit = 210
-    color = 255
-    return Newspaper_crop_parameters(left,
-                                     right,
-                                     top,
-                                     bottom,
-                                     limit,
-                                     color)
+  def set_n_pages(self, page_pool, n_pages):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      try:
+        page.newspaper.n_page
+        continue
+      except:
+        pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
 
   def get_remove_borders_parameters(self, i, width, height):
     o = 700
@@ -985,32 +959,18 @@ class Il_Mondo(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
-  def get_crop_parameters(self, i, width, height):
-    o = 200
-    if i == 0:
-      left = 0
-      top = 0
-      right = width // 2 + (o // 4)
-      bottom = height
-    elif i == 1:
-      left = width // 2 + 200
-      top = 0
-      right = width
-      bottom = height
-    else:
-      left = (o // 2)
-      top = o
-      right = width + (o // 2)
-      bottom = height - o
-    limit = 210
-    color = 255
-    return Newspaper_crop_parameters(left,
-                                     right,
-                                     top,
-                                     bottom,
-                                     limit,
-                                     color)
-
+  def set_n_pages(self, page_pool, n_pages):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      try:
+        page.newspaper.n_page
+        continue
+      except:
+        pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
   def get_remove_borders_parameters(self, i, width, height):
     o = 200
     if i == 0:

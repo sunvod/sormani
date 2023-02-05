@@ -8,7 +8,7 @@ import datetime
 import cv2
 import numpy as np
 
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 from src.sormani.system import *
 import matplotlib.pyplot as plt
 
@@ -17,6 +17,8 @@ warnings.filterwarnings("ignore")
 
 # global_count = multiprocessing.Value('I', 0)
 global_count_contrast = multiprocessing.Value('I', 0)
+global_file_list = Manager().list()
+global_lock = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
   def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0):
@@ -442,7 +444,7 @@ class Page_pool(list):
       groups_files.append((file1, file2, file))
       file1 = file2
       file2 = file
-    with Pool(processes=N_PROCESSES-4) as mp_pool:
+    with Pool(processes=N_PROCESSES) as mp_pool:
       mp_pool.map(self._set_bobine_merge_images, groups_files)
     # for group_files in groups_files:
     #   self._set_bobine_merge_images(group_files)
@@ -459,128 +461,102 @@ class Page_pool(list):
     cv2.imwrite(file, vis)
 
   def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold=None):
-    def _order(e):
-      return e[0]
-    files = []
     for page in self:
-      if Path(page.original_image).stem[:5] == 'merge':
-        files.append(page.original_image)
-    files.sort()
-    j = 1
+      page.remove_merge = remove_merge
+      page.write_borders = write_borders
+      page.threshold = threshold
+      page.filedir = self.filedir
+    # for page in self:
+    #   self._set_bobine_select_images(page)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      mp_pool.map(self._set_bobine_select_images, self)
     _w = None
     _h = None
-    for page in self:
-      file = page.original_image
-      if Path(page.original_image).stem[:5] != 'merge':
-        continue
-      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      if threshold is not None:
-        ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
-      else:
-        thresh = img.copy()
-      # Questo riempie i buchi
-      fill_hole = 8
-      invert_fill_hole = False
-      if invert_fill_hole:
-        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-      else:
-        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-      kernel = np.ones((fill_hole, fill_hole), np.uint8)
-      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-      if invert_fill_hole:
-        thresh = 255 - thresh
-      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-      bimg = img.copy()
-      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-      books = []
-      for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        if w > 10000 and h > 5000 and w < 15000:
-          books.append((x, y, w, h))
-      books.sort(key=_order)
-      for book in books:
-        x = book[0]
-        y = book[1]
-        w = book[2]
-        h = book[3]
-        _, _, weight, _ = cv2.boundingRect(img)
-        if x != 0 and x + w != weight:
-          cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-      if write_borders:
-        n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-        file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
-        cv2.imwrite(file_bimg, bimg)
-        # cv2.imwrite(file_bimg, thresh)
-        j += 1
-      for book in books:
-        x = book[0]
-        y = book[1]
-        w = book[2]
-        h = book[3]
-        n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-        file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
-        if _w is not None and _w == w and _h == h:
-          continue
-        _, _, weight, _ = cv2.boundingRect(img)
-        if x != 0 and x + w != weight:
-          roi = img[y:y + h, x:x + w]
-          cv2.imwrite(file2, roi)
-          _w = w
-          _h = h
-          j += 1
-      # if len(books) > 1:
-      #   couple_books = []
-      #   book1 = None
-      #   for i, book in enumerate(books):
-      #     if book1 is None:
-      #       book1 = book
-      #       continue
-      #     couple_books.append((book1, book))
-      #     book1 = book
-      #     if i == len(books) - 1:
-      #       couple_books.append((book, None))
-      #       # break
-      #   books = []
-      #   bw = 0
-      #   for book1, book2 in couple_books:
-      #     if book2 is not None and abs(book1[0] + book1[2] - book2[0]) < 100:
-      #       _x = book1[0]
-      #       _y = book1[1]
-      #       _w = book1[2] + book2[2] + book2[0] - (book1[0] + book1[2])
-      #       _h = book1[3] + book2[3] + book2[1] - (book1[1] + book1[3])
-      #       books.append((_x, _y, _w, _h))
-      #       if _w > bw:
-      #         bw = _w
-      #     else:
-      #       books.append(book1)
-      #       if book1[2] > bw:
-      #         bw = book1[2]
-      #   for x, y, w, h in books:
-      #     if w == bw:
-      #       cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-      #       break
-      # elif len(books) == 1:
-      #   book = books[0]
-      #   x = book[0]
-      #   y = book[1]
-      #   w = book[2]
-      #   h = book[3]
-      #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-      # else:
-      #   continue
-      # n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-      # if not remove_merge:
-      #   file_bimg = os.path.join(self.filedir, 'fotogrammi_' + n + '_bing.tif')
-      #   cv2.imwrite(file_bimg, bimg)
-      # file2 = os.path.join(self.filedir, 'fotogrammi_' + n + '.tif')
-      # _x, _y, _w, _h = cv2.boundingRect(img)
-      # if x != 0 and x + w != _w:
-      #   roi = img[y:y + h, x:x + w]
-      #   cv2.imwrite(file2, roi)
-      # j += 1
-    if remove_merge:
-      for file in files:
+    file_list = []
+    for file, x, y, w, h in global_file_list:
+      file_list.append((file, x, y, w, h))
+    file_list.sort()
+    for file, x, y, w, h in file_list:
+      if _w == w and _h == h:
         os.remove(file)
+      _w = w
+      _h = h
+
+  def _set_bobine_select_images(self, page):
+    page.set_bobine_select_images()
+    # def _order(e):
+    #   return e[0]
+    # j = 1
+    # file = page.original_image
+    # page_n = '00' + str(page.newspaper.n_page) if page.newspaper.n_page < 10 else '0' + str(page.newspaper.n_page) if page.newspaper.n_page < 100 else str(page.newspaper.n_page)
+    # if Path(page.original_image).stem[:5] != 'merge':
+    #   return
+    # img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    # if page.threshold is not None:
+    #   ret, thresh = cv2.threshold(img, page.threshold, 255, cv2.THRESH_BINARY)
+    # else:
+    #   thresh = img.copy()
+    # # Questo riempie i buchi bianchi
+    # fill_hole = 8
+    # invert_fill_hole = False
+    # if invert_fill_hole:
+    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # else:
+    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    # if invert_fill_hole:
+    #   thresh = 255 - thresh
+    # # Questo riempie i buchi neri
+    # fill_hole = 32
+    # invert_fill_hole = True
+    # if invert_fill_hole:
+    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    # else:
+    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    # if invert_fill_hole:
+    #   thresh = 255 - thresh
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # bimg = img.copy()
+    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    # books = []
+    # for contour in contours:
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   if w > 10000 and h > 5000 and w < 15000:
+    #     books.append((x, y, w, h))
+    # books.sort(key=_order)
+    # for book in books:
+    #   x = book[0]
+    #   y = book[1]
+    #   w = book[2]
+    #   h = book[3]
+    #   _, _, weight, _ = cv2.boundingRect(img)
+    #   if x != 0 and x + w != weight:
+    #     cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
+    # if page.write_borders:
+    #   n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+    #   file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
+    #   cv2.imwrite(file_bimg, bimg)
+    #   # cv2.imwrite(file_bimg, thresh)
+    #   j += 1
+    # for book in books:
+    #   x = book[0]
+    #   y = book[1]
+    #   w = book[2]
+    #   h = book[3]
+    #   n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+    #   file2 = os.path.join(self.filedir, 'fotogrammi_' + page_n + '_' + n + '.tif')
+    #   _, _, weight, _ = cv2.boundingRect(img)
+    #   if x != 0 and x + w != weight:
+    #     roi = img[y:y + h, x:x + w]
+    #     cv2.imwrite(file2, roi)
+    #     _w = w
+    #     _h = h
+    #     j += 1
+    # if page.remove_merge:
+    #   os.remove(file)
   def rotate_fotogrammi(self, verbose = False, limit=4000):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)

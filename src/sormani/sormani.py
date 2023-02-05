@@ -222,7 +222,11 @@ class Sormani():
       filedirs.sort()
       for filedir, files in filedirs:
         if self.notcheckimages or self.check_if_image(filedir, files):
-          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, self.new_root))
+          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name),
+                                            self.newspaper_name,
+                                            filedir,
+                                            files,
+                                            self.new_root))
   def check_if_image(self, filedir, files):
     for file_name in files:
       try:

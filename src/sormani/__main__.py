@@ -7,11 +7,14 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline()
   # sormani.add_pdf_metadata()
 
-  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(11,21)])
-  sormani.set_bobine_merge_images()
-  # sormani.set_bobine_select_images(remove_merge=False, write_borders=True, threshold=3)
+  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
+  # sormani.set_bobine_merge_images()
+  sormani.set_bobine_select_images(remove_merge=True, write_borders=False, threshold=5)
   # sormani.rotate_fotogrammi(verbose=False, limit=4000)
   # sormani.remove_borders()
+
+  # sormani = Sormani('La Domenica del Corriere', year=1900, months=2, days=None)
+  # sormani.set_bobine_merge_images()
 
   # sormani.set_bobine_merge_images()
   # sormani.change_contrast(contrast=-5)
