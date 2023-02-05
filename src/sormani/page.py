@@ -11,7 +11,6 @@ from PyPDF2 import PdfFileMerger
 
 from multiprocessing import Pool, Manager
 
-from src.sormani.page_pool import global_file_list, global_lock
 from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
 
@@ -618,7 +617,8 @@ class Page:
     def _order(e):
       return e[0]
 
-    j = 1
+    count_n = 1
+    count = 0
     file = self.original_image
     page_n = '00' + str(self.newspaper.n_page) if self.newspaper.n_page < 10 else '0' + str(
       self.newspaper.n_page) if self.newspaper.n_page < 100 else str(self.newspaper.n_page)
@@ -669,27 +669,83 @@ class Page:
       if x != 0 and x + w != weight:
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
     if self.write_borders:
-      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      n = '00' + str(count_n) if count_n < 10 else '0' + str(count_n) if count_n < 100 else str(count_n)
       file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
       cv2.imwrite(file_bimg, bimg)
       # cv2.imwrite(file_bimg, thresh)
-      j += 1
+      count_n += 1
+    global_file_list = []
     for book in books:
       x = book[0]
       y = book[1]
       w = book[2]
       h = book[3]
-      n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
+      n = '00' + str(count_n) if count_n < 10 else '0' + str(count_n) if count_n < 100 else str(count_n)
       file2 = os.path.join(self.filedir, 'fotogrammi_' + page_n + '_' + n + '.tif')
       _, _, weight, _ = cv2.boundingRect(img)
       if x != 0 and x + w != weight:
         roi = img[y:y + h, x:x + w]
         cv2.imwrite(file2, roi)
-        with global_lock.get_lock():
-          global_file_list.append((file2, x, y, w, h))
-        j += 1
+        global_file_list.append((file2, x, y, w, h))
+        count_n += 1
+        count += 1
     if self.remove_merge:
       os.remove(file)
+    return (global_file_list, count)
+
+  def rotate_fotogrammi(self):
+    def rotate_image(image, angle):
+      image_center = tuple(np.array(image.shape[1::-1]) / 2)
+      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
+      return result
+    count = 0
+    file = self.original_image
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    ret, thresh = cv2.threshold(img, 127, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    books = []
+    rect = None
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > self.limit and h > self.limit:
+         books.append(contour)
+    for contour in books:
+      rect = cv2.minAreaRect(contour)
+      if self.verbose:
+        box = np.int0(cv2.boxPoints(rect))
+        cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
+    if rect is not None:
+      angle = rect[2]
+      if angle < 45:
+        angle = 90 - angle
+      if angle > 85:
+        bimg = rotate_image(bimg, angle - 90)
+        cv2.imwrite(file, bimg)
+        count += 1
+      elif self.verbose:
+        cv2.imwrite(file, bimg)
+    return count
+  def remove_borders(self):
+    image = Image.open(self.original_image)
+    width, height = image.size
+    parameters = self.newspaper.get_remove_borders_parameters(2, width, height)
+    img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
+    img.save(self.original_image)
+    return 1
+  def divide_image(self):
+    file_name_no_ext = Path(self.original_image).stem
+    file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
+    ext = Path(self.original_image).suffix
+    img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
+    image1, image2 = self.newspaper.divide(img)
+    image1.save(file_path_no_ext + '_1' + ext)
+    image2.save(file_path_no_ext + '_2' + ext)
+    os.remove(self.original_image)
+    return 1
+
 
 
 

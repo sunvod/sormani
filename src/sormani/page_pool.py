@@ -17,8 +17,6 @@ warnings.filterwarnings("ignore")
 
 # global_count = multiprocessing.Value('I', 0)
 global_count_contrast = multiprocessing.Value('I', 0)
-global_file_list = Manager().list()
-global_lock = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
   def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0):
@@ -227,55 +225,17 @@ class Page_pool(list):
           os.rename(page.original_image, file_path_no_ext + '_0' + ext)
         continue
       pages.append(page)
-    # with Pool(processes=N_PROCESSES) as mp_pool:
-    #   mp_pool.map(self._divide_image, pages)
-    for page in pages:
-      self._divide_image(page)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._divide_image, pages)
+    return sum(result)
   def _divide_image(self, page):
-    i = 0
-    try:
-      file_name_no_ext = Path(page.original_image).stem
-      file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
-      ext = Path(page.original_image).suffix
-      img = cv2.imread(page.original_image, cv2.IMREAD_GRAYSCALE)
-      image1, image2 = page.newspaper.divide(img)
-      image1.save(file_path_no_ext + '_1' + ext)
-      image2.save(file_path_no_ext + '_2' + ext)
-      os.remove(page.original_image)
-      i += 1
-    except Exception as e:
-      with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
-        sormani_log.write('No valid Image: ' + page.original_image + '\n')
-      print(f'Not a valid image: {page.original_image}')
-    if i:
-      print('.', end='')
-      with global_count.get_lock():
-        global_count.value += i
-        if global_count.value % 100 == 0:
-          print()
+    return page.divide_image()
   def remove_borders(self):
     with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self._remove_borders, self)
+      result = mp_pool.map(self._remove_borders, self)
+    return sum(result)
   def _remove_borders(self, page):
-    i = 0
-    try:
-      image = Image.open(page.original_image)
-      width, height = image.size
-      # lr = 0 if file_name_no_ext.split('_')[-1] == '1' else 1
-      parameters = page.newspaper.get_remove_borders_parameters(2, width, height)
-      img = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-      img.save(page.original_image)
-      i += 1
-    except Exception as e:
-      with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
-        sormani_log.write('No valid Image: ' + page.original_image + '\n')
-      print(f'Not a valid image: {page.original_image}')
-    if i:
-      print('.', end='')
-      with global_count.get_lock():
-        global_count.value += i
-        if global_count.value % 100 == 0:
-          print()
+    return page.remove_borders()
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
@@ -445,12 +405,10 @@ class Page_pool(list):
       file1 = file2
       file2 = file
     with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self._set_bobine_merge_images, groups_files)
-    # for group_files in groups_files:
-    #   self._set_bobine_merge_images(group_files)
+      result = mp_pool.map(self._set_bobine_merge_images, groups_files)
     for file in files:
       os.remove(file)
-    pass
+    return len(files)
   def _set_bobine_merge_images(self, couple_files):
     img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
@@ -459,137 +417,45 @@ class Page_pool(list):
     n = (couple_files[0].split('_')[-1]).split('.')[0]
     file = os.path.join(self.filedir, 'merge_' + n + '.tif')
     cv2.imwrite(file, vis)
-
+    return 1
   def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold=None):
     for page in self:
       page.remove_merge = remove_merge
       page.write_borders = write_borders
       page.threshold = threshold
       page.filedir = self.filedir
-    # for page in self:
-    #   self._set_bobine_select_images(page)
     with Pool(processes=N_PROCESSES) as mp_pool:
-      mp_pool.map(self._set_bobine_select_images, self)
+      result = mp_pool.map(self._set_bobine_select_images, self)
     _w = None
     _h = None
     file_list = []
-    for file, x, y, w, h in global_file_list:
-      file_list.append((file, x, y, w, h))
+    count = 0
+    for elements in result:
+      count += elements[1]
+      for element in elements[0]:
+        file_list.append(element)
     file_list.sort()
     for file, x, y, w, h in file_list:
       if _w == w and _h == h:
         os.remove(file)
+        count -= 1
       _w = w
       _h = h
-
+    return count
   def _set_bobine_select_images(self, page):
-    page.set_bobine_select_images()
-    # def _order(e):
-    #   return e[0]
-    # j = 1
-    # file = page.original_image
-    # page_n = '00' + str(page.newspaper.n_page) if page.newspaper.n_page < 10 else '0' + str(page.newspaper.n_page) if page.newspaper.n_page < 100 else str(page.newspaper.n_page)
-    # if Path(page.original_image).stem[:5] != 'merge':
-    #   return
-    # img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    # if page.threshold is not None:
-    #   ret, thresh = cv2.threshold(img, page.threshold, 255, cv2.THRESH_BINARY)
-    # else:
-    #   thresh = img.copy()
-    # # Questo riempie i buchi bianchi
-    # fill_hole = 8
-    # invert_fill_hole = False
-    # if invert_fill_hole:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    # else:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-    # if invert_fill_hole:
-    #   thresh = 255 - thresh
-    # # Questo riempie i buchi neri
-    # fill_hole = 32
-    # invert_fill_hole = True
-    # if invert_fill_hole:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    # else:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-    # if invert_fill_hole:
-    #   thresh = 255 - thresh
-    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # bimg = img.copy()
-    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    # books = []
-    # for contour in contours:
-    #   x, y, w, h = cv2.boundingRect(contour)
-    #   if w > 10000 and h > 5000 and w < 15000:
-    #     books.append((x, y, w, h))
-    # books.sort(key=_order)
-    # for book in books:
-    #   x = book[0]
-    #   y = book[1]
-    #   w = book[2]
-    #   h = book[3]
-    #   _, _, weight, _ = cv2.boundingRect(img)
-    #   if x != 0 and x + w != weight:
-    #     cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-    # if page.write_borders:
-    #   n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-    #   file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
-    #   cv2.imwrite(file_bimg, bimg)
-    #   # cv2.imwrite(file_bimg, thresh)
-    #   j += 1
-    # for book in books:
-    #   x = book[0]
-    #   y = book[1]
-    #   w = book[2]
-    #   h = book[3]
-    #   n = '00' + str(j) if j < 10 else '0' + str(j) if j < 100 else str(j)
-    #   file2 = os.path.join(self.filedir, 'fotogrammi_' + page_n + '_' + n + '.tif')
-    #   _, _, weight, _ = cv2.boundingRect(img)
-    #   if x != 0 and x + w != weight:
-    #     roi = img[y:y + h, x:x + w]
-    #     cv2.imwrite(file2, roi)
-    #     _w = w
-    #     _h = h
-    #     j += 1
-    # if page.remove_merge:
-    #   os.remove(file)
+    return page.set_bobine_select_images()
   def rotate_fotogrammi(self, verbose = False, limit=4000):
-    def rotate_image(image, angle):
-      image_center = tuple(np.array(image.shape[1::-1]) / 2)
-      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-      return result
-    count = 1
+    count = 0
     for page in self:
-      file = page.original_image
-      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      ret, thresh = cv2.threshold(img, 127, 255, 0)
-      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-      bimg = img.copy()
-      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-      books = []
-      rect = None
-      for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)
-        if w > limit and h > limit:
-          books.append(contour)
-      for contour in books:
-        rect = cv2.minAreaRect(contour)
-        if verbose:
-          box = np.int0(cv2.boxPoints(rect))
-          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-      if rect is not None:
-        angle = rect[2]
-        if angle < 45:
-          angle = 90 - angle
-        if angle > 85:
-          bimg = rotate_image(bimg, angle - 90)
-          cv2.imwrite(file, bimg)
-          count += 1
-        elif verbose:
-          cv2.imwrite(file, bimg)
+      page.verbose = verbose
+      page.limit = limit
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      counts = mp_pool.map(self._rotate_fotogrammi, self)
+    for i in counts:
+      count += i
+    return count
+
+  def _rotate_fotogrammi(self, page):
+    return page.rotate_fotogrammi()
+
 

@@ -342,14 +342,11 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(f'Starting remove borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
-    #   mp_pool.map(self.divide_image, self.elements)
     for page_pool in self:
-      page_pool.remove_borders()
-    if global_count.value:
-      print()
+      count = page_pool.remove_borders()
+    if count:
       print(
-        f'Removing borders of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Removing borders of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
@@ -641,24 +638,27 @@ class Sormani():
     self.create_all_images()
   def set_bobine_merge_images(self):
     start_time = time.time()
-    print(f'Starting merging images at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    print(f'Starting merging images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
     for page_pool in self:
-      page_pool.set_bobine_merge_images()
+      count += page_pool.set_bobine_merge_images()
     self.set_elements()
-    print(f'Merging ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold = None):
+    print(f'Merging {count} frames ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold = 5):
     start_time = time.time()
-    print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    print(f'Extracting frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
     for page_pool in self:
-      page_pool.set_bobine_select_images(remove_merge, write_borders, threshold)
+      count += page_pool.set_bobine_select_images(remove_merge, write_borders, threshold)
     self.set_elements()
-    print(f'Extracting frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_fotogrammi(self, verbose=False, limit=4000):
+    print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  def rotate_fotogrammi(self, verbose=False, limit=5000):
     start_time = time.time()
-    print(f'Start Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    print(f'Start Rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
     for page_pool in self:
-      page_pool.rotate_fotogrammi(verbose, limit)
-    print(f'End Rotate frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      count += page_pool.rotate_fotogrammi(verbose, limit)
+    print(f'End Rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_bobine_pipeline(self, no_set_names = False):
     self.set_bobine_merge_images()
     self.set_bobine_select_images(threshold=5)
