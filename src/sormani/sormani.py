@@ -315,6 +315,32 @@ class Sormani():
     for page_pool in self:
       page_pool.change_threshold(limit=limit, color=color, inversion=inversion)
     self.force = selfforce
+  def change_colors(self, limit=None, color=255, inversion=False):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    global global_count_contrast
+    global_count_contrast.value = 0
+    self.limit = limit
+    self.color = color
+    self.inversion = inversion
+    self.force = True
+    for page_pool in self:
+      page_pool.change_colors(limit=limit, color=color, inversion=inversion)
+    self.force = selfforce
+  def select_images(self, limit=None, color=255, inversion=False):
+    if not len(self.elements):
+      return
+    selfforce = self.force
+    global global_count_contrast
+    global_count_contrast.value = 0
+    self.limit = limit
+    self.color = color
+    self.inversion = inversion
+    self.force = True
+    for page_pool in self:
+      page_pool.select_images(limit=limit, color=color, inversion=inversion)
+    self.force = selfforce
   def divide_image(self, no_rename = False, is_bobina = False):
     if not len(self.elements):
       return
@@ -678,6 +704,13 @@ class Sormani():
     for page_pool in self:
       count += page_pool.rotate_fotogrammi(verbose, limit)
     print(f'End Rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):
+    start_time = time.time()
+    print(f'Start set fotogrammi folders of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
+    for page_pool in self:
+      count += page_pool.set_fotogrammi_folders(model_path)
+    print(f'Set  {count} fotogrammi folders at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_bobine_pipeline(self, no_set_names = False):
     self.set_bobine_merge_images()
     self.set_bobine_select_images(threshold=5)

@@ -108,19 +108,70 @@ class Page:
       return 128 + factor * (c - 128)
     return img.point(contrast)
   def change_threshold(self):
-    if self.force or not self.isAlreadySeen():
-      try:
-        img = cv2.imread(self.original_image)
-        if self.inversion:
-          ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY_INV)
-        else:
-          ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
-          # ret, img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 6)
-        cv2.imwrite(self.original_image, img)
-        return 1
-      except Exception as e:
-        pass
-    return 0
+      img = cv2.imread(self.original_image)
+      if self.inversion:
+        ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY_INV)
+      else:
+        ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
+      cv2.imwrite(self.original_image, img)
+      return 1
+  def change_colors(self):
+      img = cv2.imread(self.original_image)
+      if self.inversion:
+        img[img <= int(self.limit, 16)] = 255 - self.color
+      else:
+        img[img >= int(self.limit, 16)] = self.color
+      cv2.imwrite(self.original_image, img)
+      return 1
+  def select_images(self):
+      count = 0
+      file = self.original_image
+      file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+      file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      # img[img >= int("c0", 16)] = self.color
+      ret, thresh = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)
+      # Questo riempie i buchi neri
+      fill_hole = 4
+      invert_fill_hole = True
+      if invert_fill_hole:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      else:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      kernel = np.ones((fill_hole, fill_hole), np.uint8)
+      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
+      if invert_fill_hole:
+        thresh = 255 - thresh
+      # Questo riempie i buchi bianchi
+      fill_hole = 8
+      invert_fill_hole = False
+      if invert_fill_hole:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      else:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      kernel = np.ones((fill_hole, fill_hole), np.uint8)
+      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
+      if invert_fill_hole:
+        thresh = 255 - thresh
+      contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+      bimg = img.copy()
+      # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      white_bimg = 255 - np.zeros_like(bimg)
+      for i, contour in enumerate(contours):
+        x, y, w, h = cv2.boundingRect(contour)
+        if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 3:
+          cv2.rectangle(bimg,(x, y), (x + w, y + h), 0, -1)
+          cv2.rectangle(white_bimg, (x, y), (x + w, y + h), 0, -1)
+          # cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+          # cv2.drawContours(bimg, contour, 0, (255, 255, 255), -1)
+          count += 1
+      bimg[bimg >= int("a0", 16)] = 255
+      bimg[bimg < int("a0", 16)] = 0
+      bimg[white_bimg == 0] = img[white_bimg == 0]
+      cv2.imwrite(file_bing, bimg)
+      cv2.imwrite(file_thresh, white_bimg)
+      # print(file_bing, ' ', file_thresh)
+      return count
   def save_pages_images(self, storage):
     if self.isAlreadySeen():
       pos = self.newspaper.get_whole_page_location()
@@ -134,10 +185,8 @@ class Page:
       return True
     return False
   def convert_from_cv2_to_image(self, img: np.ndarray) -> Image:
-    # return Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     return Image.fromarray(img)
   def convert_from_image_to_cv2(self, img: Image) -> np.ndarray:
-    # return cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
     return np.asarray(img)
   def _change_contrast_PIL(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
@@ -299,16 +348,14 @@ class Page:
         images = None
       return images
     return None
-  def get_crop(self, no_resize = False, filedir = None, force=False):
-    if self.isAlreadySeen() or force:
-      image = Image.open(self.original_image)
-      cropped = self.newspaper.crop_png(image)
-      Path(filedir).mkdir(parents=True, exist_ok=True)
-      if not no_resize:
-        cropped = cropped.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
-      cropped.save(os.path.join(filedir, self.file_name + '.jpg'), format="JPEG", quality=20)
-      return image
-    return None
+  def get_crop(self):
+    image = Image.open(self.original_image)
+    cropped = self.newspaper.crop_png(image)
+    Path(self.filedir).mkdir(parents=True, exist_ok=True)
+    if not self.no_resize:
+      cropped = cropped.resize(NUMBER_IMAGE_SIZE, Image.Resampling.LANCZOS)
+    cropped.save(os.path.join(self.filedir, self.file_name + '.jpg'), format="JPEG", quality=20)
+    return image
   def get_head(self):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
@@ -770,7 +817,7 @@ class Page:
       angle = rect[2]
       if angle < 45:
         angle = 90 + angle
-      if angle > 85 and angle < 89.9:
+      if angle > 85 and (angle < 89.9 or angle > 90.1):
         img = rotate_image(img, angle - 90)
         cv2.imwrite(file, img)
         count += 1

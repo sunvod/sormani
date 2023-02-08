@@ -9,8 +9,9 @@ import re
 from PIL import Image, ImageOps
 import pytesseract
 from pathlib import Path
+import tensorflow as tf
 
-from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL
+from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL, STORAGE_BASE
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -50,6 +51,7 @@ class Newspaper_parameters():
     self.exclude_colors = exclude_colors
     self.can_be_internal = can_be_internal
     self.max_distance = max_distance
+    self.model = None
 
 class Newspaper_crop_parameters():
   def __init__(self,
@@ -302,7 +304,8 @@ class Newspaper():
     parameters = self.get_crop_parameters(1, width, height)
     image2 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
     return image1, image2
-
+  def is_first_page(self, model):
+    return False
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 150
@@ -833,7 +836,7 @@ class La_Domenica_del_Corriere(Newspaper):
     self.contrast = 50
   def get_whole_page_location(self, image):
     w, h = image.size
-    whole = (w // 2 + 500, 200, w - 300, 800)
+    whole = ((w + 100) // 2, 200 + 800, w - 800, 1700)
     return whole
   def set_n_pages(self, page_pool, n_pages):
     for n_page, page in enumerate(page_pool):
@@ -847,7 +850,7 @@ class La_Domenica_del_Corriere(Newspaper):
       page.newspaper.n_page = n_page
 
   def get_remove_borders_parameters(self, i, width, height):
-    left = 900
+    left = 950
     top = 800
     right = width - 800
     bottom = height - 900
@@ -855,6 +858,21 @@ class La_Domenica_del_Corriere(Newspaper):
                                      right,
                                      top,
                                      bottom)
+  def is_first_page(self, model):
+    if model is None:
+      return False
+    dataset = []
+    image = Image.open(self.original_image)
+    cropped = self.newspaper.crop_png(image)
+    img = cv2.cvtColor(cropped, cv2.COLOR_GRAY2RGB)
+    img = Image.fromarray(img)
+    img = tf.image.convert_image_dtype(img, dtype=tf.float32)
+    dataset.append(img)
+    try:
+      original_predictions = list(np.argmax(self.model.predict(np.array(dataset), verbose=0), axis=-1))
+    except Exception as e:
+      return None, None, None
+    pass
   def divide(self, img, verbose = False):
     def _divide(e):
       return e[0]

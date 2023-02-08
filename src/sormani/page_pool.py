@@ -7,6 +7,7 @@ import time
 import datetime
 import cv2
 import numpy as np
+import tensorflow as tf
 
 from multiprocessing import Pool, Manager
 from src.sormani.system import *
@@ -67,16 +68,16 @@ class Page_pool(list):
         if image is not None:
           images.append(image)
     return images
-  def get_crop(self, no_resize = False, filedir = None, pages = None, force=False):
-    images = []
-    if isinstance(pages, int):
-      pages = [pages]
+  def get_crop(self, no_resize = False, filedir = None, force=False):
     for page in self:
-      if pages is None or page.newspaper.n_page in pages:
-        image = page.get_crop(no_resize=no_resize, filedir = filedir, force=force)
-        if image is not None:
-          images.append(image)
+      page.no_resize = False
+      page.filedir = None
+      page.force = False
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        images = mp_pool.map(self._get_crop, self)
     return images
+  def _get_crop(self, page):
+    return page.get_crop()
   def check_pages_numbers(self, model, save_images = False):
     errors = []
     countplusone = 0
@@ -187,7 +188,7 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
-  def change_threshold(self, force = True, limit = 50, color = 255, inversion = False):
+  def change_threshold(self, limit = 50, color = 255, inversion = False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -196,17 +197,45 @@ class Page_pool(list):
         page.limit = limit
         page.color = color
         page.inversion = inversion
-        page.force = force
       with Pool(processes=N_PROCESSES) as mp_pool:
-        mp_pool.map(self._change_threshold, self)
-      print(f'The {len(self)} pages threshold change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        count = mp_pool.map(self._change_threshold, self)
+      print(f'The {len(count)} pages threshold change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to changing the threshold for \'{self.newspaper_name}\'.')
   def _change_threshold(self, page):
-    global global_count_contrast
-    i = page.change_threshold()
-    with global_count_contrast.get_lock():
-      global_count_contrast.value += i
+    return page.change_threshold()
+  def change_colors(self, limit = 50, color = 255, inversion = False):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      print(f'Start changing the colors of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.limit = limit
+        page.color = color
+        page.inversion = inversion
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._change_colors, self)
+      print(f'The {len(count)} pages colors change of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no files to changing colors for \'{self.newspaper_name}\'.')
+  def _change_colors(self, page):
+    return page.change_colors()
+  def select_images(self, limit = 50, color = 255, inversion = False):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      print(f'Start selecting images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.limit = limit
+        page.color = color
+        page.inversion = inversion
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._select_images, self)
+      print(f'The {len(count)} pages select images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no files to select images for \'{self.newspaper_name}\'.')
+  def _select_images(self, page):
+    return page.select_images()
   def divide_image(self, is_bobina = False):
     flag = False
     for page in self:
@@ -468,10 +497,26 @@ class Page_pool(list):
     for i in counts:
       count += i
     return count
-
   def _rotate_fotogrammi(self, page):
     try:
       return page.rotate_fotogrammi()
+    except:
+      return 0
+  def set_fotogrammi_folders(self, model_path):
+    # self.set_GPUs()
+    if not os.path.join(STORAGE_BASE, model_path):
+      print(f'{model_path} doesn\'t exist.')
+      return
+    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
+    count = 0
+    for page in self:
+      if page.newspaper.is_first_page(model):
+        print(page.original_image)
+        count += 1
+    return count
+  def _set_fotogrammi_folders(self, page):
+    try:
+      return page.set_fotogrammi_folders()
     except:
       return 0
 

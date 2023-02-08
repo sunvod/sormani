@@ -779,13 +779,19 @@ def change_ins_file_name():
                   os.rename(os.path.join(fd, file), os.path.join(fd, new_file))
 
 
+def delete_bing():
+  for filedir, dirs, files in os.walk('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01/01'):
+    files.sort()
+    for file in files:
+      if file.split('_')[-1] == 'thresh.tif' or file.split('_')[-1] == 'bing.tif':
+        os.remove(os.path.join(filedir, file))
 
 # set_GPUs()
 
 ns = 'La Domenica del Corriere'
 
-cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 100)
+# cnn = CNN(ns)
+# cnn.exec_cnn(ns, epochs = 100)
 
 # count_tiff()
 
@@ -808,4 +814,5 @@ cnn.exec_cnn(ns, epochs = 100)
 # set_bobine_merges()
 
 # rotate_bobine_fotogrammi()
+
 
