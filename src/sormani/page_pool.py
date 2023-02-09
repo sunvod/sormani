@@ -220,22 +220,23 @@ class Page_pool(list):
       print(f'Warning: There is no files to changing colors for \'{self.newspaper_name}\'.')
   def _change_colors(self, page):
     return page.change_colors()
-  def select_images(self, limit = 50, color = 255, inversion = False):
+  def improve_images(self, limit = 50, color = 255, inversion = False, threshold="b9"):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start selecting images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      print(f'Start improving images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.limit = limit
         page.color = color
         page.inversion = inversion
+        page.threshold = threshold
       with Pool(processes=N_PROCESSES) as mp_pool:
-        count = mp_pool.map(self._select_images, self)
-      print(f'The {len(count)} pages select images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        count = mp_pool.map(self._improve_images, self)
+      print(f'The {len(count)} improved images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
-      print(f'Warning: There is no files to select images for \'{self.newspaper_name}\'.')
-  def _select_images(self, page):
-    return page.select_images()
+      print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
+  def _improve_images(self, page):
+    return page.improve_images()
   def divide_image(self, is_bobina = False):
     flag = False
     for page in self:
@@ -269,7 +270,10 @@ class Page_pool(list):
     return sum(result)
   def _divide_image(self, page):
     return page.divide_image()
-  def remove_borders(self):
+  def remove_borders(self, limit = 5000, verbose = False):
+    for page in self:
+      page.verbose = verbose
+      page.limit = limit
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._remove_borders, self)
     return sum(result)
@@ -498,10 +502,8 @@ class Page_pool(list):
       count += i
     return count
   def _rotate_fotogrammi(self, page):
-    try:
-      return page.rotate_fotogrammi()
-    except:
-      return 0
+    return page.rotate_fotogrammi()
+
   def set_fotogrammi_folders(self, model_path):
     # self.set_GPUs()
     if not os.path.join(STORAGE_BASE, model_path):

@@ -328,18 +328,14 @@ class Sormani():
     for page_pool in self:
       page_pool.change_colors(limit=limit, color=color, inversion=inversion)
     self.force = selfforce
-  def select_images(self, limit=None, color=255, inversion=False):
+  def improve_images(self, limit=None, color=255, inversion=False, threshold="b9"):
     if not len(self.elements):
       return
     selfforce = self.force
-    global global_count_contrast
-    global_count_contrast.value = 0
-    self.limit = limit
-    self.color = color
     self.inversion = inversion
     self.force = True
     for page_pool in self:
-      page_pool.select_images(limit=limit, color=color, inversion=inversion)
+      page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold)
     self.force = selfforce
   def divide_image(self, no_rename = False, is_bobina = False):
     if not len(self.elements):
@@ -361,15 +357,15 @@ class Sormani():
         self.set_all_images_names()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
-  def remove_borders(self):
+  def remove_borders(self, limit = 5000, verbose = False):
     if not len(self.elements):
       return
     global global_count
     global_count.value = 0
     start_time = time.time()
-    print(f'Starting remove borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting removing borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_borders()
+      count = page_pool.remove_borders(limit = limit, verbose = verbose)
     if count:
       print(
         f'Removing borders of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
