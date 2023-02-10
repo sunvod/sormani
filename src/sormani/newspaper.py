@@ -306,6 +306,8 @@ class Newspaper():
     return image1, image2
   def is_first_page(self, model):
     return False
+  def get_ofset(self):
+    return 0, -200, 0, 0
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 150
@@ -917,6 +919,8 @@ class La_Domenica_del_Corriere(Newspaper):
     else:
       image1, image2 = super().divide(img)
     return image1, image2
+  def get_ofset(self):
+    return 0, -200, 0, 200
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

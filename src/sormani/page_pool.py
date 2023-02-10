@@ -220,7 +220,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to changing colors for \'{self.newspaper_name}\'.')
   def _change_colors(self, page):
     return page.change_colors()
-  def improve_images(self, limit = 50, color = 255, inversion = False, threshold="b9"):
+  def improve_images(self, limit = 50, color = 255, inversion = False, threshold="b9", verbose=False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -230,6 +230,7 @@ class Page_pool(list):
         page.color = color
         page.inversion = inversion
         page.threshold = threshold
+        page.verbose = verbose
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._improve_images, self)
       print(f'The {len(count)} improved images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -237,6 +238,24 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
+  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9", verbose=False):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      print(f'Start cleaning images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.limit = limit
+        page.color = color
+        page.inversion = inversion
+        page.threshold = threshold
+        page.verbose = verbose
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._clean_images, self)
+      print(f'The {len(count)} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
+  def _clean_images(self, page):
+    return page.clean_images()
   def divide_image(self, is_bobina = False):
     flag = False
     for page in self:
