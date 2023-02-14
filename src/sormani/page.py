@@ -126,6 +126,7 @@ class Page:
   def improve_images(self):
       count = 0
       file = self.original_image
+      file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
       file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
       file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
@@ -153,21 +154,28 @@ class Page:
       if invert_fill_hole:
         thresh = 255 - thresh
       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-      bimg = img.copy()
-      # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-      white_bimg = 255 - np.zeros_like(bimg)
+      nimg = img.copy()
+      if self.debug:
+        bimg = img.copy()
+        bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+      white_nimg = 255 - np.zeros_like(nimg)
       for i, contour in enumerate(contours):
         x, y, w, h = cv2.boundingRect(contour)
         if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 3:
-          cv2.rectangle(bimg,(x, y), (x + w, y + h), 0, -1)
-          cv2.rectangle(white_bimg, (x, y), (x + w, y + h), 0, -1)
-          # cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
+          cv2.rectangle(nimg,(x, y), (x + w, y + h), 0, -1)
+          cv2.rectangle(white_nimg, (x, y), (x + w, y + h), 0, -1)
+          if self.debug:
+            cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
           count += 1
-      bimg[bimg >= int(self.threshold, 16)] = 255
-      bimg[bimg < int(self.threshold, 16)] = 0
-      bimg[white_bimg == 0] = img[white_bimg == 0]
-      cv2.imwrite(file, bimg)
-      # cv2.imwrite(file_thresh, white_bimg)
+      nimg[nimg >= int(self.threshold, 16)] = 255
+      nimg[nimg < int(self.threshold, 16)] = 0
+      nimg[white_nimg == 0] = img[white_nimg == 0]
+      if not self.debug:
+        cv2.imwrite(file, nimg)
+      else:
+        cv2.imwrite(file_img, nimg)
+        cv2.imwrite(file_bing, bimg)
+        cv2.imwrite(file_thresh, white_nimg)
       return count
   def clean_images(self):
     def rotate_image(image, angle):
@@ -181,15 +189,34 @@ class Page:
       w = max(a[0] + a[2], b[0] + b[2]) - x
       h = max(a[1] + a[3], b[1] + b[3]) - y
       return (x, y, w, h)
+
+    def sort_contours(cnts, method="left-to-right"):
+      # initialize the reverse flag and sort index
+      reverse = False
+      i = 0
+      # handle if we need to sort in reverse
+      if method == "right-to-left" or method == "bottom-to-top":
+        reverse = True
+      # handle if we are sorting against the y-coordinate rather than
+      # the x-coordinate of the bounding box
+      if method == "top-to-bottom" or method == "bottom-to-top":
+        i = 1
+      # construct the list of bounding boxes and sort them from top to
+      # bottom
+      boundingBoxes = [cv2.boundingRect(c) for c in cnts]
+      (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes), key=lambda b: b[1][i], reverse=reverse))
+      # return the list of sorted contours and bounding boxes
+      return (cnts)
     count = 0
     file = self.original_image
     file_1 = '.'.join(file.split('.')[:-1]) + '_1.' + file.split('.')[-1]
     file_2 = '.'.join(file.split('.')[:-1]) + '_2.' + file.split('.')[-1]
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_dimg = '.'.join(file.split('.')[:-1]) + '_ding.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    # img[img >= int("c0", 16)] = self.color
-    ret, thresh = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY)
+    img[img >= int(self.threshold, 16)] = 255
+    ret, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
     # Questo riempie i buchi neri
     x_fill_hole = 3
     y_fill_hole = 3
@@ -216,35 +243,73 @@ class Page:
       thresh = 255 - thresh
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     bimg = img.copy()
-    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    if self.debug:
+      dimg = img.copy()
+      dimg = cv2.cvtColor(dimg, cv2.COLOR_GRAY2RGB)
     books = ([], [])
+    bdebug = []
     _x, _y, _w, _h = cv2.boundingRect(img)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 0:
-        books[x > _w // 2].append(contour)
+      if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 0 and x != 0:
+        books[x > _w // 2].append((cv2.boundingRect(contour)))
+        if self.debug:
+          bdebug.append((contour, x))
+    max_x = np.max(np.array(books[0])[:, 0] + np.array(books[0])[:, 2])
+    np.array(books[0])[:, 0] = max_x - np.array(books[0])[:, 0]
+    books[0].sort(key=lambda e: e[0])
+    books[1].sort(key=lambda e: e[0])
+    bdebug.sort(key=lambda e: e[1])
+    if self.debug:
+      for contour, x in bdebug:
+        cv2.drawContours(dimg, contour, -1, (0, 224, 224), 3)
+    for j in range(2):
+      r = False
+      for i, book in enumerate(books[j]):
+        if r:
+          books[j].remove(book)
+          continue
+        if i == 0:
+          x, y, w, h = book
+          continue
+        x1, y1, w1, h1 = book
+        if x1 > x + w + 50 and x > w // 2:
+          books[j].remove(book)
+          r = True
+          continue
+    books[0].sort(key=lambda e: e[0])
+    books[1].sort(key=lambda e: e[0])
     for j in range(2):
       for i, book in enumerate(books[j]):
         if i == 0:
-          x, y, w, h = cv2.boundingRect(book)
+          x, y, w, h = book
           continue
-        x1, y1, w1, h1 = cv2.boundingRect(book)
+        x1, y1, w1, h1 = book
+        if x1 > x + w + 50 and x > w // 2:
+          books[j].remove(book)
+          r = True
+          continue
         x, y, w, h = union((x, y, w, h), (x1, y1, w1, h1))
       l, t, r, b = self.newspaper.get_ofset()
       y = y + t if y + t > 0 else 0
       h += b
+      if self.debug:
+        if not j:
+          cv2.rectangle(dimg,(x, y), (x + w, y + h), (0, 0, 255), 3)
+        else:
+          cv2.rectangle(dimg, (x, y), (x + w, y + h), (255, 0, 0), 3)
       cv2.rectangle(bimg,(x, y), (x + w, y + h), 255, -1)
       if not j:
         _x = x
         _y = y
         _w = w
         _h = h
-      x -= 400
+      x -= 300
       x = x if x > 0 else 0
-      y -= 400 + t
+      y -= 300 + t
       y = y if y > 0 else 0
-      w += 800
-      h += 800 + t
+      w += 600
+      h += 600 + t
       nimg = img.copy()
       nimg[bimg != 255] = 255
       nimg[nimg >= int(self.threshold, 16)] = 255
@@ -264,22 +329,13 @@ class Page:
       else:
         if w > 5000 and h > 5000:
           cv2.imwrite(file_2, nimg[y:y + h, x:x + w])
-    # Sistema la pagina doppia (se serve)
-    # x, y, w, h = union((x, y, w, h), (_x, _y, _w, _h))
-    # x -= 400
-    # x = x if x > 0 else 0
-    # y -= 400 + t
-    # y = y if y > 0 else 0
-    # w += 800
-    # h += 800 + t
-    # img[bimg != 255] = 255
-    # img[img >= int(self.threshold, 16)] = 255
-    # img = img[y:y + h, x:x + w]
     count += 1
-    if self.verbose:
+    if not self.debug:
+      os.remove(file)
+    else:
+      cv2.imwrite(file_dimg, dimg)
       cv2.imwrite(file_bimg, bimg)
-    # cv2.imwrite(file, img)
-    os.remove(file)
+      cv2.imwrite(file_thresh, thresh)
     return count
   def save_pages_images(self, storage):
     if self.isAlreadySeen():
@@ -1015,10 +1071,11 @@ class Page:
     file_name_no_ext = Path(self.original_image).stem
     file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
     ext = Path(self.original_image).suffix
-    img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
-    image1, image2 = self.newspaper.divide(img)
-    image1.save(file_path_no_ext + '_1' + ext)
-    image2.save(file_path_no_ext + '_2' + ext)
+    # img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(self.original_image)
+    img1, img2 = self.newspaper.divide(img)
+    cv2.imwrite(file_path_no_ext + '_1' + ext, img1)
+    cv2.imwrite(file_path_no_ext + '_2' + ext, img2)
     os.remove(self.original_image)
     return 1
 

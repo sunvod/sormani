@@ -3,17 +3,18 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  # sormani = Sormani('La Gazzetta dello Sport', year=2017, months=[8], days=None)
+  # sormani = Sormani('La Gazzetta dello Sport', year=2017, months=[9,10,11,12], days=None)
   # sormani.set_giornali_pipeline()
   # sormani.add_pdf_metadata()
 
-  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,6)])
-  sormani.set_bobine_merge_images()
-  sormani.set_bobine_select_images()
-  sormani.improve_images(limit=200, threshold="c9")
-  sormani.rotate_fotogrammi(verbose=False)
-  sormani.remove_borders(verbose=False)
-  sormani.clean_images(limit=500, threshold="b0", verbose=False)
+  sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
+  # sormani.set_bobine_merge_images()
+  # sormani.set_bobine_select_images()
+  # sormani.improve_images(limit=200, threshold="b0")
+  # sormani.rotate_fotogrammi(verbose=False)
+  # sormani.remove_borders(verbose=False)
+  sormani.clean_images(limit=100, threshold="b9", debug=True)
+  # sormani.clean_images(limit=50, threshold="90", debug=True)
 
   # sormani.change_colors(inversion = True, limit = "ba")
 
@@ -23,37 +24,8 @@ if __name__ == '__main__':
 
   # sormani.set_fotogrammi_folders()
 
-  # sormani = Sormani('La Domenica del Corriere', year=1900, months=2, days=None)
-  # sormani.set_bobine_merge_images()
-
-  # sormani.set_bobine_merge_images()
-  # sormani.change_contrast(contrast=-5)
-  # sormani.change_threshold(limit = 5, color = 255, inversion = False)
-  # sormani.set_bobine_select_images(remove_merge=False, threshold=5)
-  # sormani.rotate_fotogrammi(verbose=True, limit=4000)
-  # sormani.divide_image(no_rename=True, is_bobina=True)
-  # sormani.create_all_images(thresholding=220)
-  # sormani.remove_borders()
-  # sormani.change_contrast(contrast=-100)
-  # sormani.rotate_fotogrammi(verbose=True, limit=6000)
-  # sormani.rotate_page(verbose=True)
-  # sormani.set_bobine_pipeline(no_division = False, no_set_names = True, no_change_contrast = True)
-
-  # sormani = Sormani('La Domenica del Corriere', year=1899, months=1, days=8)
-  # sormani.set_bobine_images()
-  # sormani.set_bobine_merges()
-  # sormani.rotate_page(verbose=False, limit=5000)
-  # sormani.divide_image(no_rename=True, is_bobina=True)
-  # sormani.remove_borders()
-
   # sormani = Sormani('Il Mondo', year=1949, months=2, days=19)
-  # sormani.set_bobine_images()
-  # sormani.set_bobine_merges()
-  # sormani.rotate_page(verbose=False, limit=5000)
-  # sormani.divide_image(no_rename=True, is_bobina=True)
-  # sormani.remove_borders()
 
-  # sormani.set_bobine_images()
   # sormani.get_pages_numbers()
   # sormani.save_pages_images()
   # sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])

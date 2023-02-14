@@ -297,13 +297,16 @@ class Newspaper():
                                      top,
                                      bottom)
   def divide(self, img):
-    image = Image.fromarray(img)
-    width, height = image.size
+    height, width, _ = img.shape
     parameters = self.get_crop_parameters(0, width, height)
-    image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
     parameters = self.get_crop_parameters(1, width, height)
-    image2 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-    return image1, image2
+    img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+    # image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
+    # img[y:y + h, x:x + w])
+    return img1, img2
+
+  # image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
   def is_first_page(self, model):
     return False
   def get_ofset(self):

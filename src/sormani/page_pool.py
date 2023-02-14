@@ -220,7 +220,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to changing colors for \'{self.newspaper_name}\'.')
   def _change_colors(self, page):
     return page.change_colors()
-  def improve_images(self, limit = 50, color = 255, inversion = False, threshold="b9", verbose=False):
+  def improve_images(self, limit = 50, color = 255, inversion = False, threshold="b9", debug=False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -230,7 +230,7 @@ class Page_pool(list):
         page.color = color
         page.inversion = inversion
         page.threshold = threshold
-        page.verbose = verbose
+        page.debug = debug
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._improve_images, self)
       print(f'The {len(count)} improved images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -238,7 +238,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9", verbose=False):
+  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9", debug=False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -248,7 +248,7 @@ class Page_pool(list):
         page.color = color
         page.inversion = inversion
         page.threshold = threshold
-        page.verbose = verbose
+        page.debug = debug
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._clean_images, self)
       print(f'The {len(count)} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -274,6 +274,7 @@ class Page_pool(list):
     pages = []
     for page in self:
       page.is_bobina = is_bobina
+      page.filedir = self.filedir
       file_name_no_ext = Path(page.original_image).stem
       file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
       ext = Path(page.original_image).suffix
@@ -493,6 +494,8 @@ class Page_pool(list):
     file_list = []
     count = 0
     for elements in result:
+      if elements is None:
+        continue
       count += elements[1]
       for element in elements[0]:
         file_list.append(element)

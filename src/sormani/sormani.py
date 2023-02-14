@@ -19,7 +19,6 @@ from src.sormani.system import *
 import warnings
 warnings.filterwarnings("ignore")
 
-global_count_contrast = multiprocessing.Value('I', 0)
 
 class Conversion:
   def __init__(self, image_path, dpi, quality, resolution):
@@ -45,6 +44,15 @@ class Sormani():
                notcheckimages=True,
                thresholding=0,
                no_rename=False):
+    if year is not None and isinstance(year, list) and not len(year):
+      error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
+      raise OSError(error)
+    if months is not None and isinstance(months, list) and not len(months):
+      error = 'Non è stato indicato il mese di estrazione. L\'esecuzione terminerà.'
+      raise OSError(error)
+    if days is not None and isinstance(days, list) and not len(days):
+      error = 'Non è stato indicato il giorno di estrazione. L\'esecuzione terminerà.'
+      raise OSError(error)
     self.thresholding = thresholding
     if not isinstance(newspaper_names, list):
       if newspaper_names is not None:
@@ -295,8 +303,6 @@ class Sormani():
     if not len(self.elements):
       return
     selfforce = self.force
-    global global_count_contrast
-    global_count_contrast.value = 0
     self.contrast = contrast
     self.force = True
     for page_pool in self:
@@ -328,25 +334,25 @@ class Sormani():
     for page_pool in self:
       page_pool.change_colors(limit=limit, color=color, inversion=inversion)
     self.force = selfforce
-  def improve_images(self, limit=None, color=255, inversion=False, threshold="b9", verbose=False):
+  def improve_images(self, limit=None, color=255, inversion=False, threshold="b9", debug=False):
     if not len(self.elements):
       return
     selfforce = self.force
     self.inversion = inversion
     self.force = True
     for page_pool in self:
-      page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, verbose=verbose)
+      page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, limit=None, color=255, inversion=False, threshold="b9", verbose=False):
+  def clean_images(self, limit=None, color=255, inversion=False, threshold="b9", debug=False):
     if not len(self.elements):
       return
     selfforce = self.force
     self.inversion = inversion
     self.force = True
     for page_pool in self:
-      page_pool.clean_images(limit=limit, color=color, inversion=inversion, threshold=threshold, verbose=verbose)
+      page_pool.clean_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def divide_image(self, no_rename = False, is_bobina = False):
+  def divide_image(self, is_bobina = False):
     if not len(self.elements):
       return
     global global_count
@@ -355,15 +361,14 @@ class Sormani():
     print(f'Starting division of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
     #   mp_pool.map(self.divide_image, self.elements)
+    count = 0
     for page_pool in self:
-      page_pool.divide_image(is_bobina)
-    if global_count.value:
+      count += page_pool.divide_image(is_bobina)
+    if count:
       print()
       print(
-        f'Division of {global_count.value} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
-      if not no_rename:
-        self.set_all_images_names()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
   def remove_borders(self, limit = 5000, verbose = False):
@@ -671,21 +676,6 @@ class Sormani():
     self.force = selfforce
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
-  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
-    try:
-      selfforce = self.force
-    except:
-      return
-    self.force = True
-    if not no_division:
-      self.divide_image()
-    if not no_set_names:
-      self.set_all_images_names()
-    if not no_change_contrast:
-      self.change_contrast()
-    self.force = selfforce
-    self.set_elements()
-    self.create_all_images()
   def set_bobine_merge_images(self):
     start_time = time.time()
     print(f'Starting merging images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
@@ -721,7 +711,18 @@ class Sormani():
     self.set_bobine_select_images(threshold=5)
     self.rotate_fotogrammi(limit=4000)
     self.remove_borders()
-    # if not no_set_names:
-    #   self.set_all_images_names()
-    # self.set_elements()
-    # self.create_all_images()
+  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
+    try:
+      selfforce = self.force
+    except:
+      return
+    self.force = True
+    if not no_division:
+      self.divide_image()
+    if not no_set_names:
+      self.set_all_images_names()
+    if not no_change_contrast:
+      self.change_contrast()
+    self.force = selfforce
+    self.set_elements()
+    self.create_all_images()
