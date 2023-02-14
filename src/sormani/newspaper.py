@@ -1042,3 +1042,22 @@ class Il_Mondo(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
+
+  # Questo riempie i buchi neri
+  # thresh = fill_holes(thresh, black=True, x_fill_hole=3, y_fill_hole=3, iterations=3)
+  # # Questo riempie i buchi bianchi
+  # thresh = fill_holes(thresh, black=False, x_fill_hole=8, y_fill_hole=4, iterations=8)
+  # def fill_holes(thresh, black, x_fill_hole, y_fill_hole, iterations):
+  #   # Questo riempie i buchi bianchi
+  #   x_fill_hole = 8
+  #   y_fill_hole = 4
+  #   invert_fill_hole = black
+  #   if invert_fill_hole:
+  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+  #   else:
+  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+  #   kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
+  #   thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations)
+  #   if invert_fill_hole:
+  #     thresh = 255 - thresh
+  #   return thresh

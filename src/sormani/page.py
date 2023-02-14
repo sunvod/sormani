@@ -8,6 +8,7 @@ import datetime
 import time
 
 from PyPDF2 import PdfFileMerger
+from scipy.spatial import KDTree, distance
 
 from multiprocessing import Pool, Manager
 
@@ -189,7 +190,58 @@ class Page:
       w = max(a[0] + a[2], b[0] + b[2]) - x
       h = max(a[1] + a[3], b[1] + b[3]) - y
       return (x, y, w, h)
-
+    def fill_holes(thresh, black, x_fill_hole, y_fill_hole, iterations):
+      invert_fill_hole = black
+      if invert_fill_hole:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      else:
+        thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
+      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=iterations)
+      if invert_fill_hole:
+        thresh = 255 - thresh
+      return thresh
+    def remove_edge(books, b):
+      for j in range(2):
+        r = len(books[j])
+        for i, book in enumerate(b[j]):
+          if i == 0:
+            x, y, w, h = book
+            continue
+          x1, y1, w1, h1 = book
+          if x > 5000:
+            pass
+          if x1 > x + w + 50 and x > _w // 4 * (j * 3):
+            r = i
+            break
+          x, y, w, h = book
+        for a in range(r, len(books[j])):
+          books[j].remove(books[j][len(books[j]) - 1])
+      return books
+    def create_frame(contours: list):
+      j = len(contours) // 2
+      contour = contours[j]
+      while len(contours) > 1:
+        distance = find_distances(contours, contour, j)
+        j = distance[1]
+        if distance[0] < 200:
+          list_of_pts = []
+          for ctr in [contours[j], contour]:
+            list_of_pts += [pt[0] for pt in ctr]
+          contour = np.array(list_of_pts).reshape((-1, 1, 2)).astype(np.int32)
+        del contours[j]
+      return contour
+    def find_distances(contours, contour, i):
+      def _find_distances(e):
+        return e[0]
+      out = [(np.min(distance.cdist(contour.reshape((contour.shape[0],2)),
+                                                          contours[a].reshape((contours[a].shape[0],2)))), a)
+                                         for a in range(len(contours)) if a != i]
+      out.sort(key=_find_distances)
+      if len(out):
+        return np.array(out, dtype=np.int32)[0]
+      else:
+        return np.array([])
     def sort_contours(cnts, method="left-to-right"):
       # initialize the reverse flag and sort index
       reverse = False
@@ -207,6 +259,16 @@ class Page:
       (cnts, boundingBoxes) = zip(*sorted(zip(cnts, boundingBoxes), key=lambda b: b[1][i], reverse=reverse))
       # return the list of sorted contours and bounding boxes
       return (cnts)
+    def permute_books(books):
+      o = books[0][len(books[0]) - 1][0] + books[0][len(books[0]) - 1][2]
+      l = len(books[0])
+      b0 = [(o - books[0][a][0], books[0][a][1], books[0][a][2], books[0][a][3]) for a in range(l)]
+      b0.sort(key=lambda e: e[0])
+      o = books[1][len(books[1]) - 1][0] + books[1][len(books[1]) - 1][2]
+      l = len(books[1])
+      b1 = [(o - books[1][a][0], books[1][a][1], books[1][a][2], books[1][a][3]) for a in range(l)]
+      b1.sort(key=lambda e: e[0])
+      return (b0, b1)
     count = 0
     file = self.original_image
     file_1 = '.'.join(file.split('.')[:-1]) + '_1.' + file.split('.')[-1]
@@ -218,43 +280,36 @@ class Page:
     img[img >= int(self.threshold, 16)] = 255
     ret, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
     # Questo riempie i buchi neri
-    x_fill_hole = 3
-    y_fill_hole = 3
-    invert_fill_hole = True
-    if invert_fill_hole:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    else:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=3)
-    if invert_fill_hole:
-      thresh = 255 - thresh
+    thresh = fill_holes(thresh, black=True, x_fill_hole=3, y_fill_hole=3, iterations=3)
     # Questo riempie i buchi bianchi
-    x_fill_hole = 8
-    y_fill_hole = 4
-    invert_fill_hole = False
-    if invert_fill_hole:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    else:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=8)
-    if invert_fill_hole:
-      thresh = 255 - thresh
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    thresh = fill_holes(thresh, black=False, x_fill_hole=8, y_fill_hole=4, iterations=8)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     bimg = img.copy()
     if self.debug:
       dimg = img.copy()
       dimg = cv2.cvtColor(dimg, cv2.COLOR_GRAY2RGB)
     books = ([], [])
+    cnts = ([], [])
     bdebug = []
     _x, _y, _w, _h = cv2.boundingRect(img)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 0 and x != 0:
-        books[x > _w // 2].append((cv2.boundingRect(contour)))
+        books[x > _w // 2].append((x, y, w, h))
+        p = []
+        p.append((x, y))
+        p.append((x + w, y))
+        p.append((x + w, y + h))
+        p.append((x, y + h))
+        ctr = np.array(np.array(p)).reshape((-1, 1, 2)).astype(np.int32)
+        cnts[x > _w // 2].append(ctr)
         if self.debug:
           bdebug.append((contour, x))
+    _cnts = (create_frame(cnts[0]), create_frame(cnts[1]))
+    x, y, w, h = cv2.boundingRect(_cnts[0])
+    cv2.rectangle(dimg, (x, y), (x + w, y + h), (255, 255, 0), 3)
+    x, y, w, h = cv2.boundingRect(_cnts[1])
+    cv2.rectangle(dimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
     max_x = np.max(np.array(books[0])[:, 0] + np.array(books[0])[:, 2])
     np.array(books[0])[:, 0] = max_x - np.array(books[0])[:, 0]
     books[0].sort(key=lambda e: e[0])
@@ -263,32 +318,16 @@ class Page:
     if self.debug:
       for contour, x in bdebug:
         cv2.drawContours(dimg, contour, -1, (0, 224, 224), 3)
-    for j in range(2):
-      r = False
-      for i, book in enumerate(books[j]):
-        if r:
-          books[j].remove(book)
-          continue
-        if i == 0:
-          x, y, w, h = book
-          continue
-        x1, y1, w1, h1 = book
-        if x1 > x + w + 50 and x > w // 2:
-          books[j].remove(book)
-          r = True
-          continue
     books[0].sort(key=lambda e: e[0])
     books[1].sort(key=lambda e: e[0])
+    b = (books[0].copy(), books[1].copy())
+    books = remove_edge(books, b)
     for j in range(2):
       for i, book in enumerate(books[j]):
         if i == 0:
           x, y, w, h = book
           continue
         x1, y1, w1, h1 = book
-        if x1 > x + w + 50 and x > w // 2:
-          books[j].remove(book)
-          r = True
-          continue
         x, y, w, h = union((x, y, w, h), (x1, y1, w1, h1))
       l, t, r, b = self.newspaper.get_ofset()
       y = y + t if y + t > 0 else 0
@@ -337,6 +376,110 @@ class Page:
       cv2.imwrite(file_bimg, bimg)
       cv2.imwrite(file_thresh, thresh)
     return count
+
+
+    # count = 0
+    # file = self.original_image
+    # file_1 = '.'.join(file.split('.')[:-1]) + '_1.' + file.split('.')[-1]
+    # file_2 = '.'.join(file.split('.')[:-1]) + '_2.' + file.split('.')[-1]
+    # file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    # file_dimg = '.'.join(file.split('.')[:-1]) + '_ding.' + file.split('.')[-1]
+    # file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    # img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    # img[img >= int(self.threshold, 16)] = 255
+    # ret, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
+    # # Questo riempie i buchi neri
+    # thresh = fill_holes(thresh, black=True, x_fill_hole=3, y_fill_hole=3, iterations=3)
+    # # Questo riempie i buchi bianchi
+    # thresh = fill_holes(thresh, black=False, x_fill_hole=8, y_fill_hole=4, iterations=8)
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # bimg = img.copy()
+    # if self.debug:
+    #   dimg = img.copy()
+    #   dimg = cv2.cvtColor(dimg, cv2.COLOR_GRAY2RGB)
+    # books = ([], [])
+    # cnts = ([], [])
+    # bdebug = []
+    # _x, _y, _w, _h = cv2.boundingRect(img)
+    # for i, contour in enumerate(contours):
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   if w > self.limit and h > self.limit and hierarchy[0, i, 3] >= 0 and x != 0:
+    #     books[x > _w // 2].append((cv2.boundingRect(contour)))
+    #     cnts[x > _w // 2].append(contour)
+    #     if self.debug:
+    #       bdebug.append((contour, x))
+    # bdebug.sort(key=lambda e: e[1])
+    # if self.debug:
+    #   for contour, x in bdebug:
+    #     if x <= 273:
+    #       cv2.drawContours(dimg, contour, -1, (224, 224, 0), 3)
+    #     else:
+    #       cv2.drawContours(dimg, contour, -1, (0, 224, 224), 3)
+    # # _cnts = (create_frame(cnts[0]), create_frame(cnts[1]))
+    # # x, y, w, h = cv2.boundingRect(_cnts[0])
+    # # cv2.rectangle(dimg, (x, y), (x + w, y + h), (255, 255, 0), 3)
+    # # x, y, w, h = cv2.boundingRect(_cnts[1])
+    # # cv2.rectangle(dimg, (x, y), (x + w, y + h), (0, 255, 255), 3)
+    # books[0].sort(key=lambda e: e[0])
+    # books[1].sort(key=lambda e: e[0])
+    # b = (books[0].copy(), books[1].copy())
+    # books = remove_edge(books, b)
+    # # b = permute_books(books)
+    # # books = remove_edge(books, b)
+    # for j in range(2):
+    #   for i, book in enumerate(books[j]):
+    #     if i == 0:
+    #       x, y, w, h = book
+    #       continue
+    #     x1, y1, w1, h1 = book
+    #     x, y, w, h = union((x, y, w, h), (x1, y1, w1, h1))
+    #   l, t, r, b = self.newspaper.get_ofset()
+    #   y = y + t if y + t > 0 else 0
+    #   h += b
+    #   # if self.debug:
+    #   #   if not j:
+    #   #     cv2.rectangle(dimg,(x, y), (x + w, y + h), (0, 0, 255), 3)
+    #   #   else:
+    #   #     cv2.rectangle(dimg, (x, y), (x + w, y + h), (255, 0, 0), 3)
+    #   cv2.rectangle(bimg,(x, y), (x + w, y + h), 255, -1)
+    #   if not j:
+    #     _x = x
+    #     _y = y
+    #     _w = w
+    #     _h = h
+    #   x -= 300
+    #   x = x if x > 0 else 0
+    #   y -= 300 + t
+    #   y = y if y > 0 else 0
+    #   w += 600
+    #   h += 600 + t
+    #   nimg = img.copy()
+    #   nimg[bimg != 255] = 255
+    #   nimg[nimg >= int(self.threshold, 16)] = 255
+    #   # rotate image se serve
+    #   # ctr = np.array([[x, y],[x+w, y],[w+w, y+h],[x, y+h]]).reshape((-1, 1, 2)).astype(np.int32)
+    #   # rect = cv2.minAreaRect(ctr)
+    #   # if rect is not None:
+    #   #   angle = rect[2]
+    #   #   print(angle)
+    #   #   if angle < 45:
+    #   #     angle = 90 + angle
+    #   #   if angle > 85 and (angle < 89.9 or angle > 90.1):
+    #   #     bimg = rotate_image(bimg, angle - 90)
+    #   if not j:
+    #     if w > 5000 and h > 5000:
+    #       cv2.imwrite(file_1, nimg[y:y + h, x:x + w])
+    #   else:
+    #     if w > 5000 and h > 5000:
+    #       cv2.imwrite(file_2, nimg[y:y + h, x:x + w])
+    # count += 1
+    # if not self.debug:
+    #   os.remove(file)
+    # else:
+    #   cv2.imwrite(file_dimg, dimg)
+    #   cv2.imwrite(file_bimg, bimg)
+    #   cv2.imwrite(file_thresh, thresh)
+    # return count
   def save_pages_images(self, storage):
     if self.isAlreadySeen():
       pos = self.newspaper.get_whole_page_location()
