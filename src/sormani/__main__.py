@@ -13,7 +13,7 @@ if __name__ == '__main__':
   # sormani.improve_images(limit=200, threshold="b0")
   # sormani.rotate_fotogrammi(verbose=False)
   # sormani.remove_borders(verbose=False)
-  sormani.clean_images(limit=100, threshold="b9", debug=True)
+  sormani.clean_images(limit=100, threshold="b9", debug=False)
   # sormani.clean_images(limit=50, threshold="90", debug=True)
 
   # sormani.change_colors(inversion = True, limit = "ba")
