@@ -219,6 +219,8 @@ class Page:
           books[j].remove(books[j][len(books[j]) - 1])
       return books
     def create_frame(contours: list, w, h):
+      if not len(contours):
+        return None
       for j, contour in enumerate(contours):
         x, y, _, _ = cv2.boundingRect(contour)
         if x > w // 5 and x < w - w // 5 and y > h // 5 and y < h - h // 5 :
@@ -269,14 +271,14 @@ class Page:
       #   if angle > 85 and (angle < 89.9 or angle > 90.1):
       #     bimg = rotate_image(bimg, angle - 90)
       pass
-    def piano_b():
+    def piano_b(valid):
       count = 0
       file = self.original_image
       file_1 = '.'.join(file.split('.')[:-1]) + '_1.' + file.split('.')[-1]
       file_2 = '.'.join(file.split('.')[:-1]) + '_2.' + file.split('.')[-1]
-      file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
-      file_dimg = '.'.join(file.split('.')[:-1]) + '_ding.' + file.split('.')[-1]
-      file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+      file_bimg = '.'.join(file.split('.')[:-1]) + '_bing_b.' + file.split('.')[-1]
+      file_dimg = '.'.join(file.split('.')[:-1]) + '_ding_b.' + file.split('.')[-1]
+      file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh_b.' + file.split('.')[-1]
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
       img[img >= int(self.threshold, 16)] = 255
       ret, thresh = cv2.threshold(img, 100, 255, cv2.THRESH_BINARY)
@@ -314,6 +316,8 @@ class Page:
       # b = permute_books(books)
       # books = remove_edge(books, b)
       for j in range(2):
+        if j not in valid:
+          continue
         for i, book in enumerate(books[j]):
           if i == 0:
             x, y, w, h = book
@@ -343,16 +347,25 @@ class Page:
         nimg = img.copy()
         nimg[bimg != 255] = 255
         nimg[nimg >= int(self.threshold, 16)] = 255
-        if not j:
-          if w > 4500 and h > 4500:
-            cv2.imwrite(file_1, nimg[y:y + h, x:x + w])
-        else:
-          if w > 4500 and h > 4500:
-            cv2.imwrite(file_2, nimg[y:y + h, x:x + w])
+        if w > 4800 and h > 4800:
+          _nimg = nimg[y:y + h, x:x + w]
+          # _w, _h = self.newspaper.get_dimension(nimg)
+          # if _h > h:
+          #   _h = h
+          # if _w > w:
+          #   _w = w
+          if not j:
+            # y = (h - _h) // 2
+            # x = (w - _w) // 3 * 1
+            # _nimg = _nimg[y:h, x:_w]
+            cv2.imwrite(file_1, _nimg)
+          else:
+            # y = (h - _h) // 2
+            # x = (w - _w) // 3 * 2
+            # _nimg = _nimg[y:h, x:_w]
+            cv2.imwrite(file_2, _nimg)
       count += 1
-      if not self.debug:
-        os.remove(file)
-      else:
+      if self.debug:
         cv2.imwrite(file_dimg, dimg)
         cv2.imwrite(file_bimg, bimg)
         cv2.imwrite(file_thresh, thresh)
@@ -400,6 +413,8 @@ class Page:
         cv2.drawContours(dimg, contour, -1, (0, 224, 224), 3)
     _cnts = (create_frame(cnts[0], _w, _h), create_frame(cnts[1], _w, _h))
     for j in range(2):
+      if self.valid is not None and j not in self.valid:
+        continue
       x, y, w, h = cv2.boundingRect(_cnts[j])
       cv2.rectangle(dimg, (x, y), (x + w, y + h), (0, 0, 255), 3)
       l, t, r, b = self.newspaper.get_ofset()
@@ -429,12 +444,16 @@ class Page:
         if w > 4000 and h > 4000:
           cv2.imwrite(file_1, nimg[y:y + h, x:x + w])
         else:
-          pass
+          count = piano_b([0])
       else:
         if w > 4000 and h > 4000:
           cv2.imwrite(file_2, nimg[y:y + h, x:x + w])
         else:
-          return piano_b()
+          # self.valid = [1]
+          # self.limit = self.limit // 2
+          # if self.limit < 10:
+          count = piano_b([1])
+          # return self.clean_images()
     count += 1
     if not self.debug:
       os.remove(file)

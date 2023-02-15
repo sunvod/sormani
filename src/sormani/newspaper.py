@@ -113,6 +113,8 @@ class Newspaper():
       newspaper = La_Domenica_del_Corriere(newspaper_base, file_path, date, year, number)
     elif name == 'Il Mondo':
       newspaper = Il_Mondo(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Sole 24 Ore':
+      newspaper = Il_Sole_24_Ore(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -152,7 +154,9 @@ class Newspaper():
     elif name == 'Il Giorno':
       parameters = Il_Giorno.get_parameters()
     elif name == 'La Gazzetta dello Sport':
-      newspaper = La_Gazzetta.get_parameters()
+      parameters = La_Gazzetta.get_parameters()
+    elif name == 'Il Sole 24 Ore':
+      parameters = Il_Sole_24_Ore.get_parameters()
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -311,6 +315,10 @@ class Newspaper():
     return False
   def get_ofset(self):
     return 0, -200, 0, 0
+  def get_dimension(self, img):
+    _x, _y, _w, _h = cv2.boundingRect(img)
+    return w, h
+
 class La_stampa(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 150
@@ -703,6 +711,31 @@ class Il_Giorno(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
+class Il_Sole_24_Ore(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 152
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Sole 24 Ore', file_path, date, year, number, init_page = 3)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    if self.n_page % 2 == 0:
+      whole = [0, 150, 1000, 500]
+    else:
+      whole = [w - 1000, 150, w, 500]
+    return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 17
@@ -924,6 +957,8 @@ class La_Domenica_del_Corriere(Newspaper):
     return image1, image2
   def get_ofset(self):
     return 0, -200, 0, 200
+  def get_dimension(self, img=None):
+    return 5600, 7400
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -1043,21 +1078,3 @@ class Il_Mondo(Newspaper):
                                 max_distance=10,
                                 can_be_internal=True)
 
-  # Questo riempie i buchi neri
-  # thresh = fill_holes(thresh, black=True, x_fill_hole=3, y_fill_hole=3, iterations=3)
-  # # Questo riempie i buchi bianchi
-  # thresh = fill_holes(thresh, black=False, x_fill_hole=8, y_fill_hole=4, iterations=8)
-  # def fill_holes(thresh, black, x_fill_hole, y_fill_hole, iterations):
-  #   # Questo riempie i buchi bianchi
-  #   x_fill_hole = 8
-  #   y_fill_hole = 4
-  #   invert_fill_hole = black
-  #   if invert_fill_hole:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-  #   else:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-  #   kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
-  #   thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations)
-  #   if invert_fill_hole:
-  #     thresh = 255 - thresh
-  #   return thresh

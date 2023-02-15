@@ -3,18 +3,19 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  # sormani = Sormani('La Gazzetta dello Sport', year=2017, months=[9,10,11,12], days=None)
-  # sormani.set_giornali_pipeline()
+  # sormani = Sormani('Il Sole 24 Ore', year=2016, months=[1], days=None)
+  # sormani.set_giornali_pipeline(no_division=False, no_set_names=True, no_change_contrast=True, no_create_image=True)
   # sormani.add_pdf_metadata()
-
+  #
   sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
-  # sormani.set_bobine_merge_images()
-  # sormani.set_bobine_select_images()
-  # sormani.improve_images(limit=200, threshold="b0")
-  # sormani.rotate_fotogrammi(verbose=False)
-  # sormani.remove_borders(verbose=False)
-  sormani.clean_images(limit=100, threshold="b9", debug=False)
+  sormani.set_bobine_merge_images()
+  sormani.set_bobine_select_images()
+  sormani.improve_images(limit=200, threshold="b0")
+  sormani.rotate_fotogrammi()
+  # sormani.clean_images(limit=100, threshold="b9", debug=False)
   # sormani.clean_images(limit=50, threshold="90", debug=True)
+
+  # sormani.remove_borders(verbose=False)
 
   # sormani.change_colors(inversion = True, limit = "ba")
 

@@ -43,7 +43,7 @@ class Sormani():
                only_ins=False,
                notcheckimages=True,
                thresholding=0,
-               no_rename=False):
+               no_rename_folders=False):
     if year is not None and isinstance(year, list) and not len(year):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -86,7 +86,7 @@ class Sormani():
                      exclude_ins,
                      only_ins,
                      notcheckimages,
-                     no_rename)
+                     no_rename_folders)
     self.set_elements()
   def _init(self,
             newspaper_name,
@@ -102,7 +102,7 @@ class Sormani():
             exclude_ins,
             only_ins,
             notcheckimages,
-            no_rename):
+            no_rename_folders):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -124,7 +124,7 @@ class Sormani():
           self.complete_root = new_root
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
-    if not no_rename:
+    if not no_rename_folders:
       self.rename_folder()
     self.ext = ext
     self.image_path = image_path
@@ -564,8 +564,9 @@ class Sormani():
             pass
   def rename_folder(self):
     number = 1
-    pdf_root = self.new_root.replace(IMAGE_PATH, JPG_PDF_PATH)
-    for one_root in [pdf_root, self.new_root]:
+    # pdf_root = self.new_root.replace(IMAGE_PATH, JPG_PDF_PATH)
+    # for one_root in [pdf_root, self.new_root]:
+    for one_root in [self.new_root]:
       for filedir, dirs, files in os.walk(one_root):
         dirs.sort()
         for dir in dirs:
@@ -574,7 +575,7 @@ class Sormani():
             continue
           p = re.search(r'[^0-9]', dir).start()
           old_folder = os.path.join(filedir, dir)
-          new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
+          new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number) + ' ' + old_folder.split(' ')[-1])
           if old_folder != new_folder:
             try:
               os.rename(old_folder, new_folder)
@@ -711,7 +712,7 @@ class Sormani():
     self.set_bobine_select_images(threshold=5)
     self.rotate_fotogrammi(limit=4000)
     self.remove_borders()
-  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False):
+  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False, no_create_image=False):
     try:
       selfforce = self.force
     except:
@@ -725,4 +726,5 @@ class Sormani():
       self.change_contrast()
     self.force = selfforce
     self.set_elements()
-    self.create_all_images()
+    if not no_create_image:
+      self.create_all_images()

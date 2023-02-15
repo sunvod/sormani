@@ -249,6 +249,7 @@ class Page_pool(list):
         page.inversion = inversion
         page.threshold = threshold
         page.debug = debug
+        page.valid = None
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._clean_images, self)
       print(f'The {len(count)} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
