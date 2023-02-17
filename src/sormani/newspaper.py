@@ -723,6 +723,48 @@ class Il_Sole_24_Ore(Newspaper):
     else:
       whole = [w - 1000, 150, w, 500]
     return whole
+
+  def set_n_pages(self, page_pool, n_pages):
+    f = 1
+    l = n_pages
+    r = 2
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      try:
+        page.newspaper.n_page
+        continue
+      except:
+        pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      n = Path(page.file_name).stem.split('_')[-1]
+      if n != '0':
+        count_zero = 0
+        if r == 2:
+          page.newspaper.n_page = f
+          f += 1
+          r = -1
+        elif r == -1:
+          page.newspaper.n_page = l
+          l -= 1
+          r = -2
+        elif r == -2:
+          page.newspaper.n_page = l
+          l -= 1
+          r = 1
+        elif r == 1:
+          page.newspaper.n_page = f
+          f += 1
+          r = 2
+      else:
+        if count_zero < 2:
+          page.newspaper.n_page = f
+          f += 1
+        else:
+          page.newspaper.n_page = l
+          l -= 1
+        r = 2
+        count_zero += 1
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -738,10 +780,42 @@ class Il_Sole_24_Ore(Newspaper):
                                 can_be_internal=True)
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 17
+    self.init_year =  (120, 72)
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Gazzetta dello Sport', file_path, date, year, number, init_page = 3)
     self.contrast = None
+  def get_number(self):
+    folder_count = 0
+    for month in range(self.date.month):
+      m = str(month + 1)
+      input_path = os.path.join(self.newspaper_base, str(self.date.year), m if len(m) == 2 else '0' + m)
+      if os.path.exists(input_path):
+        listdir = os.listdir(input_path)
+        listdir.sort()
+        listdir = [x for x in listdir if x.isdigit()]
+        listdir.sort(key=self._get_number_sort)
+        for folders in listdir:
+          if month + 1 == self.date.month and int(folders) > self.date.day:
+            return str(folder_count)
+          if os.path.isdir(os.path.join(input_path, folders)):
+            day = int(folders)
+            if self.date.weekday() != 6:
+              try:
+                if datetime.datetime(self.date.year, month + 1 , day).weekday() != 6:
+                  folder_count += 1
+              except Exception as e:
+                pass
+            else:
+              if datetime.datetime(self.date.year, month + 1, day).weekday() == 6:
+                folder_count += 1
+    return str(folder_count)
+  def get_head(self):
+    number = self.get_number()
+    if self.date.weekday() != 6:
+      year = self.init_year[0] + self.date.year - 2016
+    else:
+      year = self.init_year[1] + self.date.year - 2016
+    return str(year), number
   def get_whole_page_location(self, image):
     w, h = image.size
     if self.n_page % 2 == 0:

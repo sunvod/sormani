@@ -125,7 +125,7 @@ class Sormani():
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
     if not no_rename_folders:
-      self.rename_folder()
+      self.rename_folders()
     self.ext = ext
     self.image_path = image_path
     self.path_exclude = path_exclude
@@ -389,29 +389,19 @@ class Sormani():
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
-    global global_count
-    global_count.value = 0
     start_time = time.time()
     print(
       f'Start redefine Metadata of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     selfforce = self.force
     self.force = True
     self.first_number = first_number
-    # with Pool(processes=N_PROCESSES_SHORT) as mp_pool:
-    #   mp_pool.map(self._add_pdf_metadata, self)
     for page_pool in self:
-      self._add_pdf_metadata(page_pool)
-    if global_count.value:
-      print(f'Redefinition Metadata of {global_count.value} pages ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      count = page_pool.add_pdf_metadata(first_number = first_number)
+    if count:
+      print(f'Redefinition Metadata of {sum(count)} pages ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'There are no Metadata to be redefined for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def _add_pdf_metadata(self, page_pool):
-    count = 0
-    for page in page_pool:
-      count += page.add_pdf_metadata(self.first_number)
-    with global_count.get_lock():
-      global_count.value += count
   def add_jpg_metadata(self, first_number = None):
     if not len(self.elements):
       return
@@ -562,7 +552,7 @@ class Sormani():
             old_file = os.path.join(filedir, file)
             os.rename(old_file, new_file)
             pass
-  def rename_folder(self):
+  def rename_folders(self):
     number = 1
     # pdf_root = self.new_root.replace(IMAGE_PATH, JPG_PDF_PATH)
     # for one_root in [pdf_root, self.new_root]:
@@ -575,7 +565,10 @@ class Sormani():
             continue
           p = re.search(r'[^0-9]', dir).start()
           old_folder = os.path.join(filedir, dir)
-          new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number) + ' ' + old_folder.split(' ')[-1])
+          new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
+          s = old_folder.split(' ')[-1]
+          if s[0] == 'P' or s[0:2] == 'OT' or s[0] == 'p':
+            new_folder += ' ' + old_folder.split(' ')[-1]
           if old_folder != new_folder:
             try:
               os.rename(old_folder, new_folder)

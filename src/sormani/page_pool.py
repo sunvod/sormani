@@ -257,6 +257,17 @@ class Page_pool(list):
       print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
   def _clean_images(self, page):
     return page.clean_images()
+  def add_pdf_metadata(self, first_number = None):
+    count = 0
+    for page in self:
+      page.first_number = first_number
+    # for page in self:
+    #   count += page.add_pdf_metadata(self.first_number)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      count = mp_pool.map(self._add_pdf_metadata, self)
+    return count
+  def _add_pdf_metadata(self, page):
+    return page.add_pdf_metadata()
   def divide_image(self, is_bobina = False):
     flag = False
     for page in self:
@@ -544,5 +555,7 @@ class Page_pool(list):
       return page.set_fotogrammi_folders()
     except:
       return 0
+
+
 
 

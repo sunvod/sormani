@@ -704,8 +704,8 @@ class Page:
     except Exception as e:
       os.rename(self.pdf_file_name + '.2', self.pdf_file_name)
       # file_in.write(self.pdf_file_name)
-      return False
-    return True
+      return 0
+    return 1
 
   def get_jpg_metadata(self, image, first_number=None):
     exif = image.getexif()
