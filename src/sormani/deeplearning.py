@@ -5,6 +5,7 @@ from random import seed, random
 import random
 import datetime
 import time
+import shutil
 
 from src.sormani.newspaper import Newspaper
 
@@ -786,20 +787,50 @@ def delete_bing():
       if file.split('_')[-1] == 'thresh.tif' or file.split('_')[-1] == 'bing.tif':
         os.remove(os.path.join(filedir, file))
 
+def rotate_OT(root):
+  for filedir, dirs, files in os.walk(root):
+    dirs.sort()
+    if filedir.split(' ')[-1][0:2] == 'OT':
+      files.sort()
+      for file in files:
+        img = cv2.imread(os.path.join(filedir, file))
+        height, width, _ = img.shape
+        if width < height:
+          img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+          cv2.imwrite(os.path.join(filedir, file), img)
+        else:
+          break
+
+def copy_OT(root, dest):
+  for filedir, dirs, files in os.walk(root):
+    dirs.sort()
+    if filedir.split(' ')[-1][0:2] == 'OT':
+      # print(filedir)
+      files.sort()
+      dest2 = dest + '/' + filedir.split('/')[-2] + '/' + filedir.split('/')[-1].upper()
+      for file in files:
+        # print(os.path.join(filedir, file) + '   ' + dest2 + '/' + file)
+        shutil.copyfile(os.path.join(filedir, file), dest2 + '/' + file)
+
+def show_OT(root):
+  for filedir, dirs, files in os.walk(root):
+    dirs.sort()
+    if filedir.split(' ')[-1][0:2] == 'OT':
+      print(filedir)
 # set_GPUs()
 
-ns = 'La Domenica del Corriere'
+ns = 'Il Sole 24 Ore'
 
 # cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 100)
+# cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# rename_images_files(ns)
+rename_images_files(ns)
 
-# to_n_classes(ns, n=2, resize=True)
+# to_n_classes(ns, n=11, resize=True)
 
 # delete_name('Avvenire')
 
@@ -815,4 +846,8 @@ ns = 'La Domenica del Corriere'
 
 # rotate_bobine_fotogrammi()
 
-
+# copy_OT('/mnt/storage02/TIFF/Il Sole 24 ore', '/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
+#
+# rotate_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
+#
+# show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')

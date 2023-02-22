@@ -63,6 +63,7 @@ class Page_pool(list):
     if isinstance(pages, int):
       pages = [pages]
     for page in self:
+      page.isins = self.isins
       if pages is None or page.newspaper.n_page in pages:
         image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir, save_head = save_head, force=force)
         if image is not None:
@@ -84,7 +85,12 @@ class Page_pool(list):
     countminusone = 0
     countzero = 0
     for page in self:
-      head_image, images, _, predictions = page.check_pages_numbers(model)
+      page.isins = self.isins
+      head_image, images, _, predictions, isvalid = page.check_pages_numbers(model)
+      if not isvalid is None:
+        print(
+          f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} non ha i nomi dei file con le date specificate.')
+        return
       if page.page_control == 0:
         if head_image is not None:
           plt.axis("off")

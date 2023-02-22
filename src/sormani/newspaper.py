@@ -161,6 +161,8 @@ class Newspaper():
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     return parameters
+  def get_ins_parameters(self):
+    return self.get_parameters()
   def __init__(self, newspaper_base, name, file_path, date, year, number, init_page):
     self.newspaper_base = newspaper_base
     self.name = name
@@ -194,8 +196,39 @@ class Newspaper():
       return 128 + factor * (c - 128)
     return img.point(contrast)
   def crop_png(self, image):
-    image = image.crop(self.get_whole_page_location(image))
-    return image
+    dims = self.get_whole_page_location(image)
+    if isinstance(dims[0], list):
+      # img = None
+      imgs = []
+      for dim in dims:
+      #   _img = np.asarray(image.crop(dim))
+      #   if img is None:
+      #     img = _img
+      #   else:
+      #     img = np.concatenate((img, _img), axis=1)
+      # image = Image.fromarray(img)
+        imgs.append(image.crop(dim))
+    else:
+      imgs = image.crop(dims)
+    return imgs
+  def crop_ins_png(self, image):
+    dims = self.get_ins_whole_page_location(image)
+    if isinstance(dims[0], list):
+      # img = None
+      imgs = []
+      for dim in dims:
+      #   _img = np.asarray(image.crop(dim))
+      #   if img is None:
+      #     img = _img
+      #   else:
+      #     img = np.concatenate((img, _img), axis=1)
+      # image = Image.fromarray(img)
+        imgs.append(image.crop(dim))
+    else:
+      imgs = image.crop(dims)
+    return imgs
+  def get_ins_whole_page_location(self, image):
+    return self.get_whole_page_location(image)
   def get_number(self):
     folder_count = 0
     for month in range(self.date.month):
@@ -301,14 +334,34 @@ class Newspaper():
                                      top,
                                      bottom)
   def divide(self, img):
+    imgs = []
     height, width, _ = img.shape
     parameters = self.get_crop_parameters(0, width, height)
     img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
     parameters = self.get_crop_parameters(1, width, height)
     img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
-    # image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-    # img[y:y + h, x:x + w])
-    return img1, img2
+    if os.path.dirname(self.file_path).split(' ')[-1][0:2] == 'OT':
+      try:
+        s = os.path.dirname(self.file_path).split(' ')[-1][2:]
+        f = int(s.split('-')[0])
+      except Exception as e:
+        error = 'Folder ' + self.filedir + ' ' + 'is not valid'
+        raise(error)
+      if f == 4:
+        img1 = cv2.rotate(img1, cv2.ROTATE_90_CLOCKWISE)
+        height, width, _ = img1.shape
+        imgs.append(img1[0:height, 0:width // 2])
+        imgs.append(img1[0:height, width // 2:width])
+        img2 = cv2.rotate(img2, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        height, width, _ = img2.shape
+        imgs.append(img2[0:height, 0:width // 2])
+        imgs.append(img2[0:height, width // 2:width])
+        # imgs.append(img1)
+        # imgs.append(img2)
+    if not len(imgs):
+      imgs.append(img1)
+      imgs.append(img2)
+    return imgs
 
   # image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
   def is_first_page(self, model):
@@ -719,16 +772,36 @@ class Il_Sole_24_Ore(Newspaper):
   def get_whole_page_location(self, image):
     w, h = image.size
     if self.n_page % 2 == 0:
-      whole = [0, 150, 1000, 500]
+      whole = [200, 200, 500, 650]
     else:
-      whole = [w - 1000, 150, w, 500]
+      whole = [w - 450, 200, w - 150, 650]
+    return whole
+  def get_ins_whole_page_location(self, image):
+    w, h = image.size
+    if self.n_page % 2 == 0:
+      whole = [[0, 200, w // 2 + 250, 650], [0, h - 650, w // 2 +250, h - 200]]
+    else:
+      whole = [[w // 2 - 250, 200, w, 650], [w // 2 - 250, h - 650, w, h - 200]]
     return whole
 
   def set_n_pages(self, page_pool, n_pages):
     f = 1
+    m = None
+    if page_pool.filedir.split(' ')[-1][0] == 'P':
+      try:
+        f = int(page_pool.filedir.split(' ')[-1][1:])
+        n_pages += f - 1
+      except Exception as e:
+        error = 'Folder ' + page_pool.filedir + ' ' + 'is not valid'
+        raise(error)
+    elif page_pool.filedir.split(' ')[-1][0:2] == 'OT':
+      m = [x for x in range(n_pages)]
+      if n_pages == 8:
+        m = [8, 1, 4, 5, 6, 3, 2, 7]
+      elif n_pages == 16:
+        m = [16, 1, 8, 9, 10, 7, 2, 15, 14, 3, 6, 11, 12, 5, 4, 13]
     l = n_pages
     r = 2
-    count_zero = 0
     for n_page, page in enumerate(page_pool):
       try:
         page.newspaper.n_page
@@ -737,9 +810,11 @@ class Il_Sole_24_Ore(Newspaper):
         pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
+      if m is not None:
+        page.newspaper.n_page = m[n_page]
+        continue
       n = Path(page.file_name).stem.split('_')[-1]
       if n != '0':
-        count_zero = 0
         if r == 2:
           page.newspaper.n_page = f
           f += 1
@@ -757,25 +832,54 @@ class Il_Sole_24_Ore(Newspaper):
           f += 1
           r = 2
       else:
-        if count_zero < 2:
+        # if n_page < n_pages // 2:
+        if False:
           page.newspaper.n_page = f
           f += 1
         else:
           page.newspaper.n_page = l
           l -= 1
         r = 2
-        count_zero += 1
+  def get_ins_parameters(self):
+    return [Newspaper_parameters(scale=200,
+                                 min_w=50,
+                                 max_w=150,
+                                 min_h=100,
+                                 max_h=150,
+                                 ts=240,
+                                 min_mean=0,
+                                 max_mean=500,
+                                 invert=False,
+                                 fill_hole=1,
+                                 invert_fill_hole=True,
+                                 max_distance=10,
+                                 can_be_internal=True),
+            Newspaper_parameters(scale=200,
+                                 min_w=30,
+                                 max_w=100,
+                                 min_h=95,
+                                 max_h=140,
+                                 ts=240,
+                                 min_mean=0,
+                                 max_mean=500,
+                                 invert=False,
+                                 fill_hole=1,
+                                 invert_fill_hole=True,
+                                 max_distance=10,
+                                 can_be_internal=True)]
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
-                                min_w = 10,
-                                max_w = 120,
-                                min_h = 90,
-                                max_h = 150,
+                                min_w = 30,
+                                max_w = 100,
+                                min_h = 70,
+                                max_h = 140,
                                 ts = 240,
-                                min_mean = 0,
-                                max_mean = 500,
-                                invert=True,
+                                min_mean = 60,
+                                max_mean = 220,
+                                invert=False,
+                                fill_hole=1,
+                                invert_fill_hole=True,
                                 max_distance=10,
                                 can_be_internal=True)
 class La_Gazzetta(Newspaper):
@@ -880,50 +984,6 @@ class Scenario(Newspaper):
                                      right,
                                      top,
                                      bottom)
-  def divide(self, img, verbose = False):
-    def _divide(e):
-      return e[0]
-    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
-    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
-    # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
-    thresh = 255 - thresh
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    books = []
-    bimg = thresh.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    image = Image.fromarray(img)
-    weight, heigth = image.size
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if w > 5000 and h > 5000:
-        books.append((x, y, w, h))
-        rect = cv2.minAreaRect(contour)
-        if verbose:
-          # rect = ([rect[0][0], heigth // 2], [rect[1][0], heigth], rect[2])
-          box = np.int0(cv2.boxPoints(rect))
-          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-    books.sort(key=_divide)
-    if verbose:
-      new_file = '_' + self.file_path.split('/')[-1]
-      cv2.imwrite(os.path.join(os.path.dirname(self.file_path), new_file), bimg)
-    if len(books) == 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, y, x + w, y + h))
-      x, y, w, h = books[1]
-      image2 = image.crop((x, y, x + w, y + h))
-    elif len(books) == 1 and books[0][2] < weight / 3 * 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, 0, x + w, heigth))
-      if x < weight / 3 * 2:
-        x = x + w
-        w = weight - x
-      else:
-        x = 0
-        w = weight - x
-      image2 = image.crop((x, y, x + w, y + h))
-    else:
-      image1, image2 = super().divide(img)
-    return image1, image2
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -985,50 +1045,6 @@ class La_Domenica_del_Corriere(Newspaper):
     except Exception as e:
       return None, None, None
     pass
-  def divide(self, img, verbose = False):
-    def _divide(e):
-      return e[0]
-    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
-    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
-    # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
-    thresh = 255 - thresh
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    books = []
-    bimg = thresh.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    image = Image.fromarray(img)
-    weight, heigth = image.size
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if w > 5000 and h > 5000:
-        books.append((x, y, w, h))
-        rect = cv2.minAreaRect(contour)
-        if verbose:
-          # rect = ([rect[0][0], heigth // 2], [rect[1][0], heigth], rect[2])
-          box = np.int0(cv2.boxPoints(rect))
-          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-    books.sort(key=_divide)
-    if verbose:
-      new_file = '_' + self.file_path.split('/')[-1]
-      cv2.imwrite(os.path.join(os.path.dirname(self.file_path), new_file), bimg)
-    if len(books) == 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, y, x + w, y + h))
-      x, y, w, h = books[1]
-      image2 = image.crop((x, y, x + w, y + h))
-    elif len(books) == 1 and books[0][2] < weight / 3 * 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, 0, x + w, heigth))
-      if x < weight / 3 * 2:
-        x = x + w
-        w = weight - x
-      else:
-        x = 0
-        w = weight - x
-      image2 = image.crop((x, y, x + w, y + h))
-    else:
-      image1, image2 = super().divide(img)
-    return image1, image2
   def get_ofset(self):
     return 0, -200, 0, 200
   def get_dimension(self, img=None):
@@ -1092,50 +1108,6 @@ class Il_Mondo(Newspaper):
                                      right,
                                      top,
                                      bottom)
-  def divide(self, img, verbose = False):
-    def _divide(e):
-      return e[0]
-    _, thresh = cv2.threshold(img, 235, 255, cv2.THRESH_BINARY_INV)
-    # rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 100))
-    # thresh = cv2.dilate(thresh, rect_kernel, iterations=1)
-    thresh = 255 - thresh
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    books = []
-    bimg = thresh.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    image = Image.fromarray(img)
-    weight, heigth = image.size
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if w > 5000 and h > 5000:
-        books.append((x, y, w, h))
-        rect = cv2.minAreaRect(contour)
-        if verbose:
-          # rect = ([rect[0][0], heigth // 2], [rect[1][0], heigth], rect[2])
-          box = np.int0(cv2.boxPoints(rect))
-          cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-    books.sort(key=_divide)
-    if verbose:
-      new_file = '_' + self.file_path.split('/')[-1]
-      cv2.imwrite(os.path.join(os.path.dirname(self.file_path), new_file), bimg)
-    if len(books) == 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, y, x + w, y + h))
-      x, y, w, h = books[1]
-      image2 = image.crop((x, y, x + w, y + h))
-    elif len(books) == 1 and books[0][2] < weight / 3 * 2:
-      x, y, w, h = books[0]
-      image1 = image.crop((x, 0, x + w, heigth))
-      if x < weight / 3 * 2:
-        x = x + w
-        w = weight - x
-      else:
-        x = 0
-        w = weight - x
-      image2 = image.crop((x, y, x + w, y + h))
-    else:
-      image1, image2 = super().divide(img)
-    return image1, image2
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

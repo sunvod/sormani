@@ -465,6 +465,7 @@ class Page:
     return count
 
   def save_pages_images(self, storage):
+    raise('save_pages_images')
     if self.isAlreadySeen():
       pos = self.newspaper.get_whole_page_location()
       image = Image.open(self.original_image)
@@ -508,7 +509,7 @@ class Page:
     mask = cv2.inRange(img, min, max)
     img[mask > 0] = [255, 255, 255]
     return img
-  def add_boxes(self, images, img, contours, hierarchy, parameters, file_name, no_resize):
+  def add_boxes(self, images, img, contours, hierarchy, parameters, file_name, no_resize, part):
     def _get_contours(e):
       return e[0]
     _contours = []
@@ -534,7 +535,7 @@ class Page:
       x, y, w, h = cv2.boundingRect(contour)
       perimeter = cv2.arcLength(contour, True)
       roi = img[y:y + h, x:x + w]
-      name = file_name + '_' + ('0000' + str(i + 1))[-5:]
+      name = file_name + '_' + str(part) + '_' + ('0000' + str(i + 1))[-5:]
       if not no_resize:
         roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
       if parameters.internal_box is not None:
@@ -547,7 +548,7 @@ class Page:
         for j, (_, cnt_inside) in enumerate(_cnts_inside):
           _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
           _roi = roi[_y:_y + _h, _x:_x + _w]
-          name_i = file_name + '_' + ('0000' + str(j + 1))[-5:]
+          name_i = file_name + '_' + str(part) + '_' + ('0000' + str(j + 1))[-5:]
           if (_w > parameters.internal_box[0] and
              _w < parameters.internal_box[1] and
              _h > parameters.internal_box[2] and
@@ -557,7 +558,7 @@ class Page:
             images.append((name_i, _roi, perimeter))
       else:
         images.append((name, roi, perimeter))
-  def get_boxes(self, image, level=200, no_resize=False):
+  def get_boxes(self, image, level=200, no_resize=False, parameters=None, part=0):
     def isgray(img):
       if len(img.shape) < 3:
         return True
@@ -571,7 +572,10 @@ class Page:
     if isgray(img):
       img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = self.change_contrast_cv2(img)
-    parameters = self.newspaper.get_parameters()
+    if parameters is None:
+      parameters = self.newspaper.get_parameters()
+      if isinstance(parameters, list):
+        parameters = parameters[0]
     p = self.file_name.split('_')[-1][1:]
     if parameters.include is not None:
       if not int(p) in parameters.include:
@@ -622,21 +626,44 @@ class Page:
       x, y, w, h = cv2.boundingRect(contour)
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
-    images = [(self.file_name + '_00000', bimg)]
-    self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize)
+    images = [(self.file_name + '_' + str(part) + '_00000', bimg)]
+    self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize, part)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True, force=False):
     if self.isAlreadySeen() or force:
       image = Image.open(self.original_image)
-      cropped = self.newspaper.crop_png(image)
-      images, img = self.get_boxes(cropped, no_resize = no_resize)
+      if not self.isins:
+        cropped = self.newspaper.crop_png(image)
+        images, _ = self.get_boxes(cropped, no_resize=no_resize)
+      else:
+        cropped = self.newspaper.crop_ins_png(image)
+        if isinstance(cropped, list):
+          images = []
+          for i in range(len(cropped)):
+            parameters = self.newspaper.get_ins_parameters()
+            if isinstance(parameters, list):
+              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[i], part=i+1)
+            else:
+              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
+            if _images is None:
+              continue
+            images.insert(i, _images[0])
+            for j in range(1, len(_images)):
+              images.append(_images[j])
+        else:
+          images, _ = self.get_boxes(cropped, no_resize = no_resize)
       if images is not None and not save_head and len(images):
         images.pop(0)
       if filedir is not None and images is not None:
         for img in images:
           image = Image.fromarray(img[1])
           Path(filedir).mkdir(parents=True, exist_ok=True)
-          image.save(os.path.join(filedir, img[0] + '.jpg'), format="JPEG")
+          file_name = img[0]
+          if 'INS' in self.original_path:
+            dir = self.original_path.split('/')[-1]
+            n = dir.split(' ')[2]
+            file_name = '_'.join(file_name.split('_')[:-2]) + ('_INS_' + str(n)) + '_' + '_'.join(file_name.split('_')[-2:])
+          image.save(os.path.join(filedir, file_name + '.jpg'), format="JPEG")
         images = None
       return images
     return None
@@ -743,8 +770,26 @@ class Page:
   def check_pages_numbers(self, model):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
-      cropped = self.newspaper.crop_png(image)
-      images, img = self.get_boxes(cropped)
+      if not self.isins:
+        cropped = self.newspaper.crop_png(image)
+        images, _ = self.get_boxes(cropped, no_resize=no_resize)
+      else:
+        cropped = self.newspaper.crop_png(image)
+        if isinstance(cropped, list):
+          images = []
+          for i in range(1, len(cropped)):
+            parameters = self.newspaper.get_parameters()
+            if isinstance(parameters, list):
+              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[i], part=i+1)
+            else:
+              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
+            if _images is None:
+              continue
+            images.insert(i, _images[0])
+            for j in range(1, len(_images)):
+              images.append(_images[j])
+        else:
+          images, _ = self.get_boxes(cropped, no_resize = no_resize)
       head_image = None
       prediction = None
       predictions = None
@@ -756,7 +801,8 @@ class Page:
         self.page_control = 1
       else:
         self.page_control = 0
-      return head_image, images, prediction, predictions
+      return head_image, images, prediction, predictions, True
+    return None, None, None, None, False
   def get_page_numbers(self, model, images):
     head_image = images.pop(0)
     dataset = []
@@ -1200,9 +1246,9 @@ class Page:
     ext = Path(self.original_image).suffix
     # img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
     img = cv2.imread(self.original_image)
-    img1, img2 = self.newspaper.divide(img)
-    cv2.imwrite(file_path_no_ext + '_1' + ext, img1)
-    cv2.imwrite(file_path_no_ext + '_2' + ext, img2)
+    imgs = self.newspaper.divide(img)
+    for i, _img in enumerate(imgs):
+      cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
     os.remove(self.original_image)
     return 1
 

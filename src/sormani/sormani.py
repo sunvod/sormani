@@ -68,6 +68,7 @@ class Sormani():
     if not isinstance(days, list):
       days = [days]
     days.sort()
+    self.days = days
     self.dir_name = ''
     self.roots = []
     for newspaper_name in newspaper_names:
@@ -203,7 +204,8 @@ class Sormani():
       filedirs = []
       roots = []
       if self.day is not None:
-        for filedir, dirs, files in os.walk(root):
+        new_root = '/'.join(root.split('/')[:-1])
+        for filedir, dirs, files in os.walk(new_root):
           if not len(dirs):
             roots.append(root)
           else:
@@ -211,8 +213,9 @@ class Sormani():
             for dir in dirs:
               n = dir.split(' ')[0]
               if n.isdigit():
-                if int(n) == self.day:
-                  roots.append(os.path.join(root, dir))
+                if int(n) in self.days:
+                  roots.append(os.path.join(new_root, dir))
+            break
       else:
         roots.append(root)
       roots.sort()
@@ -488,11 +491,11 @@ class Sormani():
     self.force = True
     images = []
     for page_pool in self:
-      if not page_pool.isins:
-        image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head, force=force)
-        if image is not None and len(image):
-          images.append(image)
-        print('.', end='')
+      # if not page_pool.isins:
+      image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head, force=force)
+      if image is not None and len(image):
+        images.append(image)
+      print('.', end='')
     print()
     self.force = selfforce
     return images
@@ -567,7 +570,7 @@ class Sormani():
           old_folder = os.path.join(filedir, dir)
           new_folder = os.path.join(filedir, dir[:p] + ' INS ' + str(number))
           s = old_folder.split(' ')[-1]
-          if s[0] == 'P' or s[0:2] == 'OT' or s[0] == 'p':
+          if s[0] == 'P' or s[0:2] == 'OT':
             new_folder += ' ' + old_folder.split(' ')[-1]
           if old_folder != new_folder:
             try:
@@ -713,10 +716,10 @@ class Sormani():
     self.force = True
     if not no_division:
       self.divide_image()
-    if not no_set_names:
-      self.set_all_images_names()
     if not no_change_contrast:
       self.change_contrast()
+    if not no_set_names:
+      self.set_all_images_names()
     self.force = selfforce
     self.set_elements()
     if not no_create_image:
