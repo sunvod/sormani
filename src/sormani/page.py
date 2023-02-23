@@ -662,7 +662,7 @@ class Page:
           if 'INS' in self.original_path:
             dir = self.original_path.split('/')[-1]
             n = dir.split(' ')[2]
-            file_name = '_'.join(file_name.split('_')[:-2]) + ('_INS_' + str(n)) + '_' + '_'.join(file_name.split('_')[-2:])
+            file_name = '_'.join(file_name.split('_')[:-3]) + ('_INS_' + str(n)) + '_' + '_'.join(file_name.split('_')[-3:])
           image.save(os.path.join(filedir, file_name + '.jpg'), format="JPEG")
         images = None
       return images
