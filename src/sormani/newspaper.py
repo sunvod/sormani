@@ -844,7 +844,7 @@ class Il_Sole_24_Ore(Newspaper):
     return [Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=150,
-                                 min_h=30,
+                                 min_h=45,
                                  max_h=150,
                                  ts=240,
                                  min_mean=0,
