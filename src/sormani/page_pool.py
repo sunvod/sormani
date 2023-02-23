@@ -30,13 +30,22 @@ class Page_pool(list):
     self.thresholding = thresholding
   def set_pages(self):
     n_pages = len(self)
+    for i, page in enumerate(self):
+      if not i:
+        page.newspaper.isfirstpage = True
+      else:
+        page.newspaper.isfirstpage = False
     if n_pages > 0:
       page = self[0]
       page.newspaper.set_n_pages(self, n_pages)
       self.sort(key=self._n_page_sort)
   def set_pages_already_seen(self):
     n_pages = len(self)
-    for page in self:
+    for i, page in enumerate(self):
+      if not i:
+        page.newspaper.isfirstpage = True
+      else:
+        page.newspaper.isfirstpage = False
       try:
         n_page = page.file_name.split('_')[-1][1:]
         page.newspaper.n_pages = n_pages

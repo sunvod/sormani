@@ -630,6 +630,8 @@ class Page:
     self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize, part)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True, force=False):
+    if self.newspaper.isfirstpage:
+      return None
     if self.isAlreadySeen() or force:
       image = Image.open(self.original_image)
       if not self.isins:
@@ -647,13 +649,14 @@ class Page:
               _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
             if _images is None:
               continue
-            images.insert(i, _images[0])
+            if save_head:
+              images.insert(i, _images[0])
             for j in range(1, len(_images)):
               images.append(_images[j])
         else:
           images, _ = self.get_boxes(cropped, no_resize = no_resize)
-      if images is not None and not save_head and len(images):
-        images.pop(0)
+          if images is not None and not save_head and len(images):
+            images.pop(0)
       if filedir is not None and images is not None:
         for img in images:
           image = Image.fromarray(img[1])

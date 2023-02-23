@@ -779,9 +779,9 @@ class Il_Sole_24_Ore(Newspaper):
   def get_ins_whole_page_location(self, image):
     w, h = image.size
     if self.n_page % 2 == 0:
-      whole = [[0, 200, w // 2 + 250, 650], [0, h - 650, w // 2 +250, h - 200]]
+      whole = [[200, 200, 500, 650], [200, h - 650, 500, h - 200], [w // 2 - 200, h - 650, w // 2 + 200, h - 200]]
     else:
-      whole = [[w // 2 - 250, 200, w, 650], [w // 2 - 250, h - 650, w, h - 200]]
+      whole = [[w - 450, 200, w - 150, 650], [w - 450, h - 650, w - 150, h - 200], [w // 2 - 250, h - 650, w, h - 200]]
     return whole
 
   def set_n_pages(self, page_pool, n_pages):
@@ -842,10 +842,23 @@ class Il_Sole_24_Ore(Newspaper):
         r = 2
   def get_ins_parameters(self):
     return [Newspaper_parameters(scale=200,
-                                 min_w=50,
+                                 min_w=30,
                                  max_w=150,
-                                 min_h=100,
+                                 min_h=30,
                                  max_h=150,
+                                 ts=240,
+                                 min_mean=0,
+                                 max_mean=500,
+                                 invert=False,
+                                 fill_hole=1,
+                                 invert_fill_hole=True,
+                                 max_distance=10,
+                                 can_be_internal=True),
+            Newspaper_parameters(scale=200,
+                                 min_w=30,
+                                 max_w=100,
+                                 min_h=90,
+                                 max_h=140,
                                  ts=240,
                                  min_mean=0,
                                  max_mean=500,
