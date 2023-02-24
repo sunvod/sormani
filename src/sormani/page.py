@@ -58,7 +58,7 @@ class Page:
     else:
       self.conversions.append(conversion)
   def set_file_names(self):
-    page = ('000' + str(self.newspaper.n_page))[-len(str(self.newspaper.n_pages)) : ]
+    page = ('0000' + str(self.newspaper.n_page))[-3 : ]
     #page = ('000' + str(self.newspaper.n_page))[-3:]
     self.file_name = self.newspaper.name.replace(' ', '_') \
                      + '_' + str(self.year) \
