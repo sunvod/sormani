@@ -28,6 +28,7 @@ class Page_pool(list):
     self.date = date
     self.force = force
     self.thresholding = thresholding
+    self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
   def set_pages(self):
     n_pages = len(self)
     for i, page in enumerate(self):
@@ -308,9 +309,15 @@ class Page_pool(list):
       image = Image.open(page.original_image)
       width, height = image.size
       if width < height:
-        if flag:
+        if self.isOT and height > 6000:
+          img = cv2.imread(page.original_image)
+          img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+          cv2.imwrite(page.original_image, img)
+        elif flag:
           os.rename(page.original_image, file_path_no_ext + '_0' + ext)
-        continue
+          continue
+        else:
+          continue
       pages.append(page)
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._divide_image, pages)

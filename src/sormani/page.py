@@ -50,6 +50,7 @@ class Page:
     self.conversions = []
     self.page_control = -1
     self.is_bobina = False
+    self.isdivided = False
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -259,18 +260,6 @@ class Page:
       b1 = [(o - books[1][a][0], books[1][a][1], books[1][a][2], books[1][a][3]) for a in range(l)]
       b1.sort(key=lambda e: e[0])
       return (b0, b1)
-    def rotate():
-      # rotate image se serve
-      # ctr = np.array([[x, y],[x+w, y],[w+w, y+h],[x, y+h]]).reshape((-1, 1, 2)).astype(np.int32)
-      # rect = cv2.minAreaRect(ctr)
-      # if rect is not None:
-      #   angle = rect[2]
-      #   print(angle)
-      #   if angle < 45:
-      #     angle = 90 + angle
-      #   if angle > 85 and (angle < 89.9 or angle > 90.1):
-      #     bimg = rotate_image(bimg, angle - 90)
-      pass
     def piano_b(valid):
       count = 0
       file = self.original_image
@@ -479,8 +468,8 @@ class Page:
     return False
   def convert_from_cv2_to_image(self, img: np.ndarray) -> Image:
     return Image.fromarray(img)
-  def convert_from_image_to_cv2(self, img: Image) -> np.ndarray:
-    return np.asarray(img)
+  def convert_from_image_to_cv2(self, image: Image) -> np.ndarray:
+    return np.asarray(image)
   def _change_contrast_PIL(self, img, level):
     factor = (259 * (level + 255)) / (255 * (259 - level))
     def contrast(c):
@@ -1253,6 +1242,7 @@ class Page:
     for i, _img in enumerate(imgs):
       cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
     os.remove(self.original_image)
+    self.isdivided = True
     return 1
 
 
