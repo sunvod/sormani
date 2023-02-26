@@ -664,9 +664,9 @@ def open_win_rename_images_files(count, filedir, file):
 def rename_images_files(name):
   count = 1
   _files = []
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
     files.sort()
     i = 0
@@ -835,14 +835,14 @@ def show_OT(root):
 
 ns = 'Il Sole 24 Ore'
 
-cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 50)
+# cnn = CNN(ns)
+# cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-# rename_images_files(ns)
+rename_images_files(ns)
 
 # to_n_classes(ns, n=11, resize=True)
 

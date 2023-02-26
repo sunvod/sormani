@@ -766,11 +766,11 @@ class Page:
         cropped = self.newspaper.crop_png(image)
         images, _ = self.get_boxes(cropped, no_resize=no_resize)
       else:
-        cropped = self.newspaper.crop_png(image)
+        cropped = self.newspaper.crop_ins_png(image)
         if isinstance(cropped, list):
           images = []
-          for i in range(1, len(cropped)):
-            parameters = self.newspaper.get_parameters()
+          for i in range(len(cropped)):
+            parameters = self.newspaper.get_ins_parameters()
             if isinstance(parameters, list):
               _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[i], part=i+1)
             else:
@@ -785,7 +785,7 @@ class Page:
       head_image = None
       prediction = None
       predictions = None
-      if images is not None:
+      if images is not None and len(images):
         head_image, prediction, predictions = self.get_page_numbers(model, images)
       if images is None or prediction is None:
         self.page_control = -1
@@ -796,9 +796,38 @@ class Page:
       return head_image, images, prediction, predictions, True
     return None, None, None, None, False
   def get_page_numbers(self, model, images):
-    head_image = images.pop(0)
+    def isgray(img):
+      if len(img.shape) < 3:
+        return True
+      if img.shape[2] == 1:
+        return True
+      r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+      if np.allclose(r, g) and np.allclose(r, b):
+        return True
+      return False
+
+    head_images = []
+    i = 0
+    while i < len(images):
+      name = images[i][0]
+      if name.split('_')[-1] == '00000':
+        hi = images.pop(0)
+        title = hi[0]
+        # head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
+        head_image = Image.fromarray(hi[1])
+        head_image = tf.image.convert_image_dtype(head_image, dtype=tf.float32)
+        head_images.append((title, head_image))
+      else:
+        i += 1
     dataset = []
     for image in images:
+      # if isgray(image[1]):
+      #   img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
+      #   img = Image.fromarray(img)
+      # else:
+      #   img = Image.fromarray(image[1])
+      # img = tf.image.convert_image_dtype(img, dtype=tf.float32)
+      # dataset.append(img)
       img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
       img = Image.fromarray(img)
       img = tf.image.convert_image_dtype(img, dtype=tf.float32)
@@ -807,10 +836,6 @@ class Page:
       original_predictions = list(np.argmax(model.predict(np.array(dataset), verbose = 0), axis=-1))
     except Exception as e:
       return None, None, None
-    title = head_image[0]
-    # head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
-    head_image = Image.fromarray(head_image[1])
-    head_image = tf.image.convert_image_dtype(head_image, dtype=tf.float32)
     b = None
     predictions = []
     last = len(self.newspaper.get_dictionary()) - 1
@@ -833,7 +858,7 @@ class Page:
       prediction = int(''.join(_predictions))
     else:
       prediction = None
-    return (title, head_image), prediction, original_predictions
+    return head_images, prediction, original_predictions
   def open_win_pages_files(self, image, file_to_be_changing, prediction = None):
     def close():
       gui.destroy()

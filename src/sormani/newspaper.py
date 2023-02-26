@@ -782,7 +782,7 @@ class Il_Sole_24_Ore(Newspaper):
     if self.n_page % 2 == 0:
       whole = [[200, 200, 470, 620], [200, h - 650, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     else:
-      whole = [[w - 450, 200, w - 200, 620], [w - 620, h - 650, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+      whole = [[w - 470, 200, w - 200, 620], [w - 620, h - 650, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
 
   def set_n_pages(self, page_pool, n_pages):
