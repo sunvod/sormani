@@ -759,7 +759,7 @@ class Page:
             image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.tif'), exif=exif)
             # image.save(os.path.join(filedir, dir, self.original_file_name + '.jpg'), exif=exif)
             pass
-  def check_pages_numbers(self, model):
+  def check_pages_numbers(self, model, no_resize=False):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
       if not self.isins:

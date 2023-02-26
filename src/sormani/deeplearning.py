@@ -117,7 +117,15 @@ class CNN:
       name = ''
     model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
-    # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
+    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
+    try:
+      file = open(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name, 'results.txt'), 'r')
+      self.val_sparse_categorical_accuracy = float(file.read())
+    finally:
+      try:
+        file.close()
+      except:
+        pass
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -131,6 +139,9 @@ class CNN:
       callbacks=callbacks
     )
     tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
+    file = open(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name, 'results.txt'), 'w')
+    file.write(str(self.val_sparse_categorical_accuracy))
+    file.close()
     pass
 
   def prediction_cnn(self):
@@ -183,6 +194,9 @@ class customCallback(keras.callbacks.Callback):
             f' {logs_val}, saving model to {model_path}')
       self.val_sparse_categorical_accuracy = logs_val
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
+      file = open(os.path.join(STORAGE_BASE, 'models', self.name, 'last_model_' + self.model_name, 'results.txt'), 'w')
+      file.write(str(self.val_sparse_categorical_accuracy))
+      file.close()
     elif logs_val <= min:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
             f' is lower than the minimum value for saving')
@@ -821,14 +835,14 @@ def show_OT(root):
 
 ns = 'Il Sole 24 Ore'
 
-# cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 50)
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-rename_images_files(ns)
+# rename_images_files(ns)
 
 # to_n_classes(ns, n=11, resize=True)
 

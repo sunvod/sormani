@@ -769,6 +769,7 @@ class Il_Sole_24_Ore(Newspaper):
     self.init_year = 152
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Il Sole 24 Ore', file_path, date, year, number, init_page = 3)
+    self.contrast = 10
   def get_whole_page_location(self, image):
     w, h = image.size
     if self.n_page % 2 == 0:

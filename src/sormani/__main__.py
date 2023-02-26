@@ -3,8 +3,8 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Il Sole 24 Ore', year=2016, months=[x for x in range(1,2)], days=25, only_ins=True)
-  sormani.set_giornali_pipeline(no_division=False, no_set_names=False, no_change_contrast=True, no_create_image=True)
+  sormani = Sormani('Il Sole 24 Ore', year=2016, months=[x for x in range(1,2)], days=None, only_ins=False)
+  # sormani.set_giornali_pipeline(no_division=False, no_set_names=False, no_change_contrast=False, no_create_image=False)
 
   # sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
   # sormani.set_bobine_merge_images()
@@ -34,7 +34,7 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = True, save_head = True)
   # sormani.get_crop(filedir=os.path.join(STORAGE_BASE, REPOSITORY), no_resize = False, force=True)
   # sormani.rename_pages_files(do_prediction=False)
-  # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
+  sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.check_page_numbers(save_images = True, model_path = 'best_model_SimpleCNN', assume_newspaper = True, newspaper_name = None)
   # sormani.update_date_creation()
 
