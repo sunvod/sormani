@@ -117,15 +117,15 @@ class CNN:
       name = ''
     model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
-    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
-    try:
-      file = open(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name, 'results.txt'), 'r')
-      self.val_sparse_categorical_accuracy = float(file.read())
-    finally:
-      try:
-        file.close()
-      except:
-        pass
+    # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
+    # try:
+    #   file = open(os.path.join(STORAGE_BASE, 'models', name, 'best_model_' + model_name, 'results.txt'), 'r')
+    #   self.val_sparse_categorical_accuracy = float(file.read())
+    # finally:
+    #   try:
+    #     file.close()
+    #   except:
+    #     pass
     model.compile(
       optimizer='adam',
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -665,7 +665,7 @@ def rename_images_files(name):
   count = 1
   _files = []
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
   for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
     files.sort()
@@ -835,14 +835,14 @@ def show_OT(root):
 
 ns = 'Il Sole 24 Ore'
 
-# cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 50)
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 500)
 
 # count_tiff()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
-rename_images_files(ns)
+# rename_images_files(ns)
 
 # to_n_classes(ns, n=11, resize=True)
 
