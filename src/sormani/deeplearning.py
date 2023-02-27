@@ -194,9 +194,14 @@ class customCallback(keras.callbacks.Callback):
             f' {logs_val}, saving model to {model_path}')
       self.val_sparse_categorical_accuracy = logs_val
       tf.keras.models.save_model(self.model, model_path, save_format='tf')
-      file = open(os.path.join(STORAGE_BASE, 'models', self.name, 'last_model_' + self.model_name, 'results.txt'), 'w')
-      file.write(str(self.val_sparse_categorical_accuracy))
-      file.close()
+      try:
+        file = open(os.path.join(STORAGE_BASE, 'models', self.name, 'best_model_' + self.model_name, 'results.txt'), 'w')
+        file.write(str(self.val_sparse_categorical_accuracy))
+      finally:
+        try:
+          file.close()
+        except:
+          pass
     elif logs_val <= min:
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy equal to {logs_val}'
             f' is lower than the minimum value for saving')
