@@ -81,6 +81,8 @@ class CNN:
       base_model = InceptionResNetV2(weights='imagenet', include_top=False)
     elif type == 'EfficientNetV2M':
       base_model = EfficientNetV2M(weights='imagenet', include_top=False)
+    elif type == 'EfficientNetV2L':
+      base_model = EfficientNetV2L(weights='imagenet', include_top=False)
     else:
       model = tf.keras.Sequential([
         tf.keras.layers.Rescaling(1. / 255),
@@ -115,7 +117,8 @@ class CNN:
       name = name.lower().replace(' ', '_')
     else:
       name = ''
-    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
+    # model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
+    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='EfficientNetV2L')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     # try:
