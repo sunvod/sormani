@@ -539,15 +539,11 @@ class Page:
             pass
           if (_x > x + parameters.right_free[0] and
               _x < x + sum(parameters.right_free) and
-              # _x + _w > x + parameters.right_free[0] and
-              # _x + _w < x + sum(parameters.right_free) and
               _y > y - h and
               _y < y + h) \
               or \
               (_x < x - parameters.left_free[0] and
                _x > x - sum(parameters.left_free)  and
-               # _x + _w > x + parameters.left_free[0] and
-               # _x + _w < x + sum(parameters.left_free) and
                _y > y - h and
                _y < y + h):
             flag = True
@@ -568,15 +564,7 @@ class Page:
               Path(filedir).mkdir(parents=True, exist_ok=True)
               cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
               pass
-            if (_x > x + parameters.right_free[0] // 2 and
-                # _x < x + sum(parameters.right_free) and
-                _y > y - h and
-                _y < y + h) \
-                or \
-                (_x < x - parameters.left_free[0] // 2 and
-                 # _x > x - sum(parameters.left_free) and
-                 _y > y - h and
-                 _y < y + h):
+            if _x > x + parameters.right_free[0] // 2 and _x < x + sum(parameters.right_free) // 2 and _y > y - h and _y < y + h:
               right = True
               break
           if right:
@@ -594,20 +582,15 @@ class Page:
                 Path(filedir).mkdir(parents=True, exist_ok=True)
                 cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
                 pass
-              if (_x < x + sum(parameters.right_free) and
-                  _y > y - h and
-                  _y < y + h) \
-                  or \
-                  (_x > x - sum(parameters.left_free) and
-                   _y > y - h and
-                   _y < y + h):
+              if _x < x - parameters.left_free[0] // 2 and _x > x - sum(parameters.left_free) // 2 and _y > y - h and _y < y + h:
                 flag = True
                 break
         if flag:
           continue
         _contours.append(contour)
       return _contours
-    contours = clean_contours(self, contours, parameters)
+    if parameters.right_free is not None:
+      contours = clean_contours(self, contours, parameters)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour) # hierarchy[0, i, 3] == -1 and
       if (parameters.can_be_internal or hierarchy[0, i, 3] == -1) and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
@@ -707,6 +690,20 @@ class Page:
       gray = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
       if parameters.invert_fill_hole:
         gray = 255 - gray
+    # Remove horizontal lines
+    # horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 1))
+    # remove_horizontal = cv2.morphologyEx(gray, cv2.MORPH_OPEN, horizontal_kernel, iterations=2)
+    # cnts = cv2.findContours(remove_horizontal, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    # for c in cnts:
+    #   cv2.drawContours(gray, [c], -1, (255, 255, 255), 5)
+    # Remove vertical lines
+    # vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1,50))
+    # remove_vertical = cv2.morphologyEx(gray, cv2.MORPH_OPEN, vertical_kernel, iterations=2)
+    # cnts = cv2.findContours(remove_vertical, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    # for c in cnts:
+    #     cv2.drawContours(gray, [c], -1, (255,255,255), 5)
     img = cv2.threshold(gray, parameters.ts, 255, cv2.THRESH_BINARY_INV)[1]
     if not parameters.invert:
       img = 255 - img
@@ -717,6 +714,12 @@ class Page:
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     _contours = []
+    # for i, contour in enumerate(contours):
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   flag = False
+    #   if w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
+    #     _contours.append(contour)
+    # contours = _contours
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       flag = False
@@ -727,6 +730,16 @@ class Page:
         if x == _x and y == _y and w == _w and h == _h:
           flag = True
           break
+      if not flag:
+        for j, _contour in enumerate(contours):
+          if j == i:
+            break
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if _w <= parameters.box[0] or _w >= parameters.box[1] or _h <= parameters.box[2] or _h >= parameters.box[3]:
+            continue
+          if x > _x and x < _x + _w and y > _y and y < _y + _w:
+            flag = True
+            break
       if not flag:
         _contours.append(contour)
     contours = _contours

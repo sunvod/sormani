@@ -36,8 +36,8 @@ class Newspaper_parameters():
                exclude_colors = None,
                can_be_internal=False,
                max_distance = None,
-               left_free=(150,75),
-               right_free=(150,75)):
+               left_free=None,
+               right_free=None):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -877,7 +877,9 @@ class Il_Sole_24_Ore(Newspaper):
                                  fill_hole=1,
                                  invert_fill_hole=True,
                                  max_distance=10,
-                                 can_be_internal=True),
+                                 can_be_internal=True,
+                                 left_free=(100, 75),
+                                 right_free = (100, 75)),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=100,
@@ -890,7 +892,9 @@ class Il_Sole_24_Ore(Newspaper):
                                  fill_hole=1,
                                  invert_fill_hole=True,
                                  max_distance=10,
-                                 can_be_internal=True),
+                                 can_be_internal=True,
+                                 left_free=(100, 75),
+                                 right_free=(150, 75)),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=100,
@@ -903,7 +907,9 @@ class Il_Sole_24_Ore(Newspaper):
                                  fill_hole=1,
                                  invert_fill_hole=True,
                                  max_distance=10,
-                                 can_be_internal=True)]
+                                 can_be_internal=True,
+                                 left_free=(100, 75),
+                                 right_free=(150, 75))]
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -918,7 +924,9 @@ class Il_Sole_24_Ore(Newspaper):
                                 fill_hole=1,
                                 invert_fill_hole=True,
                                 max_distance=10,
-                                can_be_internal=True)
+                                can_be_internal=True,
+                                left_free=(100, 75),
+                                right_free=(150, 75))
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year =  (120, 72)
