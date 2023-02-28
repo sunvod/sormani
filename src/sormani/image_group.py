@@ -45,8 +45,8 @@ class Images_group():
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
-  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding):
-    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding)
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, model):
+    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, model)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
@@ -58,14 +58,17 @@ class Images_group():
       exists = True
       for file in self.files:
         if pathlib.Path(file).suffix == '.' + ext:
-          if not(Path(file).stem + '.pdf' in listdir(filedir)):
+          if not (Path(file).stem + '.pdf' in listdir(filedir)):
             exists = False
             break
       if exists:
         return page_pool
     for file in self.files:
       if pathlib.Path(file).suffix == '.' + ext:
-        page = Page(Path(file).stem, self.date, self.newspaper, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, model)
+        if model is not None:
+          page.predictions = page.get_prediction()
+          page.isvalid = True
         page_pool.append(page)
     return page_pool
 

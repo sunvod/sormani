@@ -30,7 +30,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, original_image, pdf_path, jpg_path, txt_path):
+  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, model):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -40,7 +40,8 @@ class Page:
     self.month = date.month
     self.month_text = MONTHS[self.month - 1]
     self.day = date.day
-    self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
+    self.isins = isins
+    self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number, model=model)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -51,6 +52,9 @@ class Page:
     self.page_control = -1
     self.is_bobina = False
     self.isdivided = False
+    self.model = model
+    self.predictions = None
+    self.isvalid = None
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -625,27 +629,30 @@ class Page:
       image = Image.open(self.original_image)
       if not self.isins:
         cropped = self.newspaper.crop_png(image)
-        images, _ = self.get_boxes(cropped, no_resize=no_resize)
+        parameters = self.newspaper.get_parameters()
       else:
         cropped = self.newspaper.crop_ins_png(image)
-        if isinstance(cropped, list):
-          images = []
-          for i in range(len(cropped)):
-            parameters = self.newspaper.get_ins_parameters()
-            if isinstance(parameters, list):
-              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[i], part=i+1)
-            else:
-              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
-            if _images is None:
-              continue
-            if save_head:
-              images.insert(i, _images[0])
-            for j in range(1, len(_images)):
-              images.append(_images[j])
-        else:
-          images, _ = self.get_boxes(cropped, no_resize = no_resize)
-          if images is not None and not save_head and len(images):
-            images.pop(0)
+        parameters = self.newspaper.get_ins_parameters()
+      if isinstance(cropped, list):
+        images = []
+        for i in range(len(cropped)):
+          if isinstance(parameters, list):
+            j = i
+            if len(parameters) < len(cropped):
+              j = i if i < len(parameters) else i - len(parameters)
+            _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[j], part=i + 1)
+          else:
+            _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
+          if _images is None:
+            continue
+          if save_head:
+            images.insert(i, _images[0])
+          for j in range(1, len(_images)):
+            images.append(_images[j])
+      else:
+        images, _ = self.get_boxes(cropped, no_resize = no_resize)
+        if images is not None and not save_head and len(images):
+          images.pop(0)
       if filedir is not None and images is not None:
         for img in images:
           image = Image.fromarray(img[1])
@@ -759,29 +766,61 @@ class Page:
             image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.tif'), exif=exif)
             # image.save(os.path.join(filedir, dir, self.original_file_name + '.jpg'), exif=exif)
             pass
+  def get_prediction(self):
+    image = Image.open(self.original_image)
+    if not self.isins:
+      cropped = self.newspaper.crop_png(image)
+      parameters = self.newspaper.get_parameters()
+    else:
+      cropped = self.newspaper.crop_ins_png(image)
+      parameters = self.newspaper.get_ins_parameters()
+    if isinstance(cropped, list):
+      images = []
+      for i in range(len(cropped)):
+        if isinstance(parameters, list):
+          j = i
+          if len(parameters) < len(cropped):
+            j = i if i < len(parameters) else i - len(parameters)
+          _images, _ = self.get_boxes(cropped[i], parameters=parameters[j], part=i + 1)
+        else:
+          _images, _ = self.get_boxes(cropped[i], parameters=parameters, part=i + 1)
+        if _images is None:
+          continue
+        images.insert(i, _images[0])
+        for j in range(1, len(_images)):
+          images.append(_images[j])
+    else:
+        images, _ = self.get_boxes(cropped)
+    if images is not None and len(images):
+      head_image, prediction, predictions = self.get_page_numbers(self.model, images)
+      return predictions
+    return None
   def check_pages_numbers(self, model, no_resize=False):
     if self.isAlreadySeen():
       image = Image.open(self.original_image)
       if not self.isins:
         cropped = self.newspaper.crop_png(image)
-        images, _ = self.get_boxes(cropped, no_resize=no_resize)
+        parameters = self.newspaper.get_parameters()
       else:
         cropped = self.newspaper.crop_ins_png(image)
-        if isinstance(cropped, list):
-          images = []
-          for i in range(len(cropped)):
-            parameters = self.newspaper.get_ins_parameters()
-            if isinstance(parameters, list):
-              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[i], part=i+1)
-            else:
-              _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
-            if _images is None:
-              continue
-            images.insert(i, _images[0])
-            for j in range(1, len(_images)):
-              images.append(_images[j])
-        else:
-          images, _ = self.get_boxes(cropped, no_resize = no_resize)
+        parameters = self.newspaper.get_ins_parameters()
+      if isinstance(cropped, list):
+        images = []
+        for i in range(len(cropped)):
+          if isinstance(parameters, list):
+            j = i
+            if len(parameters) < len(cropped):
+              j = i if i < len(parameters) else i - len(parameters)
+            _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters[j], part=i + 1)
+          else:
+            _images, _ = self.get_boxes(cropped[i], no_resize=no_resize, parameters=parameters, part=i+1)
+          if _images is None:
+            continue
+          images.insert(i, _images[0])
+          for j in range(1, len(_images)):
+            images.append(_images[j])
+      else:
+        images, _ = self.get_boxes(cropped, no_resize = no_resize)
       head_image = None
       prediction = None
       predictions = None
@@ -811,7 +850,7 @@ class Page:
     while i < len(images):
       name = images[i][0]
       if name.split('_')[-1] == '00000':
-        hi = images.pop(0)
+        hi = images.pop(i)
         title = hi[0]
         # head_image = cv2.cvtColor(head_image[1], cv2.COLOR_GRAY2RGB)
         head_image = Image.fromarray(hi[1])
@@ -821,13 +860,6 @@ class Page:
         i += 1
     dataset = []
     for image in images:
-      # if isgray(image[1]):
-      #   img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
-      #   img = Image.fromarray(img)
-      # else:
-      #   img = Image.fromarray(image[1])
-      # img = tf.image.convert_image_dtype(img, dtype=tf.float32)
-      # dataset.append(img)
       img = cv2.cvtColor(image[1], cv2.COLOR_GRAY2RGB)
       img = Image.fromarray(img)
       img = tf.image.convert_image_dtype(img, dtype=tf.float32)

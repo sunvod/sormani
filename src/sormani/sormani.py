@@ -43,7 +43,8 @@ class Sormani():
                only_ins=False,
                notcheckimages=True,
                thresholding=0,
-               no_rename_folders=False):
+               no_rename_folders=False,
+               model_path=None):
     if year is not None and isinstance(year, list) and not len(year):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -87,8 +88,10 @@ class Sormani():
                      exclude_ins,
                      only_ins,
                      notcheckimages,
-                     no_rename_folders)
+                     no_rename_folders,
+                     model_path)
     self.set_elements()
+    self.pages_pool = []
   def _init(self,
             newspaper_name,
             root,
@@ -103,7 +106,8 @@ class Sormani():
             exclude_ins,
             only_ins,
             notcheckimages,
-            no_rename_folders):
+            no_rename_folders,
+            model_path):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -137,24 +141,34 @@ class Sormani():
     self.only_ins = only_ins
     self.notcheckimages = notcheckimages
     self.roots.append(self.new_root)
+    self.model = None
+    if model_path is not None:
+      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
+      self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
+    self.model_path = model_path
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
     return self
   def __next__(self):
     if self.i < len(self.elements):
-      page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
-                                                      self.new_root,
-                                                      self.ext,
-                                                      self.image_path,
-                                                      self.path_exist,
-                                                      self.force,
-                                                      self.thresholding)
-      if len(page_pool):
-        if page_pool.isAlreadySeen():
-          page_pool.set_pages_already_seen()
-        else:
-          page_pool.set_pages()
+      if self.i >= len(self.pages_pool):
+        page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
+                                                        self.new_root,
+                                                        self.ext,
+                                                        self.image_path,
+                                                        self.path_exist,
+                                                        self.force,
+                                                        self.thresholding,
+                                                        self.model)
+        if len(page_pool):
+          if page_pool.isAlreadySeen():
+            page_pool.set_pages_already_seen()
+          else:
+            page_pool.set_pages()
+        self.pages_pool.append(page_pool)
+      else:
+        page_pool = self.pages_pool[self.i]
       self.i += 1
       return page_pool
     else:
@@ -298,7 +312,8 @@ class Sormani():
         continue
       else:
         if not page_pool.isAlreadySeen():
-          page_pool.set_image_file_name()
+          # page_pool.set_image_file_name()
+          pass
         else:
           page_pool.set_pages_already_seen()
     self.set_elements()

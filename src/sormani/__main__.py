@@ -3,8 +3,10 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Il Sole 24 Ore', year=2016, months=[x for x in range(1,2)], days=None, only_ins=False)
-  sormani.set_giornali_pipeline(no_division=False, no_set_names=True, no_change_contrast=True, no_create_image=True)
+  sormani = Sormani('Il Sole 24 Ore', year=2016, months=[x for x in range(1,2)], days=2, only_ins=False, model_path='best_model_DenseNet201')
+  sormani.set_giornali_pipeline(no_division=False, no_set_names=False, no_change_contrast=True, no_create_image=True)
+
+  # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
 
   # sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
   # sormani.set_bobine_merge_images()

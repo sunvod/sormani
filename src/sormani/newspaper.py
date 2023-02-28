@@ -65,7 +65,7 @@ class Newspaper_crop_parameters():
     self.bottom = bottom
 class Newspaper():
   @staticmethod
-  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
+  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None, model=None):
     if date is None and month is None:
       file_name = Path(file_path).stem
       year = ''.join(filter(str.isdigit, file_name.split('_')[-4]))
@@ -119,6 +119,8 @@ class Newspaper():
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     newspaper.month = month
+    newspaper.model = model
+    newspaper.n_page = None
     return newspaper
 
   @staticmethod
@@ -163,7 +165,7 @@ class Newspaper():
     return parameters
   def get_ins_parameters(self):
     return self.get_parameters()
-  def __init__(self, newspaper_base, name, file_path, date, year, number, init_page):
+  def __init__(self, newspaper_base, name, file_path, date, year, number, init_page, model=None):
     self.newspaper_base = newspaper_base
     self.name = name
     self.file_path = file_path
@@ -178,6 +180,7 @@ class Newspaper():
       self.year, self.number = self.get_head()
     self.page = None
     self.init_page = init_page
+    self.model = model
   def check_n_page(self, date):
     file_name = Path(self.file_path).stem
     l = len(self.name)
@@ -772,14 +775,19 @@ class Il_Sole_24_Ore(Newspaper):
     self.contrast = 10
   def get_whole_page_location(self, image):
     w, h = image.size
-    if self.n_page % 2 == 0:
-      whole = [200, 200, 500, 650]
+    if self.n_page is None:
+      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
+    elif self.n_page % 2 == 0:
+      whole = [[200, 200, 500, 650]]
     else:
-      whole = [w - 450, 200, w - 150, 650]
+      whole = [[w - 450, 200, w - 150, 650]]
     return whole
   def get_ins_whole_page_location(self, image):
     w, h = image.size
-    if self.n_page % 2 == 0:
+    if self.n_page is None:
+      whole = [[200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200],
+               [200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+    elif self.n_page % 2 == 0:
       whole = [[200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
       # whole = [[200, 200, 470, 620], [200, h - 650, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     else:
@@ -818,11 +826,8 @@ class Il_Sole_24_Ore(Newspaper):
     l = n_pages
     r = 2
     for n_page, page in enumerate(page_pool):
-      try:
-        page.newspaper.n_page
+      if page.newspaper.n_page is not None:
         continue
-      except:
-        pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       if m is not None:

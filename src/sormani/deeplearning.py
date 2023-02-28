@@ -117,8 +117,8 @@ class CNN:
       name = name.lower().replace(' ', '_')
     else:
       name = ''
-    # model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
-    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='EfficientNetV2L')
+    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'DenseNet201')
+    # model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='EfficientNetV2L')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
     # try:
@@ -844,7 +844,7 @@ def show_OT(root):
 ns = 'Il Sole 24 Ore'
 
 cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 500)
+cnn.exec_cnn(ns, epochs = 10)
 
 # count_tiff()
 
