@@ -69,13 +69,14 @@ class Page_pool(list):
       if page.save_pages_images(storage):
         count += 1
     return count
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False, debug=False):
     images = []
     if isinstance(pages, int):
       pages = [pages]
     for page in self:
       page.isins = self.isins
       if pages is None or page.newspaper.n_page in pages:
+        page.debug = debug
         image = page.get_pages_numbers(no_resize=no_resize, filedir = filedir, save_head = save_head, force=force)
         if image is not None:
           images.append(image)

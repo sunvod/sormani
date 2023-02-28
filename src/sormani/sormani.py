@@ -494,7 +494,7 @@ class Sormani():
     else:
       print(f'There are no pages images to extract for \'{self.newspaper_name}\'.')
     self.force = selfforce
-  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False):
+  def get_pages_numbers(self, no_resize = False, filedir = None, pages = None, save_head = True, force=False, debug=False):
     if not len(self.elements):
       return
     if filedir is not None:
@@ -507,7 +507,7 @@ class Sormani():
     images = []
     for page_pool in self:
       # if not page_pool.isins:
-      image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head, force=force)
+      image = page_pool.get_pages_numbers(no_resize = no_resize, filedir = filedir, pages = pages, save_head = save_head, force=force, debug=debug)
       if image is not None and len(image):
         images.append(image)
       print('.', end='')

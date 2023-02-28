@@ -35,7 +35,9 @@ class Newspaper_parameters():
                invert_fill_hole=False,
                exclude_colors = None,
                can_be_internal=False,
-               max_distance = None):
+               max_distance = None,
+               left_free=(150,75),
+               right_free=(150,75)):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -52,6 +54,8 @@ class Newspaper_parameters():
     self.can_be_internal = can_be_internal
     self.max_distance = max_distance
     self.model = None
+    self.left_free = left_free
+    self.right_free = right_free
 
 class Newspaper_crop_parameters():
   def __init__(self,
@@ -778,9 +782,9 @@ class Il_Sole_24_Ore(Newspaper):
     if self.n_page is None:
       whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     elif self.n_page % 2 == 0:
-      whole = [[200, 200, 500, 650]]
+      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     else:
-      whole = [[w - 450, 200, w - 150, 650]]
+      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     return whole
   def get_ins_whole_page_location(self, image):
     w, h = image.size

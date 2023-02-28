@@ -30,7 +30,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, model):
+  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, model, debug=False):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -55,6 +55,7 @@ class Page:
     self.model = model
     self.predictions = None
     self.isvalid = None
+    self.debug = debug
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -507,6 +508,106 @@ class Page:
       return e[0]
     _contours = []
     _check = []
+    def clean_contours(self, contours, parameters):
+      _contours = []
+      for i, contour in enumerate(contours):
+        x, y, w, h = cv2.boundingRect(contour)
+        if (not parameters.can_be_internal and hierarchy[0, i, 3] != -1) or w <= parameters.box[0] or w >= parameters.box[1] or h <= parameters.box[2] or h >= parameters.box[3] or w > h * 1.25:
+          continue
+        flag = False
+        if self.debug:
+          _roi = img[y:y + h, x:x + w]
+          name = file_name + '_' + '_' + ('0000' + str(i))[-5:]
+          filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+          filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+          Path(filedir).mkdir(parents=True, exist_ok=True)
+          cv2.imwrite(os.path.join(filedir, name + '_img.jpg'), img)
+          cv2.imwrite(os.path.join(filedir, name + '_' + str(x) + '_' + str(y) + '_' + str(w) + '_' + str(h) + '.jpg'), _roi)
+        for j, _contour in enumerate(contours):
+          if j == i:
+            continue
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
+            continue
+          if self.debug:
+            _roi = img[_y:_y + _h, _x:_x + _w]
+            name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:]
+            filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+            filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+            Path(filedir).mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
+            pass
+          if (_x > x + parameters.right_free[0] and
+              _x < x + sum(parameters.right_free) and
+              # _x + _w > x + parameters.right_free[0] and
+              # _x + _w < x + sum(parameters.right_free) and
+              _y > y - h and
+              _y < y + h) \
+              or \
+              (_x < x - parameters.left_free[0] and
+               _x > x - sum(parameters.left_free)  and
+               # _x + _w > x + parameters.left_free[0] and
+               # _x + _w < x + sum(parameters.left_free) and
+               _y > y - h and
+               _y < y + h):
+            flag = True
+            break
+        if not flag:
+          right = False
+          for j, _contour in enumerate(contours):
+            if j == i:
+              continue
+            _x, _y, _w, _h = cv2.boundingRect(_contour)
+            if _x < x or _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
+              continue
+            if self.debug:
+              _roi = img[_y:_y + _h, _x:_x + _w]
+              name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:] + '_right'
+              filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+              filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+              Path(filedir).mkdir(parents=True, exist_ok=True)
+              cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
+              pass
+            if (_x > x + parameters.right_free[0] // 2 and
+                # _x < x + sum(parameters.right_free) and
+                _y > y - h and
+                _y < y + h) \
+                or \
+                (_x < x - parameters.left_free[0] // 2 and
+                 # _x > x - sum(parameters.left_free) and
+                 _y > y - h and
+                 _y < y + h):
+              right = True
+              break
+          if right:
+            for j, _contour in enumerate(contours):
+              if j == i:
+                continue
+              _x, _y, _w, _h = cv2.boundingRect(_contour)
+              if _x > x or _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
+                continue
+              if self.debug:
+                _roi = img[_y:_y + _h, _x:_x + _w]
+                name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:] + '_left'
+                filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+                filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+                Path(filedir).mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
+                pass
+              if (_x < x + sum(parameters.right_free) and
+                  _y > y - h and
+                  _y < y + h) \
+                  or \
+                  (_x > x - sum(parameters.left_free) and
+                   _y > y - h and
+                   _y < y + h):
+                flag = True
+                break
+        if flag:
+          continue
+        _contours.append(contour)
+      return _contours
+    contours = clean_contours(self, contours, parameters)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour) # hierarchy[0, i, 3] == -1 and
       if (parameters.can_be_internal or hierarchy[0, i, 3] == -1) and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
@@ -615,6 +716,20 @@ class Page:
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    _contours = []
+    for i, contour in enumerate(contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      flag = False
+      for j, _contour in enumerate(contours):
+        if j >= i:
+          break
+        _x, _y, _w, _h = cv2.boundingRect(_contour)
+        if x == _x and y == _y and w == _w and h == _h:
+          flag = True
+          break
+      if not flag:
+        _contours.append(contour)
+    contours = _contours
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
