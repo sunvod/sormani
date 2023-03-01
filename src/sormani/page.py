@@ -519,14 +519,14 @@ class Page:
         _contour = contours[i - 1]
         x, y, w, h = cv2.boundingRect(contour)
         _x, _y, _w, _h = cv2.boundingRect(_contour)
-        # if self.debug:
-        #   _roi = img[_y:_y + _h, _x:_x + _w]
-        #   name = file_name + '_' + '0000' + str(i)[-5:]
-        #   filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-        #   filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-        #   Path(filedir).mkdir(parents=True, exist_ok=True)
-        #   cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
-        if _x < x and _y + _h > y + h - h // 3 and _y + _h < y + h + h // 3:
+        if self.debug:
+          _roi = img[_y:_y + _h, _x:_x + _w]
+          name = file_name + '_' + '0000' + str(i)[-5:]
+          filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+          filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+          Path(filedir).mkdir(parents=True, exist_ok=True)
+          cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
+        if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
           found_left.append(_contour)
           contour = _contour
         if len(found_left) >= 3:
@@ -539,7 +539,7 @@ class Page:
         _contour = contours[i + 1]
         x, y, w, h = cv2.boundingRect(contour)
         _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if _x > x and _y + _h > y + h - h // 3 and _y + _h < y + h + h // 3:
+        if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
           found_right.append(_contour)
           contour = _contour
         if len(found_right) >= 3:
@@ -578,18 +578,20 @@ class Page:
         count = 0
         for j, _contour in enumerate(found_left):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if j < 2 and x - _x - _w < 50:
+          if j < 2 and x - _x - _w < parameters.left_free[1]:
             x = _x
             count += 1
             continue
-          if j >= 2 and x - _x - _w < 50:
+          if j >= 2 and x - _x - _w < parameters.left_free[1]:
             flag = True
             break
+        if not flag and count < len(found_left) and cv2.boundingRect(x - found_left[count])[0] < parameters.left_free[0]:
+          flag = True
         x, y, w, h = cv2.boundingRect(contour)
         if not flag:
           for j, _contour in enumerate(found_right):
             _x, _y, _w, _h = cv2.boundingRect(_contour)
-            if j < 2 and _x - x - w < 50:
+            if j < 2 and _x - x - w < parameters.right_free[1]:
               x = _x
               w = _w
               count += 1
@@ -597,9 +599,11 @@ class Page:
                 flag = True
                 break
               continue
-            if j >= 2 and _x - x - w < 50:
+            if j >= 2 and _x - x - w < parameters.right_free[1]:
               flag = True
               break
+        if not flag and count < len(found_right) and cv2.boundingRect(found_right[count])[0] - x < parameters.right_free[0]:
+          flag = True
         x, y, w, h = cv2.boundingRect(contour)
         if not flag:
           for i, _contour in enumerate(contours):
