@@ -37,7 +37,11 @@ class Newspaper_parameters():
                can_be_internal=False,
                max_distance = None,
                left_free=None,
-               right_free=None):
+               right_free=None,
+               delete_horizontal = False,
+               delete_vertical = False,
+               min_area=None,
+               position='top'):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -56,6 +60,10 @@ class Newspaper_parameters():
     self.model = None
     self.left_free = left_free
     self.right_free = right_free
+    self.delete_horizontal = delete_horizontal
+    self.delete_vertical = delete_vertical
+    self.min_area = min_area
+    self.position = position
 
 class Newspaper_crop_parameters():
   def __init__(self,
@@ -780,7 +788,7 @@ class Il_Sole_24_Ore(Newspaper):
   def get_whole_page_location(self, image):
     w, h = image.size
     if self.n_page is None:
-      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
+      whole = [[200, 200, 600, 650], [w - 450, 200, w - 150, 650]]
     elif self.n_page % 2 == 0:
       whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     else:
@@ -793,12 +801,9 @@ class Il_Sole_24_Ore(Newspaper):
                [200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     elif self.n_page % 2 == 0:
       whole = [[200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
-      # whole = [[200, 200, 470, 620], [200, h - 650, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     else:
-      # whole = [[w - 470, 200, w - 200, 620], [w - 620, h - 650, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
       whole = [[w - 470, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
-
   def set_n_pages(self, page_pool, n_pages):
     f = 1
     m = None
@@ -878,8 +883,10 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 75),
-                                 right_free = (100, 75)),
+                                 left_free=(150, 75),
+                                 right_free = (100, 75),
+                                 # delete_horizontal=True,
+                                 min_area=1500),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=100,
@@ -893,8 +900,11 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 75),
-                                 right_free=(150, 75)),
+                                 left_free=(150, 75),
+                                 right_free=(150, 75),
+                                 # delete_horizontal=True,
+                                 min_area=1500,
+                                 position='bottom'),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=100,
@@ -908,8 +918,11 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 75),
-                                 right_free=(150, 75))]
+                                 left_free=(150, 75),
+                                 right_free=(150, 75),
+                                 # delete_horizontal=True,
+                                 min_area=1500,
+                                 position='bottom')]
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -925,8 +938,10 @@ class Il_Sole_24_Ore(Newspaper):
                                 invert_fill_hole=True,
                                 max_distance=10,
                                 can_be_internal=True,
-                                left_free=(100, 75),
-                                right_free=(150, 75))
+                                left_free=(100, 100),
+                                right_free=(150, 75),
+                                # delete_horizontal=True,
+                                min_area=1500)
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year =  (120, 72)
@@ -1168,4 +1183,3 @@ class Il_Mondo(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
-
