@@ -503,211 +503,161 @@ class Page:
     mask = cv2.inRange(img, min, max)
     img[mask > 0] = [255, 255, 255]
     return img
+
+  def get_near_contour(self, img, file_name, contours, pos):
+    i = pos
+    found_left = []
+    contour = contours[pos]
+    while i > 0:
+      _contour = contours[i - 1]
+      x, y, w, h = cv2.boundingRect(contour)
+      _x, _y, _w, _h = cv2.boundingRect(_contour)
+      if self.debug:
+        _roi = img[_y:_y + _h, _x:_x + _w]
+        name = file_name + '_' + '0000' + str(i)[-5:]
+        filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+        filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+        Path(filedir).mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
+      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
+        found_left.append(_contour)
+        contour = _contour
+      if len(found_left) >= 3:
+        break
+      i -= 1
+    i = pos
+    if i:
+      i -= 1
+    found_right = []
+    contour = contours[pos]
+    while i < len(contours):
+      if i == pos:
+        i += 1
+        continue
+      _contour = contours[i]
+      x, y, w, h = cv2.boundingRect(contour)
+      _x, _y, _w, _h = cv2.boundingRect(_contour)
+      if _x == x and _w > w:
+        points = [(x + w + 1, y), (x + _w, y), (x + _w, y + _h), (x + w, y + _h)]
+        _contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
+        _x = x + w + 1
+      if self.debug:
+        _roi = img[_y:_y + _h, _x:_x + _w]
+        name = file_name + '_' + '0000' + str(i)[-5:]
+        filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+        filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+        Path(filedir).mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(os.path.join(filedir, name + '_right.jpg'), _roi)
+      if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
+        found_right.append(_contour)
+        contour = _contour
+      if len(found_right) >= 3:
+        break
+      i += 1
+    return found_left, found_right
+  def clean_contours(self, img, file_name, contours, hierarchy, parameters):
+    def _ordering_contours_x(c):
+      return cv2.boundingRect(c)[0]
+    contours.sort(key=_ordering_contours_x)
+    _contours = []
+    heigth, weight = img.shape
+    for i, contour in enumerate(contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      if (not parameters.can_be_internal and hierarchy[0, i, 3] != -1) \
+          or w <= parameters.box[0] \
+          or w >= parameters.box[1] \
+          or h <= parameters.box[2] \
+          or h >= parameters.box[3] \
+          or w > h * 1.25 \
+          or x == 0 \
+          or y == 0 \
+          or x + w == weight \
+          or y + h == heigth:
+        continue
+      if self.debug:
+        _roi = img[y:y + h, x:x + w]
+        name = file_name + '_' + '0000' + str(i)[-5:]
+        filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+        filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+        Path(filedir).mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(os.path.join(filedir, name + '_img.jpg'), _roi)
+      found_left, found_right = self.get_near_contour(img, file_name, contours, i)
+      for j, __contours in enumerate([found_left, found_right]):
+        for z, _contour in enumerate(__contours):
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if self.debug:
+            _roi = img[_y:_y + _h, _x:_x + _w]
+            name = file_name + '_' + '0000' + str(i)[-5:]
+            filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+            filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+            Path(filedir).mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(os.path.join(filedir, name + '_' + str(j) + '_' + str(z) + '.jpg'), _roi)
+      flag = False
+      count = 0
+      # controlla se i caratteri a sinistra hanno una distanza fra di loro di meno di parameters.left_free[1]
+      for j, _contour in enumerate(found_left):
+        _x, _y, _w, _h = cv2.boundingRect(_contour)
+        if j < 2 and x - _x - _w < parameters.left_free[1]:
+          if _w > _h * 1.25:
+            flag = True
+            break
+          x = _x
+          count += 1
+          continue
+        if j >= 2 and x - _x - _w < parameters.left_free[1]:
+          flag = True
+          break
+      # controlla se c'è uno spazio vuoto lungo almeno parameters.left_free[0] a sinistra dell'ultimo carattere valido
+      if not flag and count < len(found_left):
+        _x, _y, _w, _h = cv2.boundingRect(found_left[count])
+        if x - _x - _w < parameters.left_free[0]:
+          flag = True
+      # controlla se i caratteri a destra hanno una distanza fra di loro di meno di parameters.right_free[1]
+      x, y, w, h = cv2.boundingRect(contour)
+      _count = 0
+      if not flag:
+        for j, _contour in enumerate(found_right):
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if j < 2 and _x - x - w < parameters.right_free[1]:
+            if _w > _h * 1.25:
+              flag = True
+              break
+            x = _x
+            w = _w
+            count += 1
+            _count += 1
+            if count > 2:
+              flag = True
+              break
+            continue
+          if j >= 2 and _x - x - w < parameters.right_free[1]:
+            flag = True
+            break
+      # controlla se c'è uno spazio vuoto lungo almeno parameters.right_free[0] a destra dell'ultimo carattere valido
+      if not flag and _count < len(found_right):
+        _x, _y, _w, _h = cv2.boundingRect(found_right[_count])
+        if _x - x - w < parameters.right_free[0]:
+          flag = True
+      x, y, w, h = cv2.boundingRect(contour)
+      if not flag:
+        for i, _contour in enumerate(contours):
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          # if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25:
+          #   continue
+          if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
+              or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
+            flag = True
+      if not flag:
+        _contours.append(contour)
+    return _contours
   def add_boxes(self, images, img, contours, hierarchy, parameters, file_name, no_resize, part):
     def _get_contours(e):
       return e[0]
     _contours = []
     _check = []
-    def _ordering_contours_x(c):
-      x, y, w, h = cv2.boundingRect(c)
-      return x
-    def get_near_contour(contours, pos):
-      i = pos
-      found_left = []
-      contour = contours[pos]
-      while i > 0:
-        _contour = contours[i - 1]
-        x, y, w, h = cv2.boundingRect(contour)
-        _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if self.debug:
-          _roi = img[_y:_y + _h, _x:_x + _w]
-          name = file_name + '_' + '0000' + str(i)[-5:]
-          filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-          filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-          Path(filedir).mkdir(parents=True, exist_ok=True)
-          cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
-        if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
-          found_left.append(_contour)
-          contour = _contour
-        if len(found_left) >= 3:
-          break
-        i -= 1
-      i = pos
-      found_right = []
-      contour = contours[pos]
-      while i < len(contours) - 1:
-        _contour = contours[i + 1]
-        x, y, w, h = cv2.boundingRect(contour)
-        _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
-          found_right.append(_contour)
-          contour = _contour
-        if len(found_right) >= 3:
-          break
-        i += 1
-      return found_left, found_right
-
-    def clean_contours(self, contours, parameters):
-      contours.sort(key=_ordering_contours_x)
-      _contours = []
-      for i, contour in enumerate(contours):
-        x, y, w, h = cv2.boundingRect(contour)
-        if (not parameters.can_be_internal and hierarchy[0, i, 3] != -1) or \
-            w <= parameters.box[0] or w >= parameters.box[1] or h <= parameters.box[2] or h >= parameters.box[3] or w > h + 5:
-          continue
-        if self.debug:
-          _roi = img[y:y + h, x:x + w]
-          name = file_name + '_' + '0000' + str(i)[-5:]
-          filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-          filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-          Path(filedir).mkdir(parents=True, exist_ok=True)
-          cv2.imwrite(os.path.join(filedir, name + '_img.jpg'), _roi)
-        found_left, found_right = get_near_contour(contours, i)
-        for j, __contours in enumerate([found_left, found_right]):
-          for z, _contour in enumerate(__contours):
-            _x, _y, _w, _h = cv2.boundingRect(_contour)
-            if self.debug:
-              _roi = img[_y:_y + _h, _x:_x + _w]
-              name = file_name + '_' + '0000' + str(i)[-5:]
-              filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-              filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-              Path(filedir).mkdir(parents=True, exist_ok=True)
-              cv2.imwrite(os.path.join(filedir, name + '_' + str(j) + '_' + str(z) + '.jpg'), _roi)
-              pass
-        flag = False
-        count = 0
-        for j, _contour in enumerate(found_left):
-          _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if j < 2 and x - _x - _w < parameters.left_free[1]:
-            x = _x
-            count += 1
-            continue
-          if j >= 2 and x - _x - _w < parameters.left_free[1]:
-            flag = True
-            break
-        if not flag and count < len(found_left) and cv2.boundingRect(x - found_left[count])[0] < parameters.left_free[0]:
-          flag = True
-        x, y, w, h = cv2.boundingRect(contour)
-        if not flag:
-          for j, _contour in enumerate(found_right):
-            _x, _y, _w, _h = cv2.boundingRect(_contour)
-            if j < 2 and _x - x - w < parameters.right_free[1]:
-              x = _x
-              w = _w
-              count += 1
-              if count > 2:
-                flag = True
-                break
-              continue
-            if j >= 2 and _x - x - w < parameters.right_free[1]:
-              flag = True
-              break
-        if not flag and count < len(found_right) and cv2.boundingRect(found_right[count])[0] - x < parameters.right_free[0]:
-          flag = True
-        x, y, w, h = cv2.boundingRect(contour)
-        if not flag:
-          for i, _contour in enumerate(contours):
-            _x, _y, _w, _h = cv2.boundingRect(_contour)
-            if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h + 5:
-              continue
-            if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2)\
-              or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
-              flag = True
-        if not flag:
-          _contours.append(contour)
-      return _contours
-
-      # _contours = []
-      # contours.sort(key=_ordering_contours_x)
-      # for i, contour in enumerate(contours):
-      #   x, y, w, h = cv2.boundingRect(contour)
-      #   if (not parameters.can_be_internal and hierarchy[0, i, 3] != -1) or \
-      #       w <= parameters.box[0] or \
-      #       w >= parameters.box[1] or \
-      #       h <= parameters.box[2] or \
-      #       h >= parameters.box[3] or \
-      #       w > h + 5:
-      #     continue
-      #   flag = False
-      #   if self.debug:
-      #     _roi = img[y:y + h, x:x + w]
-      #     name = file_name + '_' + '_' + ('0000' + str(i))[-5:]
-      #     filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-      #     filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-      #     Path(filedir).mkdir(parents=True, exist_ok=True)
-      #     cv2.imwrite(os.path.join(filedir, name + '_img.jpg'), img)
-      #     cv2.imwrite(os.path.join(filedir, name + '_' + str(x) + '_' + str(y) + '_' + str(w) + '_' + str(h) + '.jpg'), _roi)
-      #   for j, _contour in enumerate(contours):
-      #     if j == i:
-      #       continue
-      #     _x, _y, _w, _h = cv2.boundingRect(_contour)
-      #     if _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
-      #       continue
-      #     if self.debug:
-      #       _roi = img[_y:_y + _h, _x:_x + _w]
-      #       name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:]
-      #       filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-      #       filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-      #       Path(filedir).mkdir(parents=True, exist_ok=True)
-      #       cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
-      #       pass
-      #     if (_x > x + parameters.right_free[0] and
-      #         _x < x + sum(parameters.right_free) and
-      #         _y > y - h and
-      #         _y < y + h) \
-      #         or \
-      #         (_x < x - parameters.left_free[0] and
-      #          _x > x - sum(parameters.left_free)  and
-      #          _y > y - h and
-      #          _y < y + h)\
-      #         or (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
-      #         or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
-      #       flag = True
-      #       break
-      #   if not flag:
-      #     right = False
-      #     for j, _contour in enumerate(contours):
-      #       if j == i:
-      #         continue
-      #       _x, _y, _w, _h = cv2.boundingRect(_contour)
-      #       if _x < x or _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
-      #         continue
-      #       if self.debug:
-      #         _roi = img[_y:_y + _h, _x:_x + _w]
-      #         name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:] + '_right'
-      #         filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-      #         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-      #         Path(filedir).mkdir(parents=True, exist_ok=True)
-      #         cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
-      #         pass
-      #       if _x > x + parameters.right_free[0] // 2 and _x < x + sum(parameters.right_free) // 2 and _y > y - h and _y < y + h:
-      #         right = True
-      #         break
-      #     if right:
-      #       for j, _contour in enumerate(contours):
-      #         if j == i:
-      #           continue
-      #         _x, _y, _w, _h = cv2.boundingRect(_contour)
-      #         if _x > x or _w <= 30 or _w >= parameters.box[1] or _h <= 20 or _h >= parameters.box[3] or _w > _h * 1.25:
-      #           continue
-      #         if self.debug:
-      #           _roi = img[_y:_y + _h, _x:_x + _w]
-      #           name = file_name + '_' + '0000' + str(i) + '_' + ('0000' + str(j))[-5:] + '_left'
-      #           filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-      #           filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-      #           Path(filedir).mkdir(parents=True, exist_ok=True)
-      #           cv2.imwrite(os.path.join(filedir, name + '.jpg'), _roi)
-      #           pass
-      #         if _x < x - parameters.left_free[0] // 2 and _x > x - sum(parameters.left_free) // 2 and _y > y - h and _y < y + h:
-      #           flag = True
-      #           break
-      #   if flag:
-      #     continue
-      #   _contours.append(contour)
-      # return _contours
 
     if parameters.right_free is not None:
-      contours = clean_contours(self, contours, parameters)
+      contours = self.clean_contours(img, file_name, contours, hierarchy, parameters)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour) # hierarchy[0, i, 3] == -1 and
       if (parameters.can_be_internal or hierarchy[0, i, 3] == -1) and w > parameters.box[0] and w < parameters.box[1] and h > parameters.box[2] and h < parameters.box[3]:
@@ -755,7 +705,7 @@ class Page:
   def get_boxes(self, image, level=200, no_resize=False, parameters=None, part=0):
     def _ordering_contours(c):
       x, y, w, h = cv2.boundingRect(c)
-      return w * h
+      return (x, w)
     def isgray(img):
       if len(img.shape) < 3:
         return True
@@ -780,7 +730,7 @@ class Page:
     if parameters.exclude is not None and p.isdigit() and int(p) in parameters.exclude:
         return None, img
     img = self.cv2_resize(img, parameters.scale)
-    weight, heigth, _ = img.shape
+    heigth, weight, _ = img.shape
     # bimg = img.copy()
     # Questo cancella tutto ciò che non è
     if parameters.exclude_colors is not None and len(parameters.exclude_colors) == 3:
@@ -837,13 +787,13 @@ class Page:
     edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = list(contours)
-    contours.sort(key=_ordering_contours, reverse=True)
-    # cancella i contorni con area < 100 e > 25000
+    contours.sort(key=_ordering_contours)
+    # cancella i contorni con area < 100 e > 25000 o spessi meno di 20
     _contours = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      # if w * h > parameters.min_area and w * h < 25000 and x != 0 and y != 0 and x + w != weight and y + h != heigth:
-      if w * h > parameters.min_area and w * h < 25000:
+      # if w * h > parameters.min_area and w * h < 25000 and x > 0 and y > 0 and x + w < weight and y + h < heigth:
+      if w * h > parameters.min_area and w * h < 25000 and w >= 20 and h >= 20:
         _contours.append(contour)
     contours = _contours
     # cancella i contorni doppi
@@ -868,11 +818,11 @@ class Page:
       flag = False
       for j, _contour in enumerate(contours):
         if j == i:
-          break
-        _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if _w <= parameters.box[0] or _w >= parameters.box[1] or _h <= parameters.box[2] or _h >= parameters.box[3]:
           continue
-        if x >= _x and x <= _x + _w and y >= _y and y <= _y + _w:
+        _x, _y, _w, _h = cv2.boundingRect(_contour)
+        # if _w <= parameters.box[0] or _w >= parameters.box[1] or _h <= parameters.box[2] or _h >= parameters.box[3]:
+        #   continue
+        if (x >= _x and x + w <= _x + _w and y >= _y and y + h <= _y + _h):
           flag = True
           break
       if not flag:
