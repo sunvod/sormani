@@ -153,6 +153,8 @@ class Sormani():
   def __next__(self):
     if self.i < len(self.elements):
       if self.i >= len(self.pages_pool):
+        # if self.model is not None and not self.i:
+        #   self.set_GPUs()
         page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
                                                         self.new_root,
                                                         self.ext,
@@ -304,7 +306,7 @@ class Sormani():
         continue
       page_pool.convert_images(converts)
     self.force = selfforce
-  def set_all_images_names(self):
+  def set_all_images_names(self, force_rename=False):
     if not len(self.elements):
       return
     for page_pool in self:
@@ -312,10 +314,21 @@ class Sormani():
         continue
       else:
         if not page_pool.isAlreadySeen():
-          # page_pool.set_image_file_name()
-          pass
-        else:
-          page_pool.set_pages_already_seen()
+          page_pool.set_image_file_name()
+        if force_rename:
+          s = page_pool.filedir.split('/')[-1]
+          s = s.split()[-1]
+          n_page = 0
+          if s[0] == 'P':
+            if s[1:].isdigit():
+              n_page = int(s[1:])
+          if s[0:2] == 'OT':
+            s = s.split('-')[-1]
+            if s.isdigit():
+              n_page = int(s)
+          if n_page:
+            page_pool.force_rename_image_file_name(n_page=n_page)
+        page_pool.set_pages_already_seen()
     self.set_elements()
   def change_contrast(self, contrast = None):
     if not len(self.elements):
@@ -595,19 +608,22 @@ class Sormani():
               raise OSError('La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).')
           number += 1
   def set_GPUs(self):
-    from numba import cuda
-    device = cuda.get_current_device()
-    device.reset()
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-      try:  # Currently, memory growth needs to be the same across GPUs
-        for gpu in gpus:
-          tf.config.experimental.set_memory_growth(gpu, True)
-        logical_gpus = tf.config.list_logical_devices('GPU')
-        # print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-      except RuntimeError as e:  # Memory growth must be set before GPUs have been initialized
-        print(e)
-        exit(0)
+    try:
+      from numba import cuda
+      device = cuda.get_current_device()
+      device.reset()
+      gpus = tf.config.list_physical_devices('GPU')
+      if gpus:
+        try:  # Currently, memory growth needs to be the same across GPUs
+          for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+          logical_gpus = tf.config.list_logical_devices('GPU')
+          # print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:  # Memory growth must be set before GPUs have been initialized
+          print(e)
+          exit(0)
+    except:
+      pass
   def check_page_numbers(self,
                          save_images = False,
                          model_path = 'best_model_DenseNet201',
@@ -723,7 +739,7 @@ class Sormani():
     self.set_bobine_select_images(threshold=5)
     self.rotate_fotogrammi(limit=4000)
     self.remove_borders()
-  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False, no_create_image=False):
+  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False, no_create_image=False, force_rename=False):
     try:
       selfforce = self.force
     except:
@@ -734,7 +750,7 @@ class Sormani():
     if not no_change_contrast:
       self.change_contrast()
     if not no_set_names:
-      self.set_all_images_names()
+      self.set_all_images_names(force_rename=force_rename)
     self.force = selfforce
     self.set_elements()
     if not no_create_image:

@@ -323,9 +323,15 @@ class Page_pool(list):
         else:
           continue
       pages.append(page)
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._divide_image, pages)
-    return sum(result)
+    result = 0
+    if self.model is not None:
+      for page in pages:
+        result += self._divide_image(page)
+    else:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._divide_image, pages)
+      result = sum(result)
+    return result
   def _divide_image(self, page):
     return page.divide_image()
   def remove_borders(self, limit = 5000, verbose = False):
@@ -346,6 +352,17 @@ class Page_pool(list):
           os.rename(page.original_image, new_file_name)
           page.file_name = new_file_name
           page.newspaper.file_path = new_file_name
+  def force_rename_image_file_name(self, n_page):
+    for page in self:
+      page.newspaper.n_page = n_page
+      page.set_file_names()
+      if page.original_file_name != page.file_name:
+        new_file_name = os.path.join(page.original_path, page.file_name + pathlib.Path(page.original_image).suffix)
+        if Path(page.original_image).is_file():
+          os.rename(page.original_image, new_file_name)
+          page.file_name = new_file_name
+          page.newspaper.file_path = new_file_name
+      n_page += 1
   def convert_images(self, converts):
     if converts is None:
       return

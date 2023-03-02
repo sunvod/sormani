@@ -53,7 +53,7 @@ class Page:
     self.is_bobina = False
     self.isdivided = False
     self.model = model
-    self.predictions = None
+    self.prediction = None
     self.isvalid = None
     self.debug = debug
   def add_conversion(self, conversion):
@@ -568,7 +568,7 @@ class Page:
           or w >= parameters.box[1] \
           or h <= parameters.box[2] \
           or h >= parameters.box[3] \
-          or w > h * 1.25 \
+          or w > h * 1.1 \
           or x == 0 \
           or y == 0 \
           or x + w == weight \
@@ -598,7 +598,7 @@ class Page:
       for j, _contour in enumerate(found_left):
         _x, _y, _w, _h = cv2.boundingRect(_contour)
         if j < 2 and x - _x - _w < parameters.left_free[1]:
-          if _w > _h * 1.25:
+          if _w > _h * 1.1:
             flag = True
             break
           x = _x
@@ -619,7 +619,7 @@ class Page:
         for j, _contour in enumerate(found_right):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
           if j < 2 and _x - x - w < parameters.right_free[1]:
-            if _w > _h * 1.25:
+            if _w > _h * 1.1:
               flag = True
               break
             x = _x
@@ -642,8 +642,8 @@ class Page:
       if not flag:
         for i, _contour in enumerate(contours):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          # if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25:
-          #   continue
+          if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25 or _w <= 20 or _h <= 20:
+            continue
           if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
               or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
             flag = True
@@ -793,7 +793,7 @@ class Page:
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       # if w * h > parameters.min_area and w * h < 25000 and x > 0 and y > 0 and x + w < weight and y + h < heigth:
-      if w * h > parameters.min_area and w * h < 25000 and w >= 20 and h >= 20:
+      if (parameters.min_area is None or w * h > parameters.min_area) and w * h < 25000 and w >= 10 and h >= 10:
         _contours.append(contour)
     contours = _contours
     # cancella i contorni doppi
@@ -1006,7 +1006,7 @@ class Page:
         images, _ = self.get_boxes(cropped)
     if images is not None and len(images):
       head_image, prediction, predictions = self.get_page_numbers(self.model, images)
-      return predictions
+      return prediction
     return None
   def check_pages_numbers(self, model, no_resize=False):
     if self.isAlreadySeen():

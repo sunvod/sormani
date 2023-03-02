@@ -797,12 +797,12 @@ class Il_Sole_24_Ore(Newspaper):
   def get_ins_whole_page_location(self, image):
     w, h = image.size
     if self.n_page is None:
-      whole = [[200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200],
-               [200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+      whole = [[200, 200, 470, 620], [w - 450, 200, w - 150, 650], [200, h - 550, 620, h - 200],
+               [w // 2 - 250, h - 600, w // 2 + 250, h - 200], [w - 620, h - 550, w - 200, h - 200]]
     elif self.n_page % 2 == 0:
-      whole = [[200, 200, 470, 620], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+      whole = [[200, 200, 470, 620], [w - 450, 200, w - 150, 650], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     else:
-      whole = [[w - 470, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+      whole = [[200, 200, 470, 620], [w - 470, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
   def set_n_pages(self, page_pool, n_pages):
     f = 1
@@ -834,6 +834,7 @@ class Il_Sole_24_Ore(Newspaper):
           pass
     l = n_pages
     r = 2
+    lasffl = None
     for n_page, page in enumerate(page_pool):
       if page.newspaper.n_page is not None:
         continue
@@ -861,13 +862,24 @@ class Il_Sole_24_Ore(Newspaper):
           f += 1
           r = 2
       else:
-        # if n_page < n_pages // 2:
-        if False:
-          page.newspaper.n_page = f
-          f += 1
+        if page.prediction is not None:
+          if page.prediction == f:
+            page.newspaper.n_page = f
+            f += 1
+            lasffl = 'f'
+          elif page.prediction == l:
+            page.newspaper.n_page = l
+            l -= 1
+            lasffl = 'l'
+          else:
+            page.newspaper.n_page = page.prediction
         else:
-          page.newspaper.n_page = l
-          l -= 1
+          if lasffl == 'f':
+            page.newspaper.n_page = f
+            f += 1
+          else:
+            page.newspaper.n_page = l
+            l -= 1
         r = 2
   def get_ins_parameters(self):
     return [Newspaper_parameters(scale=200,
@@ -887,7 +899,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free = (100, 20),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=1500),
+                                 min_area=500),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -905,7 +917,25 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 20),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=1500,
+                                 min_area=500),
+            Newspaper_parameters(scale=200,
+                                 min_w=30,
+                                 max_w=120,
+                                 min_h=45,
+                                 max_h=160,
+                                 ts=240,
+                                 min_mean=0,
+                                 max_mean=500,
+                                 invert=False,
+                                 fill_hole=1,
+                                 invert_fill_hole=True,
+                                 max_distance=10,
+                                 can_be_internal=True,
+                                 left_free=(100, 20),
+                                 right_free=(100, 20),
+                                 delete_horizontal=True,
+                                 # delete_vertical=True,
+                                 min_area=500,
                                  position='bottom'),
             Newspaper_parameters(scale=200,
                                  min_w=30,
@@ -924,7 +954,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 20),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=1500,
+                                 min_area=500,
                                  position='bottom')]
   @staticmethod
   def get_parameters():
@@ -945,7 +975,7 @@ class Il_Sole_24_Ore(Newspaper):
                                 right_free=(100, 20),
                                 delete_horizontal=True,
                                 # delete_vertical=True,
-                                min_area=1500)
+                                min_area=500)
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year =  (120, 72)

@@ -67,8 +67,9 @@ class Images_group():
       if pathlib.Path(file).suffix == '.' + ext:
         page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, model)
         if model is not None:
-          page.predictions = page.get_prediction()
-          page.isvalid = True
+          if page.file_name.split('_')[-1] == '0':
+            page.prediction = page.get_prediction()
+            page.isvalid = True
         page_pool.append(page)
     return page_pool
 
