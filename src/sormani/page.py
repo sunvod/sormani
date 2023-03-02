@@ -519,7 +519,7 @@ class Page:
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
-      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
+      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20:
         found_left.append(_contour)
         contour = _contour
       if len(found_left) >= 3:
@@ -548,7 +548,7 @@ class Page:
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(os.path.join(filedir, name + '_right.jpg'), _roi)
-      if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2:
+      if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20:
         found_right.append(_contour)
         contour = _contour
       if len(found_right) >= 3:

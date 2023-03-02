@@ -6,7 +6,7 @@ if __name__ == '__main__':
   sormani = Sormani('Il Sole 24 Ore', year=2016, months=[x for x in range(2,3)], days=2, only_ins=False, exclude_ins=False) #, model_path='best_model_DenseNet201')
   # sormani.set_giornali_pipeline(no_division=False, no_set_names=False, no_change_contrast=True, no_create_image=True, force_rename=True)
 
-  sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 22, no_resize = True, save_head = True, force=True, debug=False)
+  sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = None, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
 
   # sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])
