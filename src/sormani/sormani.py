@@ -152,7 +152,7 @@ class Sormani():
     return self
   def __next__(self):
     if self.i < len(self.elements):
-      if self.i >= len(self.pages_pool):
+      if self.i >= len(self.pages_pool) or self.pages_pool[self.i] is None:
         # if self.model is not None and not self.i:
         #   self.set_GPUs()
         page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
@@ -168,7 +168,10 @@ class Sormani():
             page_pool.set_pages_already_seen()
           else:
             page_pool.set_pages()
-        self.pages_pool.append(page_pool)
+        if self.i < len(self.pages_pool) and self.pages_pool[self.i] is None:
+          self.pages_pool[self.i] = page_pool
+        else:
+          self.pages_pool.append(page_pool)
       else:
         page_pool = self.pages_pool[self.i]
       self.i += 1
@@ -394,9 +397,13 @@ class Sormani():
     #   mp_pool.map(self.divide_image, self.elements)
     count = 0
     for page_pool in self:
-      count += page_pool.divide_image(is_bobina)
+      n = page_pool.divide_image(is_bobina)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
     if count:
-      print()
+      # print()
       print(
         f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()

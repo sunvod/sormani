@@ -560,7 +560,7 @@ class Page:
       return cv2.boundingRect(c)[0]
     contours.sort(key=_ordering_contours_x)
     _contours = []
-    heigth, weight = img.shape
+    heigth, width = img.shape
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       if (not parameters.can_be_internal and hierarchy[0, i, 3] != -1) \
@@ -571,7 +571,7 @@ class Page:
           or w > h * 1.1 \
           or x == 0 \
           or y == 0 \
-          or x + w == weight \
+          or x + w == width \
           or y + h == heigth:
         continue
       if self.debug:
@@ -594,17 +594,20 @@ class Page:
             cv2.imwrite(os.path.join(filedir, name + '_' + str(j) + '_' + str(z) + '.jpg'), _roi)
       flag = False
       count = 0
+      valid_contours = []
+      valid_contours.append(contour)
       # controlla se i caratteri a sinistra hanno una distanza fra di loro di meno di parameters.left_free[1]
       for j, _contour in enumerate(found_left):
         _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if j < 2 and x - _x - _w < parameters.left_free[1]:
-          if _w > _h * 1.1:
+        if j < 2 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
+          if _w > _h * 1.1 or _x == 0 or _x + _w >= width:
             flag = True
             break
           x = _x
           count += 1
+          valid_contours.append(_contour)
           continue
-        if j >= 2 and x - _x - _w < parameters.left_free[1]:
+        if j >= 2 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
           flag = True
           break
       # controlla se c'è uno spazio vuoto lungo almeno parameters.left_free[0] a sinistra dell'ultimo carattere valido
@@ -618,19 +621,20 @@ class Page:
       if not flag:
         for j, _contour in enumerate(found_right):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if j < 2 and _x - x - w < parameters.right_free[1]:
-            if _w > _h * 1.1:
+          if j < 2 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
+            if _w > _h * 1.1 or _x == 0 or _x + _w >= width:
               flag = True
               break
             x = _x
             w = _w
             count += 1
             _count += 1
+            valid_contours.append(_contour)
             if count > 2:
               flag = True
               break
             continue
-          if j >= 2 and _x - x - w < parameters.right_free[1]:
+          if j >= 2 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
             flag = True
             break
       # controlla se c'è uno spazio vuoto lungo almeno parameters.right_free[0] a destra dell'ultimo carattere valido
@@ -640,12 +644,32 @@ class Page:
           flag = True
       x, y, w, h = cv2.boundingRect(contour)
       if not flag:
+        min_w = None
+        min_h = None
+        # calcola il più piccolo w e h fra i probabili valori numerici
+        for i, _contour in enumerate(valid_contours):
+          if self.debug:
+            _x, _y, _w, _h = cv2.boundingRect(_contour)
+            _roi = img[_y:_y + _h, _x:_x + _w]
+            name = file_name + '_' + '0000' + str(i)[-5:]
+            filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+            filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+            Path(filedir).mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(os.path.join(filedir, name + '_valid.jpg'), _roi)
+          if min_w is None:
+            min_w = cv2.boundingRect(_contour)[2]
+            min_h = cv2.boundingRect(_contour)[3]
+            continue
+          min_w = min(min_w, cv2.boundingRect(_contour)[2])
+          min_h = min(min_h, cv2.boundingRect(_contour)[3])
+        # controlla che non vi siano contour sopra (o sotto) escludendo dal controllo i poligoni piccoli
         for i, _contour in enumerate(contours):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25 or _w <= 20 or _h <= 20:
+          if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25 or _w <= min_w // 2 or _h <= min_h // 2:
             continue
-          if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
-              or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
+          # if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
+          #     or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
+          if (parameters.position == 'top' and _y < y - h // 2) or (parameters.position == 'bottom' and _y > y + h // 2):
             flag = True
       if not flag:
         _contours.append(contour)

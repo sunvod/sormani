@@ -871,6 +871,14 @@ class Il_Sole_24_Ore(Newspaper):
             page.newspaper.n_page = l
             l -= 1
             lasffl = 'l'
+          elif str(page.prediction) in str(f):
+            page.newspaper.n_page = f
+            f += 1
+            lasffl = 'f'
+          elif str(page.prediction) in str(l):
+            page.newspaper.n_page = l
+            l -= 1
+            lasffl = 'l'
           else:
             page.newspaper.n_page = page.prediction
         else:
@@ -895,8 +903,26 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 20),
-                                 right_free = (100, 20),
+                                 left_free=(100, 36),
+                                 right_free = (100, 36),
+                                 # delete_horizontal=True,
+                                 # delete_vertical=True,
+                                 min_area=500),
+            Newspaper_parameters(scale=200,
+                                 min_w=30,
+                                 max_w=120,
+                                 min_h=45,
+                                 max_h=160,
+                                 ts=240,
+                                 min_mean=0,
+                                 max_mean=500,
+                                 invert=False,
+                                 fill_hole=1,
+                                 invert_fill_hole=True,
+                                 max_distance=10,
+                                 can_be_internal=True,
+                                 left_free=(100, 36),
+                                 right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500),
@@ -913,26 +939,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 20),
-                                 right_free=(100, 20),
-                                 delete_horizontal=True,
-                                 # delete_vertical=True,
-                                 min_area=500),
-            Newspaper_parameters(scale=200,
-                                 min_w=30,
-                                 max_w=120,
-                                 min_h=45,
-                                 max_h=160,
-                                 ts=240,
-                                 min_mean=0,
-                                 max_mean=500,
-                                 invert=False,
-                                 fill_hole=1,
-                                 invert_fill_hole=True,
-                                 max_distance=10,
-                                 can_be_internal=True,
-                                 left_free=(100, 20),
-                                 right_free=(100, 20),
+                                 left_free=(100, 36),
+                                 right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
@@ -950,8 +958,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  invert_fill_hole=True,
                                  max_distance=10,
                                  can_be_internal=True,
-                                 left_free=(100, 20),
-                                 right_free=(100, 20),
+                                 left_free=(100, 36),
+                                 right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
@@ -971,8 +979,8 @@ class Il_Sole_24_Ore(Newspaper):
                                 invert_fill_hole=True,
                                 max_distance=10,
                                 can_be_internal=True,
-                                left_free=(100, 20),
-                                right_free=(100, 20),
+                                left_free=(100, 36),
+                                right_free=(100, 36),
                                 delete_horizontal=True,
                                 # delete_vertical=True,
                                 min_area=500)

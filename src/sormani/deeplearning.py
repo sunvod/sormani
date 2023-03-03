@@ -843,8 +843,8 @@ def show_OT(root):
 
 ns = 'Il Sole 24 Ore'
 
-# cnn = CNN(ns)
-# cnn.exec_cnn(ns, epochs = 10)
+cnn = CNN(ns)
+cnn.exec_cnn(ns, epochs = 500)
 
 # count_tiff()
 
@@ -856,7 +856,7 @@ ns = 'Il Sole 24 Ore'
 
 # delete_name('Avvenire')
 
-get_max_box()
+# get_max_box()
 
 # change_ins_file_name()
 
