@@ -30,7 +30,7 @@ class Page_pool(list):
     self.thresholding = thresholding
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.model = model
-  def set_pages(self):
+  def set_pages(self, use_ai=False):
     n_pages = len(self)
     for i, page in enumerate(self):
       if not i:
@@ -39,7 +39,7 @@ class Page_pool(list):
         page.newspaper.isfirstpage = False
     if n_pages > 0:
       page = self[0]
-      page.newspaper.set_n_pages(self, n_pages)
+      page.newspaper.set_n_pages(self, n_pages, use_ai)
       self.sort(key=self._n_page_sort)
   def set_pages_already_seen(self):
     n_pages = len(self)
@@ -48,16 +48,15 @@ class Page_pool(list):
         page.newspaper.isfirstpage = True
       else:
         page.newspaper.isfirstpage = False
-      try:
-        n_page = page.file_name.split('_')[-1][1:]
-        page.newspaper.n_pages = n_pages
-        page.newspaper.n_real_pages = len(self)
+      n_page = page.file_name.split('_')[-1][1:]
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(self)
+      if n_page.isdigit():
         page.newspaper.n_page = int(n_page)
-      except:
-        pass
+      else:
+        page.newspaper.n_page = 0
   def _set_pages_sort(self, page):
     return page.original_file_name
-    #return os.path.getmtime(Path(page.original_image))
   def _n_page_sort(self, page):
     return page.newspaper.n_page
   def isAlreadySeen(self):
@@ -349,9 +348,12 @@ class Page_pool(list):
       if page.original_file_name != page.file_name:
         new_file_name = os.path.join(page.original_path, page.file_name + pathlib.Path(page.original_image).suffix)
         if Path(page.original_image).is_file():
-          os.rename(page.original_image, new_file_name)
-          page.file_name = new_file_name
-          page.newspaper.file_path = new_file_name
+          image = Image.open(page.original_image)
+          w, h = image.size
+          if h > w:
+            os.rename(page.original_image, new_file_name)
+            page.file_name = new_file_name
+            page.newspaper.file_path = new_file_name
   def force_rename_image_file_name(self, n_page):
     for page in self:
       page.newspaper.n_page = n_page

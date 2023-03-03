@@ -142,9 +142,9 @@ class CNN:
       callbacks=callbacks
     )
     tf.keras.models.save_model(model, os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name), save_format = 'tf')
-    file = open(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name, 'results.txt'), 'w')
-    file.write(str(self.val_sparse_categorical_accuracy))
-    file.close()
+    # file = open(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name, 'results.txt'), 'w')
+    # file.write(str(self.val_sparse_categorical_accuracy))
+    # file.close()
     pass
 
   def prediction_cnn(self):
@@ -191,7 +191,7 @@ class customCallback(keras.callbacks.Callback):
   def on_epoch_end(self, epoch, logs=None):
     logs_val = logs['val_sparse_categorical_accuracy']
     min = 0.95
-    if logs_val > min and (self.val_sparse_categorical_accuracy is None or logs_val > self.val_sparse_categorical_accuracy):
+    if logs_val > min and (self.val_sparse_categorical_accuracy is None or logs_val > self.val_sparse_categorical_accuracy) or logs_val == 1.0:
       model_path = os.path.join(STORAGE_BASE, 'models', self.name, 'best_model_' + self.model_name)
       print(f'\nEpoch {epoch + 1}: val_sparse_categorical_accuracy improved from {self.val_sparse_categorical_accuracy} to'
             f' {logs_val}, saving model to {model_path}')
@@ -674,8 +674,8 @@ def rename_images_files(name):
   _files = []
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'sure', 'no_numbers')):
     files.sort()
     i = 0
     for j, file in enumerate(files):

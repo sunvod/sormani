@@ -131,7 +131,6 @@ class Newspaper():
     newspaper.month = month
     newspaper.model = model
     newspaper.n_page = None
-    newspaper.use_ai = False
     return newspaper
   def get_page_position(self):
     return ['top']
@@ -276,7 +275,7 @@ class Newspaper():
     return str(year), number
   def get_page(self):
     return None, None
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     f = 1
     l = n_pages
     r = 2
@@ -491,7 +490,7 @@ class Milano_Finanza(Newspaper):
     self.init_year = 27
     self.year_change = [1, 9]
     Newspaper.__init__(self, newspaper_base, 'Milano Finanza', file_path, date, year, number, init_page = 5)
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     f = 1
     l = n_pages
     r = 2
@@ -568,7 +567,7 @@ class Italia_Oggi(Newspaper):
     self.init_year = 25
     self.year_change = [8, 8]
     Newspaper.__init__(self, newspaper_base, 'Italia Oggi', file_path, date, year, number, init_page = 5)
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     f = 1
     l = n_pages
     r = 2
@@ -806,7 +805,7 @@ class Il_Sole_24_Ore(Newspaper):
     else:
       whole = [[200, 200, 470, 620], [w - 470, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     f = 1
     m = None
     if page_pool.filedir.split(' ')[-1][0] == 'P':
@@ -817,43 +816,23 @@ class Il_Sole_24_Ore(Newspaper):
         error = 'Folder ' + page_pool.filedir + ' ' + 'is not valid'
         raise(error)
     elif page_pool.filedir.split(' ')[-1][0:2] == 'OT':
-      if use_ai:
-        m = []
-        min = None
-        for page in page_pool:
-          n_page = page.prediction
-          if n_page is not None:
-            if min is None:
-              min = n_page
-            else:
-              min = n_page if n_page < min else min
-        n_none = 0
-        for i, page in enumerate(page_pool):
-          n_page = page.prediction
-          if n_page is None:
-            if n_none == 0 and min is not None:
-              n_none += 1
-              n_page = min - 1
-            else:
-              n_none += 1
-              n_page = '?' + ('000' + str(n_none))[-2:]
-          m.append(n_page)
-      else:
-        m = [x for x in range(n_pages)]
-        if n_pages == 8:
-          m = [8, 1, 4, 5, 6, 3, 2, 7]
-        elif n_pages == 16:
-          m = [16, 1, 8, 9, 10, 7, 2, 15, 14, 3, 6, 11, 12, 5, 4, 13]
-        elif n_pages == 32:
-          m = [8, 25, 24, 9, 26, 7, 10, 23, 6, 27, 22, 11, 28, 5, 12, 21, 4, 29, 20, 13, 30, 3, 14, 19, 2, 31, 18, 15, 32, 1, 16, 17]
-        elif n_pages == 40:
-          m = [40, 1, 20, 21, 22, 19, 2, 39, 38, 3, 18, 23, 24, 17, 4, 37, 36, 5, 16, 25, 26, 15, 6, 35, 34, 7, 14, 27, 28, 13, 8, 33, 32, 9, 12, 29, 30, 11, 10, 31]
-        if len(page_pool.filedir.split(' ')[-1].split('-')) > 1:
-          n = int(page_pool.filedir.split(' ')[-1].split('-')[-1])
-          try:
-            m = list(np.array(m) + n - 1)
-          except:
-            pass
+      m = [x for x in range(n_pages)]
+      if n_pages == 8:
+        m = [8, 1, 4, 5, 6, 3, 2, 7]
+      elif n_pages == 16:
+        m = [16, 1, 8, 9, 10, 7, 2, 15, 14, 3, 6, 11, 12, 5, 4, 13]
+      elif n_pages == 32:
+        # m = [64,81,80,65,82,63,66,79,62,83,78,67,84,61,68,77,60,85,76,69,86,59,70,75,58,87,74,71,88,57,72,73]
+        m = [8, 25, 24, 9, 26, 7, 10, 23, 6, 27, 22, 11, 28, 5, 12, 21, 4, 29, 20, 13, 30, 3, 14, 19, 2, 31, 18, 15, 32, 1, 16, 17]
+      elif n_pages == 40:
+        # m = [56,17,36,37,38,35,18,55,54,19,34,39,40,33,20,53,52,21,32,41,42,31,22,51,50,23,30,43,44,29,24,49,48,25,28,45,46,27,26,47]
+        m = [40, 1, 20, 21, 22, 19, 2, 39, 38, 3, 18, 23, 24, 17, 4, 37, 36, 5, 16, 25, 26, 15, 6, 35, 34, 7, 14, 27, 28, 13, 8, 33, 32, 9, 12, 29, 30, 11, 10, 31]
+      if len(page_pool.filedir.split(' ')[-1].split('-')) > 1:
+        n = int(page_pool.filedir.split(' ')[-1].split('-')[-1])
+        try:
+          m = list(np.array(m) + n - 1)
+        except:
+          pass
     l = n_pages
     r = 2
     lasffl = None
@@ -884,7 +863,7 @@ class Il_Sole_24_Ore(Newspaper):
           f += 1
           r = 2
       else:
-        if page.prediction is not None and use_ai:
+        if page.prediction is not None:
           if page.prediction == f:
             page.newspaper.n_page = f
             f += 1
@@ -912,7 +891,7 @@ class Il_Sole_24_Ore(Newspaper):
             l -= 1
         r = 2
   def get_ins_parameters(self):
-    return [Newspaper_parameters(scale=200,
+    return Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
                                  min_h=45,
@@ -929,80 +908,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free = (100, 36),
                                  # delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500),
-            Newspaper_parameters(scale=200,
-                                 min_w=30,
-                                 max_w=120,
-                                 min_h=45,
-                                 max_h=160,
-                                 ts=240,
-                                 min_mean=0,
-                                 max_mean=500,
-                                 invert=False,
-                                 fill_hole=1,
-                                 invert_fill_hole=True,
-                                 max_distance=10,
-                                 can_be_internal=True,
-                                 left_free=(100, 36),
-                                 right_free=(100, 36),
-                                 delete_horizontal=True,
-                                 # delete_vertical=True,
-                                 min_area=500),
-            Newspaper_parameters(scale=200,
-                                 min_w=30,
-                                 max_w=120,
-                                 min_h=45,
-                                 max_h=160,
-                                 ts=240,
-                                 min_mean=0,
-                                 max_mean=500,
-                                 invert=False,
-                                 fill_hole=1,
-                                 invert_fill_hole=True,
-                                 max_distance=10,
-                                 can_be_internal=True,
-                                 left_free=(100, 36),
-                                 right_free=(100, 36),
-                                 delete_horizontal=True,
-                                 # delete_vertical=True,
-                                 min_area=500),
-            Newspaper_parameters(scale=200,
-                                 min_w=30,
-                                 max_w=120,
-                                 min_h=90,
-                                 max_h=160,
-                                 ts=240,
-                                 min_mean=0,
-                                 max_mean=500,
-                                 invert=False,
-                                 fill_hole=1,
-                                 invert_fill_hole=True,
-                                 max_distance=10,
-                                 can_be_internal=True,
-                                 left_free=(100, 36),
-                                 right_free=(100, 36),
-                                 delete_horizontal=True,
-                                 # delete_vertical=True,
-                                 min_area=500),
-            Newspaper_parameters(scale=200,
-                                 min_w=30,
-                                 max_w=120,
-                                 min_h=90,
-                                 max_h=160,
-                                 ts=240,
-                                 min_mean=0,
-                                 max_mean=500,
-                                 invert=False,
-                                 fill_hole=1,
-                                 invert_fill_hole=True,
-                                 max_distance=10,
-                                 can_be_internal=True,
-                                 left_free=(100, 36),
-                                 right_free=(100, 36),
-                                 delete_horizontal=True,
-                                 # delete_vertical=True,
                                  min_area=500)
-            ]
 
   def get_page_ins_position(self):
     return ['top', 'top',' bottom', 'bottom', 'bottom']
@@ -1094,7 +1000,7 @@ class Scenario(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     l = n_pages
     count_zero = 0
     for n_page, page in enumerate(page_pool):
@@ -1154,7 +1060,7 @@ class La_Domenica_del_Corriere(Newspaper):
     w, h = image.size
     whole = ((w + 100) // 2, 200 + 800, w - 800, 1700)
     return whole
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     for n_page, page in enumerate(page_pool):
       try:
         page.newspaper.n_page
@@ -1219,7 +1125,7 @@ class Il_Mondo(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
-  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+  def set_n_pages(self, page_pool, n_pages):
     l = n_pages
     count_zero = 0
     for n_page, page in enumerate(page_pool):

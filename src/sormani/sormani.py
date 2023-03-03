@@ -44,7 +44,8 @@ class Sormani():
                notcheckimages=True,
                thresholding=0,
                no_rename_folders=False,
-               model_path=None):
+               model_path=None,
+               use_ai=False):
     if year is not None and isinstance(year, list) and not len(year):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -89,9 +90,12 @@ class Sormani():
                      only_ins,
                      notcheckimages,
                      no_rename_folders,
-                     model_path)
+                     model_path,
+                     use_ai)
     self.set_elements()
     self.pages_pool = []
+    for _ in self:
+      pass
   def _init(self,
             newspaper_name,
             root,
@@ -107,7 +111,8 @@ class Sormani():
             only_ins,
             notcheckimages,
             no_rename_folders,
-            model_path):
+            model_path,
+            use_ai):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -146,6 +151,7 @@ class Sormani():
       model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
       self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     self.model_path = model_path
+    self.use_ai = use_ai
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -162,12 +168,13 @@ class Sormani():
                                                         self.path_exist,
                                                         self.force,
                                                         self.thresholding,
-                                                        self.model)
+                                                        self.model,
+                                                        self.use_ai)
         if len(page_pool):
           if page_pool.isAlreadySeen():
             page_pool.set_pages_already_seen()
           else:
-            page_pool.set_pages()
+            page_pool.set_pages(use_ai=self.use_ai)
         if self.i < len(self.pages_pool) and self.pages_pool[self.i] is None:
           self.pages_pool[self.i] = page_pool
         else:
@@ -746,19 +753,19 @@ class Sormani():
     self.set_bobine_select_images(threshold=5)
     self.rotate_fotogrammi(limit=4000)
     self.remove_borders()
-  def set_giornali_pipeline(self, no_division = False, no_set_names = False, no_change_contrast = False, no_create_image=False, force_rename=False):
+  def set_giornali_pipeline(self, divide = True, rename = True, change_contrast = True, create_images=True, force_rename=False):
     try:
       selfforce = self.force
     except:
       return
     self.force = True
-    if not no_division:
+    if divide:
       self.divide_image()
-    if not no_change_contrast:
+    if change_contrast:
       self.change_contrast()
-    if not no_set_names:
+    if rename:
       self.set_all_images_names(force_rename=force_rename)
     self.force = selfforce
     self.set_elements()
-    if not no_create_image:
+    if create_images:
       self.create_all_images()
