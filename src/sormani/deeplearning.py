@@ -674,8 +674,8 @@ def rename_images_files(name):
   _files = []
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY + '_' + name.lower().replace(' ', '_'))):
   # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, 'numbers')):
-  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'numbers')):
-  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'sure', 'no_numbers')):
+  for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'notsure', 'no_numbers')):
+  # for filedir, dirs, files in os.walk(os.path.join(STORAGE_BASE, REPOSITORY, name.lower().replace(' ', '_'), 'sure', 'numbers')):
     files.sort()
     i = 0
     for j, file in enumerate(files):
@@ -844,7 +844,7 @@ def show_OT(root):
 ns = 'Il Sole 24 Ore'
 
 cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 500)
+cnn.exec_cnn(ns, epochs = 50)
 
 # count_tiff()
 

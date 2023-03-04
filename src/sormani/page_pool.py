@@ -30,6 +30,12 @@ class Page_pool(list):
     self.thresholding = thresholding
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.model = model
+
+  def _n_page_sort(self, page):
+    n_page = str(page.newspaper.n_page)
+    if n_page[0] != '?':
+      n_page = ('000' + n_page)[-3:]
+    return n_page
   def set_pages(self, use_ai=False):
     n_pages = len(self)
     for i, page in enumerate(self):
@@ -57,8 +63,6 @@ class Page_pool(list):
         page.newspaper.n_page = 0
   def _set_pages_sort(self, page):
     return page.original_file_name
-  def _n_page_sort(self, page):
-    return page.newspaper.n_page
   def isAlreadySeen(self):
     for page in self:
       return page.isAlreadySeen()

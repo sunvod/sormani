@@ -790,7 +790,7 @@ class Il_Sole_24_Ore(Newspaper):
   def get_whole_page_location(self, image):
     w, h = image.size
     # if self.n_page is None:
-    whole = [[100, 200, 600, 650], [w - 600, 200, w - 150, 650]]
+    whole = [[100, 200, 800, 650], [w - 800, 200, w - 150, 650]]
     # elif self.n_page % 2 == 0:
     #   whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     # else:
