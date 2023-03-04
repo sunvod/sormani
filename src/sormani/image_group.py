@@ -17,11 +17,11 @@ warnings.filterwarnings("ignore")
 
 class Images_group():
 
-  def __init__(self,  newspaper_base, newspaper_name, filedir, files, new_root):
+  def __init__(self,  newspaper_base, newspaper_name, filedir, files):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
-    self.new_root = new_root
+    # self.new_root = new_root
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
     i = -2
     if not len(year):

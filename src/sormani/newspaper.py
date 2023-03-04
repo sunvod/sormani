@@ -789,22 +789,23 @@ class Il_Sole_24_Ore(Newspaper):
     self.contrast = 10
   def get_whole_page_location(self, image):
     w, h = image.size
-    if self.n_page is None:
-      whole = [[200, 200, 600, 650], [w - 450, 200, w - 150, 650]]
-    elif self.n_page % 2 == 0:
-      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
-    else:
-      whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
+    # if self.n_page is None:
+    whole = [[100, 200, 600, 650], [w - 600, 200, w - 150, 650]]
+    # elif self.n_page % 2 == 0:
+    #   whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
+    # else:
+    #   whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     return whole
   def get_ins_whole_page_location(self, image):
     w, h = image.size
-    if self.n_page is None:
-      whole = [[200, 200, 470, 620], [w - 450, 200, w - 150, 650], [200, h - 550, 620, h - 200],
-               [w // 2 - 250, h - 600, w // 2 + 250, h - 200], [w - 620, h - 550, w - 200, h - 200]]
-    elif self.n_page % 2 == 0:
-      whole = [[200, 200, 470, 620], [w - 450, 200, w - 150, 650], [200, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
-    else:
-      whole = [[200, 200, 470, 620], [w - 470, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+    # if self.n_page is None:
+    whole = [[100, 200, 470, 620], [w - 700, 200, w - 150, 650], [100, h - 550, 620, h - 200],
+            [w // 2 - 400, h - 600, w // 2 + 400, h - 200], [w - 700, h - 550, w - 200, h - 200]]
+    # whole = [[100, 200, w - 100, 620], [100, h - 550, w - 100, h - 200]]
+    # elif self.n_page % 2 == 0:
+    #   whole = [[100, 200, 470, 620], [w - 600, 200, w - 150, 650], [100, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
+    # else:
+    #   whole = [[100, 200, 470, 620], [w - 600, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
     f = 1

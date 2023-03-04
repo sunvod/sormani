@@ -226,10 +226,11 @@ class Sormani():
       self.add_zero_to_dir(root)
   def set_elements(self):
     self.elements = []
+    _filedirs = []
     for root in self.roots:
       filedirs = []
       roots = []
-      if self.day is not None:
+      if self.days[0] is not None:
         new_root = '/'.join(root.split('/')[:-1])
         for filedir, dirs, files in os.walk(new_root):
           if not len(dirs):
@@ -259,11 +260,12 @@ class Sormani():
       filedirs.sort()
       for filedir, files in filedirs:
         if self.notcheckimages or self.check_if_image(filedir, files):
-          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name),
-                                            self.newspaper_name,
-                                            filedir,
-                                            files,
-                                            self.new_root))
+          if not filedir in _filedirs:
+            self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name),
+                                              self.newspaper_name,
+                                              filedir,
+                                              files))
+            _filedirs.append(filedir)
   def check_if_image(self, filedir, files):
     for file_name in files:
       try:

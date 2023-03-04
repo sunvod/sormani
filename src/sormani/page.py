@@ -669,8 +669,8 @@ class Page:
           _x, _y, _w, _h = cv2.boundingRect(_contour)
           if _w >= parameters.box[1] or _h >= parameters.box[3] or _w > _h * 1.25 or _w <= min_w // 2 or _h <= min_h // 2:
             continue
-          # if (parameters.position == 'top' and _x > x - w and _x < x + w * 2 and _y < y - h // 2) \
-          #     or (parameters.position == 'bottom' and _x > x - w and _x < x + w * 2 and _y > y + h // 2):
+          # if (parameters.position == 'top' and _x > x - w * 10 and _x < x + w * 10 and _y < y - h // 2) \
+          #     or (parameters.position == 'bottom' and _x > x - w * 10 and _x < x + w * 10 and _y > y + h // 2):
           if (parameters.position == 'top' and _y < y - h // 2) or (parameters.position == 'bottom' and _y > y + h // 2):
             flag = True
       if not flag:
