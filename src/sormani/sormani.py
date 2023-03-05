@@ -147,7 +147,8 @@ class Sormani():
     self.notcheckimages = notcheckimages
     self.roots.append(self.new_root)
     self.model = None
-    if model_path is not None:
+    if model_path is not None and use_ai:
+      self.set_GPUs()
       model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
       self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     self.model_path = model_path
@@ -642,16 +643,11 @@ class Sormani():
       pass
   def check_page_numbers(self,
                          save_images = False,
-                         model_path = 'best_model_DenseNet201',
                          assume_newspaper = True,
                          newspaper_name = None,
                          exclude_ins = False,
                          only_ins = False):
     if not len(self.elements):
-      return
-    self.set_GPUs()
-    if not os.path.join(STORAGE_BASE, model_path):
-      print(f'{model_path} doesn\'t exist.')
       return
     start_time = time.time()
     print(
@@ -660,17 +656,13 @@ class Sormani():
     selfforce = self.force
     self.force = True
     images = []
-    if assume_newspaper:
-      if newspaper_name is None:
-        newspaper_name = self.newspaper_name
-      model_path = os.path.join('models', newspaper_name.lower().replace(' ', '_'), model_path)
-    else:
-      model_path = os.path.join('models', model_path)
-    model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
+    if self.model is None:
+      print("No artificial intelligence model is present and therefore no page control is possible.")
+      return
     for page_pool in self:
       if (exclude_ins and page_pool.isins) or (only_ins and not page_pool.isins):
         continue
-      page_pool.check_pages_numbers(model, save_images = save_images)
+      page_pool.check_pages_numbers(self.model, save_images = save_images)
     if len(images):
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce

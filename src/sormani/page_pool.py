@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0,model=None):
+  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0,model=None, use_ai=False):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.new_root = new_root
@@ -30,6 +30,7 @@ class Page_pool(list):
     self.thresholding = thresholding
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.model = model
+    self.use_ai = use_ai
 
   def _n_page_sort(self, page):
     n_page = str(page.newspaper.n_page)
@@ -327,7 +328,7 @@ class Page_pool(list):
           continue
       pages.append(page)
     result = 0
-    if self.model is not None:
+    if self.model is not None and self.use_ai:
       for page in pages:
         result += self._divide_image(page)
     else:
