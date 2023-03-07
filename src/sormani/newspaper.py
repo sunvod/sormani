@@ -40,7 +40,8 @@ class Newspaper_parameters():
                right_free=None,
                delete_horizontal = False,
                delete_vertical = False,
-               min_area=None):
+               min_area=None,
+               max_near=2):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -62,6 +63,7 @@ class Newspaper_parameters():
     self.delete_horizontal = delete_horizontal
     self.delete_vertical = delete_vertical
     self.min_area = min_area
+    self.max_near = max_near
 
 class Newspaper_crop_parameters():
   def __init__(self,
@@ -353,18 +355,25 @@ class Newspaper():
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape
-    parameters = self.get_crop_parameters(0, width, height)
-    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
-    parameters = self.get_crop_parameters(1, width, height)
-    img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
     if os.path.dirname(self.file_path).split(' ')[-1][0:2] == 'OT':
       try:
         s = os.path.dirname(self.file_path).split(' ')[-1][2:]
-        f = int(s.split('-')[0])
+        if s.split('-')[0] != '':
+          f = int(s.split('-')[0])
+        else:
+          f = int(s)
       except Exception as e:
         error = 'Folder ' + self.filedir + ' ' + 'is not valid'
         raise(error)
-      if f == 4:
+      if f < 0:
+        f = -f
+      if f == 1:
+        imgs.append(img)
+      elif f == 4:
+        parameters = self.get_crop_parameters(0, width, height)
+        img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+        parameters = self.get_crop_parameters(1, width, height)
+        img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
         img1 = cv2.rotate(img1, cv2.ROTATE_90_CLOCKWISE)
         height, width, _ = img1.shape
         imgs.append(img1[0:height, 0:width // 2])
@@ -373,9 +382,11 @@ class Newspaper():
         height, width, _ = img2.shape
         imgs.append(img2[0:height, 0:width // 2])
         imgs.append(img2[0:height, width // 2:width])
-        # imgs.append(img1)
-        # imgs.append(img2)
-    if not len(imgs):
+    else:
+      parameters = self.get_crop_parameters(0, width, height)
+      img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+      parameters = self.get_crop_parameters(1, width, height)
+      img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
       imgs.append(img1)
       imgs.append(img2)
     return imgs
@@ -808,8 +819,16 @@ class Il_Sole_24_Ore(Newspaper):
     #   whole = [[100, 200, 470, 620], [w - 600, 200, w - 200, 620], [w - 620, h - 550, w - 200, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]
     return whole
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    def set_n_page(page_pool, n_page, n_none):
+      for page in page_pool:
+        if page.newspaper.n_page is not None and page.newspaper.n_page == n_page:
+          n_none += 1
+          n_page = '?' + ('000' + str(n_page))[-2:] + '(' + str(n_none) + ')'
+          break
+      return n_page, n_none
     f = 1
     m = None
+    n_none = 0
     if page_pool.filedir.split(' ')[-1][0] == 'P':
       try:
         f = int(page_pool.filedir.split(' ')[-1][1:])
@@ -828,7 +847,6 @@ class Il_Sole_24_Ore(Newspaper):
               min = n_page
             else:
               min = n_page if n_page < min else min
-        n_none = 0
         for i, page in enumerate(page_pool):
           n_page = page.prediction
           if n_page is None:
@@ -864,52 +882,52 @@ class Il_Sole_24_Ore(Newspaper):
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       if m is not None:
-        page.newspaper.n_page = m[n_page]
+        page.newspaper.n_page, n_none = set_n_page(page_pool, m[n_page], n_none)
         continue
       n = Path(page.file_name).stem.split('_')[-1]
       if n != '0':
         if r == 2:
-          page.newspaper.n_page = f
+          page.newspaper.n_page, n_none = set_n_page(page_pool, f, n_none)
           f += 1
           r = -1
         elif r == -1:
-          page.newspaper.n_page = l
+          page.newspaper.n_page, n_none = set_n_page(page_pool, l, n_none)
           l -= 1
           r = -2
         elif r == -2:
-          page.newspaper.n_page = l
+          page.newspaper.n_page, n_none = set_n_page(page_pool, l, n_none)
           l -= 1
           r = 1
         elif r == 1:
-          page.newspaper.n_page = f
+          page.newspaper.n_page, n_none = set_n_page(page_pool, f, n_none)
           f += 1
           r = 2
       else:
         if page.prediction is not None and use_ai:
           if page.prediction == f:
-            page.newspaper.n_page = f
+            page.newspaper.n_page, n_none = set_n_page(page_pool, f, n_none)
             f += 1
             lasffl = 'f'
           elif page.prediction == l:
-            page.newspaper.n_page = l
+            page.newspaper.n_page, n_none = set_n_page(page_pool, l, n_none)
             l -= 1
             lasffl = 'l'
           elif str(page.prediction) in str(f):
-            page.newspaper.n_page = f
+            page.newspaper.n_page, n_none = set_n_page(page_pool, f, n_none)
             f += 1
             lasffl = 'f'
           elif str(page.prediction) in str(l):
-            page.newspaper.n_page = l
+            page.newspaper.n_page, n_none = set_n_page(page_pool, l, n_none)
             l -= 1
             lasffl = 'l'
           else:
-            page.newspaper.n_page = page.prediction
+            page.newspaper.n_page, n_none = set_n_page(page_pool, page.prediction, n_none)
         else:
           if lasffl == 'f':
-            page.newspaper.n_page = f
+            page.newspaper.n_page, n_none = set_n_page(page_pool, f, n_none)
             f += 1
           else:
-            page.newspaper.n_page = l
+            page.newspaper.n_page, n_none = set_n_page(page_pool, l, n_none)
             l -= 1
         r = 2
   def get_ins_parameters(self):
@@ -930,7 +948,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free = (100, 36),
                                  # delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500),
+                                 min_area=500,
+                                 max_near=3),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -948,7 +967,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500),
+                                 min_area=500,
+                                 max_near=3),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -966,7 +986,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500),
+                                 min_area=500,
+                                 max_near=3),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -984,7 +1005,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500),
+                                 min_area=500,
+                                 max_near=3),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -1002,7 +1024,8 @@ class Il_Sole_24_Ore(Newspaper):
                                  right_free=(100, 36),
                                  delete_horizontal=True,
                                  # delete_vertical=True,
-                                 min_area=500)
+                                 min_area=500,
+                                 max_near=3)
             ]
 
   def get_page_ins_position(self):

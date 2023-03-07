@@ -328,6 +328,8 @@ class Sormani():
       else:
         if not page_pool.isAlreadySeen():
           page_pool.set_image_file_name()
+          i = self.pages_pool.index(page_pool)
+          self.pages_pool[i] = None
         if force_rename:
           s = page_pool.filedir.split('/')[-1]
           s = s.split()[-1]
@@ -341,6 +343,8 @@ class Sormani():
               n_page = int(s)
           if n_page:
             page_pool.force_rename_image_file_name(n_page=n_page)
+            i = self.pages_pool.index(page_pool)
+            self.pages_pool[i] = None
         page_pool.set_pages_already_seen()
     self.set_elements()
   def change_contrast(self, contrast = None):
@@ -643,8 +647,7 @@ class Sormani():
       pass
   def check_page_numbers(self,
                          save_images = False,
-                         assume_newspaper = True,
-                         newspaper_name = None,
+                         print_images=True,
                          exclude_ins = False,
                          only_ins = False):
     if not len(self.elements):
@@ -662,7 +665,7 @@ class Sormani():
     for page_pool in self:
       if (exclude_ins and page_pool.isins) or (only_ins and not page_pool.isins):
         continue
-      page_pool.check_pages_numbers(self.model, save_images = save_images)
+      page_pool.check_pages_numbers(self.model, save_images = save_images, print_images=print_images)
     if len(images):
       print(f'Checking numbers ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     self.force = selfforce

@@ -521,7 +521,7 @@ class Page:
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
-      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20:
+      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20 and _w * _h > w * h // 3:
         found_left.append(_contour)
         contour = _contour
       if len(found_left) >= 3:
@@ -609,7 +609,7 @@ class Page:
           count += 1
           valid_contours.append(_contour)
           continue
-        if j >= 2 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
+        if j >= parameters.max_near - 1 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
           flag = True
           break
       # controlla se c'è uno spazio vuoto lungo almeno parameters.left_free[0] a sinistra dell'ultimo carattere valido
@@ -636,7 +636,7 @@ class Page:
               flag = True
               break
             continue
-          if j >= 2 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
+          if j >=  parameters.max_near - 1 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
             flag = True
             break
       # controlla se c'è uno spazio vuoto lungo almeno parameters.right_free[0] a destra dell'ultimo carattere valido
@@ -1020,6 +1020,9 @@ class Page:
 
   def check_pages_numbers(self, model, no_resize=False):
     if self.isAlreadySeen():
+      if str(self.newspaper.n_page)[0] == '?':
+        self.page_control = 2
+        return None, None, None, None, True
       images = self.get_images_list(no_resize = no_resize)
       head_image = None
       prediction = None
@@ -1077,16 +1080,6 @@ class Page:
       if e != last:
         predictions.append(str(e))
       b = e
-    # for e in original_predictions:
-    #   if b is None:
-    #     b = e
-    #     if e == 0:
-    #       continue
-    #   elif e ==  0 and (b == 0 or (b == last and  len(predictions) == 0) or len(predictions) >= 3):
-    #     continue
-    #   if e != last:
-    #     predictions.append(str(e))
-    #   b = e
     _predictions = [self.newspaper.get_dictionary()[int(p)] for p in predictions]
     prefix = self.newspaper.get_prefix()
     init = ''.join(_predictions).find(prefix)
@@ -1441,6 +1434,7 @@ class Page:
     count = 0
     file = self.original_image
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     # Questo riempie i buchi bianchi

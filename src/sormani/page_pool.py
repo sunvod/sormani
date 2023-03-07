@@ -29,6 +29,7 @@ class Page_pool(list):
     self.force = force
     self.thresholding = thresholding
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
+    self.need_rotation = filedir.split(' ')[-1][0:2] == 'OT' and len(filedir.split(' ')[-1].split('-')) > 1 and filedir.split(' ')[-1].split('-')[1].isdigit()
     self.model = model
     self.use_ai = use_ai
 
@@ -61,7 +62,7 @@ class Page_pool(list):
       if n_page.isdigit():
         page.newspaper.n_page = int(n_page)
       else:
-        page.newspaper.n_page = 0
+        page.newspaper.n_page = n_page
   def _set_pages_sort(self, page):
     return page.original_file_name
   def isAlreadySeen(self):
@@ -95,11 +96,12 @@ class Page_pool(list):
     return images
   def _get_crop(self, page):
     return page.get_crop()
-  def check_pages_numbers(self, model, save_images = False):
+  def check_pages_numbers(self, model, save_images = False, print_images=True):
     errors = []
     countplusone = 0
     countminusone = 0
     countzero = 0
+    found_qm = False
     for page in self:
       page.isins = self.isins
       head_images, images, _, predictions, isvalid = page.check_pages_numbers(model)
@@ -108,42 +110,47 @@ class Page_pool(list):
           f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} non ha i nomi dei file con le date specificate.')
         return
       if page.page_control == 0:
-        if head_images is not None:
+        if head_images is not None and print_images:
           for head_image in head_images:
             plt.axis("off")
             plt.title(head_image[0])
             plt.imshow(head_image[1])
             plt.show()
-        countzero += 1
+        countminusone += 1
         errors.append(page.newspaper.n_page)
-        col = 6
-        row = len(images) // col + (1 if len(images) % col != 0 else 0)
-        if row < 2:
-          row = 2
-        fig, ax = plt.subplots(row, col)
-        for i in range(row):
-          for j in range(col):
-            ax[i][j].set_axis_off()
-        title = str(self.date.strftime("%d/%m")) + ' ' + str(page.newspaper.n_page)
-        for i, image in enumerate(images):
-          if image is not None:
-            ax[i // col][i % col].imshow(image[1])
-            ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
-        plt.axis("off")
-        # plt.title(head_image[0])
-        plt.show()
+        if print_images:
+          col = 6
+          row = len(images) // col + (1 if len(images) % col != 0 else 0)
+          if row < 2:
+            row = 2
+          fig, ax = plt.subplots(row, col)
+          for i in range(row):
+            for j in range(col):
+              ax[i][j].set_axis_off()
+          title = str(self.date.strftime("%d/%m")) + ' ' + str(page.newspaper.n_page)
+          for i, image in enumerate(images):
+            if image is not None:
+              ax[i // col][i % col].imshow(image[1])
+              ax[i // col][i % col].set_title(title + ' ' + str(predictions[i]), fontsize = 7)
+          plt.axis("off")
+          plt.show()
+      elif page.page_control == 1:
+        countplusone += 1
+      elif page.page_control == 2:
+        errors.append(page.newspaper.n_page)
+        found_qm = True
+        countminusone += 1
+      else:
+        countzero += 1
       if save_images and images is not None and predictions is not None:
         if page.page_control == 1:
-          countplusone += 1
           exact = 'sure'
         else:
-          countminusone += 1
           exact = 'notsure'
         name = self.newspaper_name.lower().replace(' ', '_')
         Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NO_NUMBERS)).mkdir(parents=True, exist_ok=True)
         Path(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, NUMBERS)).mkdir(parents=True, exist_ok=True)
         for i, image in enumerate(images):
-          # n = 'X' if predictions[i] == 10 else str(predictions[i])
           n = page.newspaper.get_dictionary()[predictions[i]]
           if n == 'X':
             dir = NO_NUMBERS
@@ -151,10 +158,18 @@ class Page_pool(list):
             dir = NUMBERS
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
-    if len(errors) < 2:
+    if (not found_qm and len(errors) < 2) or not len(errors):
       print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
-      msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
+      if len(errors) == 1:
+        msg = '{} ({}) del giorno {} ha la pagina {} non esatta  (code: {} {} {}) <=============='.format(
+          self.newspaper_name,
+          self.name_complete, str(
+            self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
+      else:
+        msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}) <=============='.format(
+          self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countminusone,
+          countzero, countplusone)
       print(msg)
       with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
         sormani_log.write(msg + '\n')
@@ -316,8 +331,12 @@ class Page_pool(list):
       ext = Path(page.original_image).suffix
       image = Image.open(page.original_image)
       width, height = image.size
+      if self.need_rotation:
+        img = cv2.imread(page.original_image)
+        img = cv2.rotate(img, cv2.ROTATE_180)
+        cv2.imwrite(page.original_image, img)
       if width < height:
-        if self.isOT and height > 6000:
+        if self.isOT and height > 8000:
           img = cv2.imread(page.original_image)
           img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
           cv2.imwrite(page.original_image, img)
