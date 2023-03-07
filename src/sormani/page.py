@@ -63,7 +63,8 @@ class Page:
       self.conversions.append(conversion)
   def set_file_names(self):
     if str(self.newspaper.n_page).isdigit():
-      page = ('0000' + str(self.newspaper.n_page))[-3 : ]
+      parameters = self.newspaper.get_parameters()
+      page = ('00000' + str(self.newspaper.n_page))[-parameters.n_digits : ]
     else:
       page = self.newspaper.n_page
     #page = ('000' + str(self.newspaper.n_page))[-3:]
@@ -468,7 +469,7 @@ class Page:
       image = image.crop(pos)
       image = image.resize(((int)(image.size[0] * 1.5), (int)(image.size[1] * 1.5)), Image.Resampling.LANCZOS)
       n_files = sum(1 for _, _, files in os.walk(storage) for f in files)
-      file_count = str('00000000' + str(n_files))[-7:]
+      file_count = str('000000000' + str(n_files))[-7:]
       file_name = os.path.join(storage, file_count + '_' + self.file_name) + pathlib.Path(self.original_image).suffix
       image.save(file_name)
       return True
@@ -516,7 +517,7 @@ class Page:
       _x, _y, _w, _h = cv2.boundingRect(_contour)
       if self.debug:
         _roi = img[_y:_y + _h, _x:_x + _w]
-        name = file_name + '_' + '0000' + str(i)[-5:]
+        name = file_name + '_' + '00000' + str(i)[-5:]
         filedir = os.path.join(STORAGE_BASE, REPOSITORY)
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
@@ -524,7 +525,7 @@ class Page:
       if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20 and _w * _h > w * h // 3:
         found_left.append(_contour)
         contour = _contour
-      if len(found_left) >= 3:
+      if len(found_left) >= 16:
         break
       i -= 1
     i = pos
@@ -544,16 +545,17 @@ class Page:
         _contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
         _x = x + w + 1
       if self.debug:
-        _roi = img[_y:_y + _h, _x:_x + _w]
-        name = file_name + '_' + '0000' + str(i)[-5:]
-        filedir = os.path.join(STORAGE_BASE, REPOSITORY)
-        filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
-        Path(filedir).mkdir(parents=True, exist_ok=True)
-        cv2.imwrite(os.path.join(filedir, name + '_right.jpg'), _roi)
+        if _x > x:
+          _roi = img[_y:_y + _h, _x:_x + _w]
+          name = file_name + '_' + '00000' + str(i)[-5:]
+          filedir = os.path.join(STORAGE_BASE, REPOSITORY)
+          filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
+          Path(filedir).mkdir(parents=True, exist_ok=True)
+          cv2.imwrite(os.path.join(filedir, name + '_right.jpg'), _roi)
       if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20:
         found_right.append(_contour)
         contour = _contour
-      if len(found_right) >= 3:
+      if len(found_right) >= 16:
         break
       i += 1
     return found_left, found_right
@@ -577,8 +579,10 @@ class Page:
           or y + h == heigth:
         continue
       if self.debug:
+        if w == 54 and h == 87:
+          pass
         _roi = img[y:y + h, x:x + w]
-        name = file_name + '_' + '0000' + str(i)[-5:]
+        name = file_name + '_' + '00000' + str(i)[-5:]
         filedir = os.path.join(STORAGE_BASE, REPOSITORY)
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
@@ -589,7 +593,7 @@ class Page:
           _x, _y, _w, _h = cv2.boundingRect(_contour)
           if self.debug:
             _roi = img[_y:_y + _h, _x:_x + _w]
-            name = file_name + '_' + '0000' + str(i)[-5:]
+            name = file_name + '_' + '00000' + str(i)[-5:]
             filedir = os.path.join(STORAGE_BASE, REPOSITORY)
             filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
             Path(filedir).mkdir(parents=True, exist_ok=True)
@@ -601,7 +605,7 @@ class Page:
       # controlla se i caratteri a sinistra hanno una distanza fra di loro di meno di parameters.left_free[1]
       for j, _contour in enumerate(found_left):
         _x, _y, _w, _h = cv2.boundingRect(_contour)
-        if j < 2 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
+        if j < parameters.max_near - 1 and x - _x - _w < max(_w, w, parameters.left_free[1]) // 3:
           if _w > _h * 1.1 or _x == 0 or _x + _w >= width:
             flag = True
             break
@@ -623,7 +627,7 @@ class Page:
       if not flag:
         for j, _contour in enumerate(found_right):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if j < 2 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
+          if j < parameters.max_near - 1 and _x - x - w < max(_w, w, parameters.right_free[1]) // 3:
             if _w > _h * 1.1 or _x == 0 or _x + _w >= width:
               flag = True
               break
@@ -632,7 +636,7 @@ class Page:
             count += 1
             _count += 1
             valid_contours.append(_contour)
-            if count > 2:
+            if count > parameters.max_near - 1 :
               flag = True
               break
             continue
@@ -653,7 +657,7 @@ class Page:
           if self.debug:
             _x, _y, _w, _h = cv2.boundingRect(_contour)
             _roi = img[_y:_y + _h, _x:_x + _w]
-            name = file_name + '_' + '0000' + str(i)[-5:]
+            name = file_name + '_' + '00000' + str(i)[-5:]
             filedir = os.path.join(STORAGE_BASE, REPOSITORY)
             filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
             Path(filedir).mkdir(parents=True, exist_ok=True)
@@ -705,7 +709,7 @@ class Page:
       x, y, w, h = cv2.boundingRect(contour)
       perimeter = cv2.arcLength(contour, True)
       roi = img[y:y + h, x:x + w]
-      name = file_name + '_' + str(part) + '_' + ('0000' + str(i + 1))[-5:]
+      name = file_name + '_' + str(part) + '_' + ('00000' + str(i + 1))[-5:]
       if not no_resize:
         roi = cv2.resize(roi, NUMBER_IMAGE_SIZE)
       if parameters.internal_box is not None:
@@ -718,7 +722,7 @@ class Page:
         for j, (_, cnt_inside) in enumerate(_cnts_inside):
           _x, _y, _w, _h = cv2.boundingRect(cnt_inside)
           _roi = roi[_y:_y + _h, _x:_x + _w]
-          name_i = file_name + '_' + str(part) + '_' + ('0000' + str(j + 1))[-5:]
+          name_i = file_name + '_' + str(part) + '_' + ('00000' + str(j + 1))[-5:]
           if (_w > parameters.internal_box[0] and
              _w < parameters.internal_box[1] and
              _h > parameters.internal_box[2] and
@@ -859,8 +863,6 @@ class Page:
       cv2.rectangle(bimg, (x, y), (x + w, y + h), (36, 255, 12), 2)
     file_name = Path(self.file_name).stem
     images = [(self.file_name + '_' + str(part) + '_00000', bimg)]
-    if 'QUOTID' in file_name:
-      pass
     self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize, part)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True, force=False):
@@ -1109,7 +1111,7 @@ class Page:
         label1.config(text=new_file)
         if self.file_name != os.path.basename(new_file) and new_file[-1] != 'p':
           on = self.file_name.split('_')[-1][1:]
-          n = ('0000' + new_file.split('_')[-1][1:])[-len(on):]
+          n = ('00000' + new_file.split('_')[-1][1:])[-len(on):]
           new_file = '_'.join(new_file.split('_')[:-1]) + '_p' + n
           ext = pathlib.Path(self.original_image).suffix
           file_to_be_changing.append((os.path.join(self.original_path, self.original_image), os.path.join(self.original_path, new_file) + ext))

@@ -7,13 +7,11 @@ if __name__ == '__main__':
                     year=2016,
                     months=[x for x in range(1,13)],
                     days=None,
-                    only_ins=False,
-                    exclude_ins=False,
                     use_ai=True,
                     model_path='best_model_DenseNet201')
-  sormani.set_giornali_pipeline(divide=True, rename=True, change_contrast=False, create_images=False)
+  # sormani.set_giornali_pipeline(divide=True, rename=True, change_contrast=False, create_images=False)
   #
-  # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 17, no_resize = True, save_head = True, force=True, debug=False)
+  # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 64, no_resize = True, save_head = True, force=True, debug=False)
   sormani.check_page_numbers(save_images=True, print_images=False)
 
   # sormani = Sormani('La Domenica del Corriere', year=1900, months=1, days=[x for x in range(1,2)])

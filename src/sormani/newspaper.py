@@ -41,7 +41,8 @@ class Newspaper_parameters():
                delete_horizontal = False,
                delete_vertical = False,
                min_area=None,
-               max_near=2):
+               max_near=2,
+               n_digits=2):
     self.scale = scale
     self.box = (min_w, max_w, min_h, max_h)
     self.ts = ts
@@ -64,7 +65,7 @@ class Newspaper_parameters():
     self.delete_vertical = delete_vertical
     self.min_area = min_area
     self.max_near = max_near
-
+    self.n_digits = n_digits
 class Newspaper_crop_parameters():
   def __init__(self,
                left,
@@ -823,7 +824,7 @@ class Il_Sole_24_Ore(Newspaper):
       for page in page_pool:
         if page.newspaper.n_page is not None and page.newspaper.n_page == n_page:
           n_none += 1
-          n_page = '?' + ('000' + str(n_page))[-2:] + '(' + str(n_none) + ')'
+          n_page = '?' + ('000' + str(n_page))[-2:] + '(' + str(n_none-1) + ')'
           break
       return n_page, n_none
     f = 1
@@ -855,7 +856,7 @@ class Il_Sole_24_Ore(Newspaper):
               n_page = min - 1
             else:
               n_none += 1
-              n_page = '?' + ('000' + str(n_none))[-2:]
+              n_page = '?' + ('000' + str(n_none-1))[-2:]
           m.append(n_page)
       else:
         m = [x for x in range(n_pages)]
@@ -949,7 +950,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  # delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
-                                 max_near=3),
+                                 max_near=4),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -968,7 +969,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
-                                 max_near=3),
+                                 max_near=4),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -987,7 +988,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
-                                 max_near=3),
+                                 max_near=4),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -1006,7 +1007,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
-                                 max_near=3),
+                                 max_near=4),
             Newspaper_parameters(scale=200,
                                  min_w=30,
                                  max_w=120,
@@ -1025,7 +1026,7 @@ class Il_Sole_24_Ore(Newspaper):
                                  delete_horizontal=True,
                                  # delete_vertical=True,
                                  min_area=500,
-                                 max_near=3)
+                                 max_near=4)
             ]
 
   def get_page_ins_position(self):
@@ -1049,7 +1050,9 @@ class Il_Sole_24_Ore(Newspaper):
                                 right_free=(100, 36),
                                 delete_horizontal=True,
                                 # delete_vertical=True,
-                                min_area=500)
+                                min_area=500,
+                                max_near=2,
+                                n_digits=4)
 class La_Gazzetta(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year =  (120, 72)
