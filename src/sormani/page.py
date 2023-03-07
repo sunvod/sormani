@@ -507,7 +507,7 @@ class Page:
     img[mask > 0] = [255, 255, 255]
     return img
 
-  def get_near_contour(self, img, file_name, contours, pos):
+  def get_near_contour(self, img, file_name, contours, pos, parameters):
     i = pos
     found_left = []
     contour = contours[pos]
@@ -522,7 +522,7 @@ class Page:
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(os.path.join(filedir, name + '_left.jpg'), _roi)
-      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20 and _w * _h > w * h // 3:
+      if _x < x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > parameters.less_w and _h > parameters.less_h and _w * _h > w * h // 3:
         found_left.append(_contour)
         contour = _contour
       if len(found_left) >= 16:
@@ -552,7 +552,7 @@ class Page:
           filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
           Path(filedir).mkdir(parents=True, exist_ok=True)
           cv2.imwrite(os.path.join(filedir, name + '_right.jpg'), _roi)
-      if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > 20 and _h > 20:
+      if _x > x and _y + _h > y + h - h // 2 and _y + _h < y + h + h // 2 and _w > parameters.less_w and _h > parameters.less_h:
         found_right.append(_contour)
         contour = _contour
       if len(found_right) >= 16:
@@ -587,7 +587,7 @@ class Page:
         filedir += '_' + self.newspaper.name.lower().replace(' ', '_')
         Path(filedir).mkdir(parents=True, exist_ok=True)
         cv2.imwrite(os.path.join(filedir, name + '_img.jpg'), _roi)
-      found_left, found_right = self.get_near_contour(img, file_name, contours, i)
+      found_left, found_right = self.get_near_contour(img, file_name, contours, i, parameters)
       for j, __contours in enumerate([found_left, found_right]):
         for z, _contour in enumerate(__contours):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
@@ -818,12 +818,12 @@ class Page:
     contours, hierarchy = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = list(contours)
     contours.sort(key=_ordering_contours)
-    # cancella i contorni con area < 100 e > 25000 o spessi meno di 20
+    # cancella i contorni con area < 100 e > 25000 o spessi meno di 10
     _contours = []
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       # if w * h > parameters.min_area and w * h < 25000 and x > 0 and y > 0 and x + w < weight and y + h < heigth:
-      if (parameters.min_area is None or w * h > parameters.min_area) and w * h < 25000 and w >= 10 and h >= 10:
+      if (parameters.min_area is None or w * h > parameters.min_area) and w * h < 25000 and w >= parameters.less_w / 2 and h >= parameters.less_h / 2:
         _contours.append(contour)
     contours = _contours
     # cancella i contorni doppi

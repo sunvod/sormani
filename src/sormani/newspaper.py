@@ -40,31 +40,36 @@ class Newspaper_parameters():
                right_free=None,
                delete_horizontal = False,
                delete_vertical = False,
+               less_w=20,
+               less_h=20,
                min_area=None,
                max_near=2,
                n_digits=2):
+    m = scale / 200
     self.scale = scale
-    self.box = (min_w, max_w, min_h, max_h)
+    self.box = (int(min_w * m), int(max_w * m), int(min_h * m), int(max_h * m))
     self.ts = ts
     self.min_mean = min_mean
     self.max_mean = max_mean
     self.include = include
     self.exclude = exclude
-    self.max_fillarea = max_fillarea
+    self.max_fillarea = int(max_fillarea * m)
     self.invert = invert
     self.internal_box = internal_box
-    self.fill_hole = fill_hole
+    self.fill_hole = int(fill_hole * m)
     self.invert_fill_hole = invert_fill_hole
     self.exclude_colors = exclude_colors
     self.can_be_internal = can_be_internal
-    self.max_distance = max_distance
+    self.max_distance = int(max_distance * m)
     self.model = None
-    self.left_free = left_free
-    self.right_free = right_free
+    self.left_free = [int(x * m) for x in left_free]
+    self.right_free = [int(x * m) for x in right_free]
     self.delete_horizontal = delete_horizontal
     self.delete_vertical = delete_vertical
-    self.min_area = min_area
-    self.max_near = max_near
+    self.less_w = int(less_w * m)
+    self.less_h = int(less_h * m)
+    self.min_area = int(min_area * m)
+    self.max_near = int(max_near * m)
     self.n_digits = n_digits
 class Newspaper_crop_parameters():
   def __init__(self,
@@ -802,7 +807,7 @@ class Il_Sole_24_Ore(Newspaper):
   def get_whole_page_location(self, image):
     w, h = image.size
     # if self.n_page is None:
-    whole = [[100, 200, 800, 650], [w - 800, 200, w - 150, 650]]
+    whole = [[0, 200, 1000, 650], [w - 1000, 200, w, 650]]
     # elif self.n_page % 2 == 0:
     #   whole = [[200, 200, 500, 650], [w - 450, 200, w - 150, 650]]
     # else:
@@ -811,8 +816,8 @@ class Il_Sole_24_Ore(Newspaper):
   def get_ins_whole_page_location(self, image):
     w, h = image.size
     # if self.n_page is None:
-    whole = [[100, 200, 470, 620], [w - 700, 200, w - 150, 650], [100, h - 550, 620, h - 200],
-            [w // 2 - 400, h - 600, w // 2 + 400, h - 200], [w - 700, h - 550, w - 200, h - 200]]
+    whole = [[0, 200, 1000, 620], [w - 1000, 200, w, 650], [0, h - 550, 620, h],
+            [w // 2 - 400, h - 600, w // 2 + 400, h - 200], [w - 1000, h - 550, w, h - 200]]
     # whole = [[100, 200, w - 100, 620], [100, h - 550, w - 100, h - 200]]
     # elif self.n_page % 2 == 0:
     #   whole = [[100, 200, 470, 620], [w - 600, 200, w - 150, 650], [100, h - 550, 620, h - 200], [w // 2 - 250, h - 600, w // 2 + 250, h - 200]]

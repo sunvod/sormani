@@ -158,18 +158,22 @@ class Page_pool(list):
             dir = NUMBERS
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
-    if (not found_qm and len(errors) < 2) or not len(errors):
-      print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
+    if ((not found_qm and len(errors) < 2) or not len(errors)) and countzero <= 1:
+      if countzero:
+        print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte e ha {countzero} pagine indefinite (code: {countminusone} {countzero} {countplusone}).')
+      else:
+        print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
       if len(errors) == 1:
-        msg = '{} ({}) del giorno {} ha la pagina {} non esatta  (code: {} {} {}).'.format(
+        msg = '{} ({}) del giorno {} ha la pagina {} non esatta e ha {} pagine indefinite (code: {} {} {}).'.format(
           self.newspaper_name,
-          self.name_complete, str(
-            self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
+          self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countzero, countminusone, countzero, countplusone)
+      elif len(errors) > 1:
+        msg = '{} ({}) del giorno {} ha le pagine {} non esatte e ha {} pagine indefinite (code: {} {} {}).'.format(
+          self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countzero, countminusone, countzero, countplusone)
       else:
-        msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(
-          self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countminusone,
-          countzero, countplusone)
+        msg = '{} ({}) del giorno {} ha {} pagine indefinite (code: {} {} {}).'.format(
+          self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), countzero, countminusone, countzero, countplusone)
       print(msg)
       with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
         sormani_log.write(msg + '\n')

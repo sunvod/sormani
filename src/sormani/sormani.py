@@ -607,8 +607,6 @@ class Sormani():
             pass
   def rename_folders(self):
     number = 1
-    # pdf_root = self.new_root.replace(IMAGE_PATH, JPG_PDF_PATH)
-    # for one_root in [pdf_root, self.new_root]:
     for one_root in [self.new_root]:
       for filedir, dirs, files in os.walk(one_root):
         dirs.sort()
@@ -627,7 +625,8 @@ class Sormani():
               os.rename(old_folder, new_folder)
               pass
             except:
-              raise OSError('La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).')
+              error = 'La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).'
+              raise OSError(error)
           number += 1
   def set_GPUs(self):
     try:
