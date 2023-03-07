@@ -43,7 +43,7 @@ class Sormani():
                only_ins=False,
                notcheckimages=True,
                thresholding=0,
-               no_rename_folders=False,
+               rename_folders=True,
                model_path=None,
                use_ai=False):
     if year is not None and isinstance(year, list) and not len(year):
@@ -73,6 +73,8 @@ class Sormani():
     self.days = days
     self.dir_name = ''
     self.roots = []
+    if model_path is not None and use_ai:
+      self.set_GPUs()
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
@@ -89,7 +91,7 @@ class Sormani():
                      exclude_ins,
                      only_ins,
                      notcheckimages,
-                     no_rename_folders,
+                     rename_folders,
                      model_path,
                      use_ai)
     self.set_elements()
@@ -110,7 +112,7 @@ class Sormani():
             exclude_ins,
             only_ins,
             notcheckimages,
-            no_rename_folders,
+            rename_folders,
             model_path,
             use_ai):
     self.newspaper_name = newspaper_name
@@ -134,7 +136,7 @@ class Sormani():
           self.complete_root = new_root
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
-    if not no_rename_folders:
+    if rename_folders:
       self.rename_folders()
     self.ext = ext
     self.image_path = image_path
@@ -148,7 +150,6 @@ class Sormani():
     self.roots.append(self.new_root)
     self.model = None
     if model_path is not None and use_ai:
-      self.set_GPUs()
       model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
       self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     self.model_path = model_path

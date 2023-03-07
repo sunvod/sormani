@@ -162,12 +162,12 @@ class Page_pool(list):
       print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
       if len(errors) == 1:
-        msg = '{} ({}) del giorno {} ha la pagina {} non esatta  (code: {} {} {}) <=============='.format(
+        msg = '{} ({}) del giorno {} ha la pagina {} non esatta  (code: {} {} {}).'.format(
           self.newspaper_name,
           self.name_complete, str(
             self.date.strftime("%d/%m/%y")), errors, countminusone, countzero, countplusone)
       else:
-        msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}) <=============='.format(
+        msg = '{} ({}) del giorno {} ha le pagine {} non esatte  (code: {} {} {}).'.format(
           self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")), errors, countminusone,
           countzero, countplusone)
       print(msg)
