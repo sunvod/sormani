@@ -159,8 +159,10 @@ class Page_pool(list):
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
     if ((not found_qm and len(errors) < 2) or not len(errors)) and countzero <= 1:
-      if countzero:
+      if countzero > 1:
         print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte e ha {countzero} pagine indefinite (code: {countminusone} {countzero} {countplusone}).')
+      elif countzero == 1:
+          print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte e ha {countzero} pagina indefinita (code: {countminusone} {countzero} {countplusone}).')
       else:
         print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte (code: {countminusone} {countzero} {countplusone}).')
     else:
