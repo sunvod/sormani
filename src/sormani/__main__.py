@@ -5,11 +5,11 @@ if __name__ == '__main__':
 
   sormani = Sormani('Il Sole 24 Ore',
                     year=2016,
-                    months=[x for x in range(2,3)],
-                    days=18,
+                    months=[x for x in range(11,12)],
+                    days=24,
                     use_ai=False,
                     model_path='best_model_DenseNet201')
-  # sormani.set_giornali_pipeline(divide=True, rename=True, change_contrast=False, create_images=False)
+  sormani.set_giornali_pipeline(divide=True, rename=True, change_contrast=False, create_images=False)
   #
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
   # sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])
   # sormani.add_pdf_metadata()
   # sormani.convert_all_images()
-  sormani.rename_pages_files(do_prediction=False)
+  # sormani.rename_pages_files(do_prediction=False)
   # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.update_date_creation()
 

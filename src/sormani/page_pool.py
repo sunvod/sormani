@@ -106,8 +106,10 @@ class Page_pool(list):
       page.isins = self.isins
       head_images, images, _, predictions, isvalid = page.check_pages_numbers(model)
       if not isvalid:
-        print(
-          f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} non ha i nomi dei file con le date specificate.')
+        msg = '{} ({}) del giorno {} non ha i nomi dei file con le date specificate.'.format(self.newspaper_name, self.name_complete, str(self.date.strftime("%d/%m/%y")))
+        print(msg)
+        with portalocker.Lock('sormani_check.log', timeout=120) as sormani_log:
+          sormani_log.write(msg + '\n')
         return
       if page.page_control == 0:
         if head_images is not None and print_images:
