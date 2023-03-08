@@ -1092,7 +1092,7 @@ class Page:
     else:
       prediction = None
     return head_images, prediction, original_predictions
-  def open_win_pages_files(self, image, file_to_be_changing, prediction = None):
+  def open_win_pages_files(self, image, file_to_be_changing, n_unkown, prediction = None):
     def close():
       gui.destroy()
       exit()
@@ -1104,10 +1104,14 @@ class Page:
       global new_file
       global end_flag
       global flag_digited
+      global _n_unkown
       end_flag = False
+      if button_press == '?':
+        _n_unkown += 1
+        on = self.file_name.split('_')[-1][1:]
+        button_press = '?' + ('00000' + str(_n_unkown))[-len(on) + 1:]
       if button_press != 'ok':
-        new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p'
-        new_file += str(button_press)
+        new_file = '_'.join(self.file_name.split('_')[:-1]) + '_p' + str(button_press)
         label1.config(text=new_file)
         if self.file_name != os.path.basename(new_file) and new_file[-1] != 'p':
           on = self.file_name.split('_')[-1][1:]
@@ -1137,6 +1141,8 @@ class Page:
     global end_flag
     global next_page
     global label3
+    global _n_unkown
+    _n_unkown = n_unkown
     end_flag = False
     next_page = -1
     gui = tk.Tk()
@@ -1180,6 +1186,8 @@ class Page:
         text = i * TOTAL_BUTTON_IN_LINE + j + 1
         if text == self.newspaper.n_pages + 1:
           text = 'ok'
+        elif text == self.newspaper.n_pages + 2:
+          text = '?'
         elif text > self.newspaper.n_pages:
           break
         pixel = tk.PhotoImage(width=1, height=1)
@@ -1233,8 +1241,8 @@ class Page:
     exit_button = Button(button_frame, text="Esci", font=('Arial', 18), command=close, height=2, width=4)
     exit_button.grid(row=4, column=0, sticky=tk.W + tk.E, padx=(5, 5), pady=(5, 5))
     gui.mainloop()
-    return file_to_be_changing, end_flag, next_page
-  def rename_pages_files(self, file_to_be_changing, model = None):
+    return file_to_be_changing, end_flag, next_page, _n_unkown
+  def rename_pages_files(self, file_to_be_changing, n_unkown, model = None):
     if self.isAlreadySeen():
       if os.path.isdir(self.pdf_path):
         filedir, dirs, files = next(os.walk(self.pdf_path))
@@ -1247,8 +1255,8 @@ class Page:
       prediction = None
       if model is not None:
         _, _, prediction, _ = self.check_pages_numbers(model)
-      file_to_be_changing, end_flag, next_page = self.open_win_pages_files(image, file_to_be_changing, prediction = prediction)
-    return file_to_be_changing, end_flag, next_page
+      file_to_be_changing, end_flag, next_page, n_unkown = self.open_win_pages_files(image, file_to_be_changing, n_unkown, prediction = prediction)
+    return file_to_be_changing, end_flag, next_page, n_unkown
   def convert_image(self, force):
     image = Image.open(self.original_image)
     for convert in self.conversions:

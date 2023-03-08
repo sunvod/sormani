@@ -158,7 +158,7 @@ class Page_pool(list):
             dir = NUMBERS
           file_name = image[0] + '_' + str(n)
           cv2.imwrite(os.path.join(STORAGE_BASE, REPOSITORY, name, exact, dir, file_name) + '.jpg', image[1])
-    if ((not found_qm and len(errors) < 2) or not len(errors)) and countzero <= 1:
+    if ((not found_qm and len(errors) < 2) or not len(errors)) and countzero <= countplusone // 4:
       if countzero > 1:
         print(f'{self.newspaper_name} ({self.name_complete}) del giorno {str(self.date.strftime("%d/%m/%y"))} ha le pagine esatte e ha {countzero} pagine indefinite (code: {countminusone} {countzero} {countplusone}).')
       elif countzero == 1:
@@ -435,12 +435,13 @@ class Page_pool(list):
     file_to_be_changing = []
     end_flag = False
     next_page = -1
+    n_unkown = 0
     while not end_flag:
       for page in self:
         if next_page > 1:
           next_page -= 1
           continue
-        file_to_be_changing, end_flag, next_page = page.rename_pages_files(file_to_be_changing, model)
+        file_to_be_changing, end_flag, next_page, n_unkown = page.rename_pages_files(file_to_be_changing, n_unkown, model)
         if end_flag:
           break
         if next_page >= 0:
@@ -449,6 +450,25 @@ class Page_pool(list):
       #   end_flag = True
     flag = False
     filedirs = []
+    numbers = []
+    max = 0
+    for i, (old_file, new_file) in enumerate(file_to_be_changing):
+      n = new_file.split('/')[-1].split('p')[1]
+      if n[0] != '?' and n.isdigit():
+        numbers.append(int(n))
+        max = max(max, int(n))
+    missing = [(e1 + 1) for e1, e2 in zip(numbers, numbers[1:]) if e2 - e1 != 1]
+    for i in range(max + 1, len(file_to_be_changing) + max):
+      missing.append(i)
+    _file_to_be_changing = []
+    j = 0
+    for i, (old_file, new_file) in enumerate(file_to_be_changing):
+      n = new_file.split('/')[-1].split('p')[1]
+      if n[0] == '?':
+        on = self.new_file.split('_')[-1][1:]
+        new_file = '/'.join(new_file.split('/')[:-1]) + '_p' + ('00000' + str(missing[j]))[-len(on):]
+        j += 1
+      _file_to_be_changing.append((old_file, new_file))
     for i, (old_file, new_file) in enumerate(file_to_be_changing):
       for j, (old_file2, new_file2) in enumerate(file_to_be_changing):
         if j <= i:

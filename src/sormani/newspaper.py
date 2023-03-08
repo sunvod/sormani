@@ -44,7 +44,7 @@ class Newspaper_parameters():
                less_h=20,
                min_area=None,
                max_near=2,
-               n_digits=2):
+               n_digits=3):
     m = scale / 200
     self.scale = scale
     self.box = (int(min_w * m), int(max_w * m), int(min_h * m), int(max_h * m))
@@ -70,7 +70,7 @@ class Newspaper_parameters():
     self.less_h = int(less_h * m)
     self.min_area = int(min_area * m)
     self.max_near = int(max_near * m)
-    self.n_digits = n_digits
+    self.n_digits = max(n_digits, 3)
 class Newspaper_crop_parameters():
   def __init__(self,
                left,
