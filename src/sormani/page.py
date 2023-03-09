@@ -1184,11 +1184,11 @@ class Page:
     for i in range(n_lines):
       for j in range(TOTAL_BUTTON_IN_LINE):
         text = i * TOTAL_BUTTON_IN_LINE + j + 1
-        if text == self.newspaper.n_pages + 1:
+        if text == self.newspaper.n_pages + 1 + 8:
           text = 'ok'
-        elif text == self.newspaper.n_pages + 2:
+        elif text == self.newspaper.n_pages + 2 + 8:
           text = '?'
-        elif text > self.newspaper.n_pages:
+        elif text > self.newspaper.n_pages + 8:
           break
         pixel = tk.PhotoImage(width=1, height=1)
         buttons[i][j] = tk.Button(button_frame_1,

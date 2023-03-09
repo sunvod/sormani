@@ -20,14 +20,14 @@ warnings.filterwarnings("ignore")
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=0,model=None, use_ai=False):
+  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=None,model=None, use_ai=False):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.new_root = new_root
     self.name_complete = name_complete
     self.date = date
     self.force = force
-    self.thresholding = thresholding
+    self.thresholding = thresholding if thresholding is not None else THRESHOLDING
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.need_rotation = filedir.split(' ')[-1][0:2] == 'OT' and len(filedir.split(' ')[-1].split('-')) > 1 and filedir.split(' ')[-1].split('-')[1].isdigit()
     self.model = model
@@ -467,10 +467,11 @@ class Page_pool(list):
     for i, (old_file, new_file) in enumerate(file_to_be_changing):
       n = new_file.split('/')[-1].split('p')[1]
       if n[0] == '?':
-        on = self.new_file.split('_')[-1][1:]
+        on = new_file.split('_')[-1][1:]
         new_file = '/'.join(new_file.split('/')[:-1]) + '_p' + ('00000' + str(missing[j]))[-len(on):]
         j += 1
       _file_to_be_changing.append((old_file, new_file))
+    file_to_be_changing = _file_to_be_changing
     for i, (old_file, new_file) in enumerate(file_to_be_changing):
       for j, (old_file2, new_file2) in enumerate(file_to_be_changing):
         if j <= i:
