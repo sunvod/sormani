@@ -41,6 +41,7 @@ class Sormani():
                force = False,
                exclude_ins=False,
                only_ins=False,
+               valid_ins=[],
                notcheckimages=True,
                thresholding=0,
                rename_folders=True,
@@ -90,6 +91,7 @@ class Sormani():
                      force,
                      exclude_ins,
                      only_ins,
+                     valid_ins,
                      notcheckimages,
                      rename_folders,
                      model_path,
@@ -111,6 +113,7 @@ class Sormani():
             force,
             exclude_ins,
             only_ins,
+            valid_ins,
             notcheckimages,
             rename_folders,
             model_path,
@@ -146,6 +149,7 @@ class Sormani():
     self.converts = None
     self.exclude_ins = exclude_ins
     self.only_ins = only_ins
+    self.valid_ins = valid_ins
     self.notcheckimages = notcheckimages
     self.roots.append(self.new_root)
     self.model = None
@@ -254,23 +258,15 @@ class Sormani():
           if filedir in self.path_exclude or \
               len(files) == 0 or \
               len(dirs) > 0 or \
-              (self.exclude_ins and not dir.isdigit()):
+              (self.exclude_ins and not dir.isdigit()) or \
+              (self.only_ins and dir.isdigit()):
             continue
-          if isinstance(self.only_ins, bool) and self.only_ins and dir.isdigit():
-            continue
-          if isinstance(self.only_ins, int):
-            self.only_ins = [self.only_ins]
-          if isinstance(self.only_ins, list) and len(dir.split()) >= 2 and dir.split()[1] == 'INS':
-            n_ins = dir.split()[2]
-            if n_ins.isdigit():
-              n_ins = int(n_ins)
-              flag = False
-              for ins in self.only_ins:
-                if ins == n_ins:
-                  flag = True
-                  break
-              if not flag:
-                continue
+          if isinstance(self.valid_ins, int):
+            self.valid_ins = [self.valid_ins]
+          if len(dir.split()) >= 2 and dir.split()[1] == 'INS':
+            valid_ins = [str(x) for x in self.valid_ins]
+            if not dir.split()[2] in valid_ins:
+              continue
           files.sort(key = self._get_elements)
           filedirs.append((filedir, files))
       filedirs.sort()
@@ -293,6 +289,10 @@ class Sormani():
           sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
         print(f'Not a valid image: {os.path.join(filedir, file_name)}')
         return False
+      img = cv2.imread(os.path.join(filedir, file_name), cv2.IMREAD_UNCHANGED)
+      if img.shape[2] == 4:
+        img = img[:,:,:3]
+        cv2.imwrite(os.path.join(filedir, file_name), img)
     return True
   def _get_elements(self, n):
     # n = e[:5]

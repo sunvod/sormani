@@ -8,7 +8,8 @@ if __name__ == '__main__':
                     months=[x for x in range(11,12)],
                     days=30,
                     use_ai=False,
-                    only_ins = 2,
+                    only_ins=True,
+                    valid_ins = 1,
                     model_path='best_model_DenseNet201')
   sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
   #
