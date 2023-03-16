@@ -5,11 +5,12 @@ if __name__ == '__main__':
 
   sormani = Sormani('Il Sole 24 Ore',
                     year=2016,
-                    months=[x for x in range(1,4)],
-                    days=None,
+                    months=[x for x in range(11,12)],
+                    days=30,
                     use_ai=False,
+                    only_ins = 2,
                     model_path='best_model_DenseNet201')
-  sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False , create_images=True)
+  sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
   #
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)

@@ -254,9 +254,23 @@ class Sormani():
           if filedir in self.path_exclude or \
               len(files) == 0 or \
               len(dirs) > 0 or \
-              (self.exclude_ins and not dir.isdigit()) or \
-              (self.only_ins and dir.isdigit()):
+              (self.exclude_ins and not dir.isdigit()):
             continue
+          if isinstance(self.only_ins, bool) and self.only_ins and dir.isdigit():
+            continue
+          if isinstance(self.only_ins, int):
+            self.only_ins = [self.only_ins]
+          if isinstance(self.only_ins, list) and len(dir.split()) >= 2 and dir.split()[1] == 'INS':
+            n_ins = dir.split()[2]
+            if n_ins.isdigit():
+              n_ins = int(n_ins)
+              flag = False
+              for ins in self.only_ins:
+                if ins == n_ins:
+                  flag = True
+                  break
+              if not flag:
+                continue
           files.sort(key = self._get_elements)
           filedirs.append((filedir, files))
       filedirs.sort()

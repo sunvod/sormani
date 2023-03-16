@@ -204,12 +204,16 @@ class Page_pool(list):
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     if self.ocr:
-      exec_ocrmypdf(page.original_image,
-                    page.pdf_file_name,
-                    page.txt_file_name,
-                    ORIGINAL_DPI,
-                    UPSAMPLING_DPI,
-                    thresholding=self.thresholding)
+      try:
+        exec_ocrmypdf(page.original_image,
+                      page.pdf_file_name,
+                      page.txt_file_name,
+                      ORIGINAL_DPI,
+                      UPSAMPLING_DPI,
+                      thresholding=self.thresholding)
+      except Exception as e:
+        print(e)
+        print(page.original_image)
     else:
       image = Image.open(page.original_image)
       image.save(page.pdf_file_name, "PDF", resolution=50.0)
