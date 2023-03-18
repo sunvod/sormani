@@ -198,12 +198,14 @@ class Page_pool(list):
       print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
+      # for page in self:
+      #   self.to_pdfa(page)
       print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
-    _parser, options, plugin_manager = get_parser_options_plugins(None)
-    options = Namespace()
+    # _parser, options, plugin_manager = get_parser_options_plugins(None)
+    # options = Namespace()
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     if self.ocr:
@@ -629,7 +631,7 @@ class Page_pool(list):
       hash = imagehash.average_hash(Image.fromarray(img))
       if _img is not None:
         score, _ = structural_similarity(img, _img, full=True)
-        if score > CUTOFF or abs(hash - _hash) < 3:
+        if score > SCORECUTOFF or abs(hash - _hash) <= HASHCUTOFF:
           if debug:
             print(score, abs(hash - _hash), _file, file)
           os.remove(_file)

@@ -3,11 +3,10 @@ from src.sormani.sormani import *
 
 if __name__ == '__main__':
 
-
   # sormani = Sormani('Il Sole 24 Ore',
   #                   year=2016,
-  #                   months=[x for x in range(11,12)],
-  #                   days=30,
+  #                   months=1,
+  #                   days=2,
   #                   use_ai=False,
   #                   only_ins=True,
   #                   valid_ins=1,
@@ -21,8 +20,8 @@ if __name__ == '__main__':
                     year=1900,
                     months=1,
                     days=[x for x in range(2,3)])
-  sormani.set_bobine_merge_images()
-  # sormani.set_bobine_select_images()
+  # sormani.set_bobine_merge_images()
+  sormani.set_bobine_select_images()
   # sormani.bobine_delete_copies()
   # sormani.improve_images(limit=200, threshold="b0")
   # sormani.rotate_fotogrammi()

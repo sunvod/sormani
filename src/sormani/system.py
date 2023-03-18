@@ -7,13 +7,16 @@ from PIL import Image
 from argparse import Namespace
 from contextlib import suppress
 from ocrmypdf import __version__, ExitCode, BadArgsError, MissingDependencyError, InputFileError
-from ocrmypdf._plugin_manager import get_parser_options_plugins
+from ocrmypdf._plugin_manager import get_parser_options_plugins, get_plugin_manager
 from ocrmypdf._sync import run_pipeline
 from ocrmypdf._validation import check_options, log
 from ocrmypdf.api import Verbosity, configure_logging
 from pathlib import Path
 
 import warnings
+
+from ocrmypdf.cli import plugins_only_parser, get_parser
+
 warnings.filterwarnings("ignore")
 
 ORIGINAL_DPI = 400
@@ -49,16 +52,20 @@ NEWSPAPERS = ['Alias',
               'Osservatore Romano',
               'Tutto Libri',
               'Unita']
-CUTOFF = 0.66
+SCORECUTOFF = 0.66
+HASHCUTOFF = 2
 
 global_count = multiprocessing.Value('I', 0)
 
 def sigbus(self, *args):
   raise InputFileError("Lost access to the input file")
 
-def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', image_dpi=ORIGINAL_DPI,
-                  oversample=0, thresholding=0):
-  _, _, plugin_manager = get_parser_options_plugins(None)
+def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', image_dpi=ORIGINAL_DPI, oversample=0, thresholding=0):
+  pre_options, _ = plugins_only_parser.parse_known_args(args=None)
+  plugin_manager = get_plugin_manager(pre_options.plugins)
+  parser = get_parser()
+  plugin_manager.hook.initialize(plugin_manager = plugin_manager)
+  plugin_manager.hook.add_options(parser=parser)
   options = Namespace()
   options.input_file = input_file
   options.output_file = output_file
