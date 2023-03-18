@@ -8,6 +8,9 @@ import datetime
 import cv2
 import numpy as np
 import tensorflow as tf
+from skimage.metrics import structural_similarity
+import scipy.ndimage as ndi
+import imagehash
 
 from multiprocessing import Pool, Manager
 from src.sormani.system import *
@@ -595,37 +598,47 @@ class Page_pool(list):
     file = os.path.join(self.filedir, 'merge_' + n + '.tif')
     cv2.imwrite(file, vis)
     return 1
-  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold=None):
+  def set_bobine_select_images(self, remove_merge, debug, threshold=None):
     for page in self:
       page.remove_merge = remove_merge
-      page.write_borders = write_borders
+      page.debug = debug
       page.threshold = threshold
       page.filedir = self.filedir
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._set_bobine_select_images, self)
-    _w = None
-    _h = None
-    file_list = []
     count = 0
     for elements in result:
       if elements is None:
         continue
       count += elements[1]
-      for element in elements[0]:
-        file_list.append(element)
-    file_list.sort()
-    for file, x, y, w, h in file_list:
-      if _w == w and _h == h:
-        os.remove(file)
-        count -= 1
-      _w = w
-      _h = h
     return count
   def _set_bobine_select_images(self, page):
     try:
       return page.set_bobine_select_images()
     except:
       return 0
+  def bobine_delete_copies(self, debug):
+    _file = None
+    _hash = None
+    _img = None
+    i = 0
+    count = 0
+    for page in self:
+      file = page.original_image
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
+      hash = imagehash.average_hash(Image.fromarray(img))
+      if _img is not None:
+        score, _ = structural_similarity(img, _img, full=True)
+        if score > CUTOFF or abs(hash - _hash) < 3:
+          # print(i, score, abs(hash - _hash), file)
+          os.remove(file)
+          count += 1
+      _file = file
+      _hash = hash
+      _img = img
+      i += 1
+    return count
   def rotate_fotogrammi(self, verbose = False, limit=4000, threshold=180):
     count = 0
     for page in self:

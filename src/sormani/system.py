@@ -49,6 +49,7 @@ NEWSPAPERS = ['Alias',
               'Osservatore Romano',
               'Tutto Libri',
               'Unita']
+CUTOFF = 0.66
 
 global_count = multiprocessing.Value('I', 0)
 

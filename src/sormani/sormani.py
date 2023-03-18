@@ -432,7 +432,6 @@ class Sormani():
         i = self.pages_pool.index(page_pool)
         self.pages_pool[i] = None
     if count:
-      # print()
       print(
         f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
@@ -734,17 +733,38 @@ class Sormani():
     print(f'Starting merging images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.set_bobine_merge_images()
+      n = page_pool.set_bobine_merge_images()
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
     self.set_elements()
     print(f'Merging {count} frames ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True, write_borders=False, threshold = 5):
+  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 5):
     start_time = time.time()
     print(f'Extracting frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.set_bobine_select_images(remove_merge, write_borders, threshold)
+      n = page_pool.set_bobine_select_images(remove_merge, debug, threshold)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    self.bobine_delete_copies(debug)
+  def bobine_delete_copies(self, debug=False):
+    start_time = time.time()
+    print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
+    for page_pool in self:
+      n = page_pool.bobine_delete_copies(debug)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
+    self.set_elements()
+    print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def rotate_fotogrammi(self, verbose=False, limit=5000):
     start_time = time.time()
     print(f'Start Rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')

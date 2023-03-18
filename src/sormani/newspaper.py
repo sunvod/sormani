@@ -1188,11 +1188,11 @@ class La_Domenica_del_Corriere(Newspaper):
     return whole
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
     for n_page, page in enumerate(page_pool):
-      try:
-        page.newspaper.n_page
-        continue
-      except:
-        pass
+      # try:
+      #   page.newspaper.n_page
+      #   continue
+      # except:
+      #   pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       page.newspaper.n_page = n_page

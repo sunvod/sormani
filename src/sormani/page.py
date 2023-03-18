@@ -1321,6 +1321,10 @@ class Page:
     books = []
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
+      rect = cv2.minAreaRect(contour)
+      if self.debug:
+        box = np.int0(cv2.boxPoints(rect))
+        cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
       if w > 10000 and h > 5000 and w < 15000:
         books.append((x, y, w, h))
     books.sort(key=_order)
@@ -1332,7 +1336,7 @@ class Page:
       _, _, weight, _ = cv2.boundingRect(img)
       if x != 0 and x + w != weight:
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-    if self.write_borders:
+    if self.debug:
       n = '00' + str(count_n) if count_n < 10 else '0' + str(count_n) if count_n < 100 else str(count_n)
       file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
       file_thresh = os.path.join(self.filedir, 'fotogrammi_thresh_' + page_n + '_' + n + '.tif')
