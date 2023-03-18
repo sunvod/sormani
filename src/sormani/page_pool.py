@@ -621,7 +621,6 @@ class Page_pool(list):
     _file = None
     _hash = None
     _img = None
-    i = 0
     count = 0
     for page in self:
       file = page.original_image
@@ -631,13 +630,13 @@ class Page_pool(list):
       if _img is not None:
         score, _ = structural_similarity(img, _img, full=True)
         if score > CUTOFF or abs(hash - _hash) < 3:
-          # print(i, score, abs(hash - _hash), file)
-          os.remove(file)
+          if debug:
+            print(score, abs(hash - _hash), _file, file)
+          os.remove(_file)
           count += 1
       _file = file
       _hash = hash
       _img = img
-      i += 1
     return count
   def rotate_fotogrammi(self, verbose = False, limit=4000, threshold=180):
     count = 0
