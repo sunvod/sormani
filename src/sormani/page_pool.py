@@ -198,14 +198,10 @@ class Page_pool(list):
       print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       with Pool(processes=N_PROCESSES) as mp_pool:
         mp_pool.map(self.to_pdfa, self)
-      # for page in self:
-      #   self.to_pdfa(page)
       print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
   def to_pdfa(self, page):
-    # _parser, options, plugin_manager = get_parser_options_plugins(None)
-    # options = Namespace()
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     if self.ocr:
@@ -294,7 +290,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9", debug=False):
+  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9"):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -304,7 +300,6 @@ class Page_pool(list):
         page.color = color
         page.inversion = inversion
         page.threshold = threshold
-        page.debug = debug
         page.valid = None
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._clean_images, self)
@@ -374,10 +369,10 @@ class Page_pool(list):
     return result
   def _divide_image(self, page):
     return page.divide_image()
-  def remove_borders(self, limit = 5000, verbose = False):
+  def remove_borders(self, limit = 5000, threshold=180):
     for page in self:
-      page.verbose = verbose
       page.limit = limit
+      page.threshold = threshold
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._remove_borders, self)
     return sum(result)
@@ -619,7 +614,7 @@ class Page_pool(list):
       return page.set_bobine_select_images()
     except:
       return 0
-  def bobine_delete_copies(self, debug):
+  def bobine_delete_copies(self):
     _file = None
     _hash = None
     _img = None
@@ -627,23 +622,24 @@ class Page_pool(list):
     for page in self:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      h, w = img.shape
+      img = img[1000:h-2000,1000:w-2000]
       img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
       if _img is not None:
         score, _ = structural_similarity(img, _img, full=True)
+        if DEBUG:
+          print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
         if score > SCORECUTOFF or abs(hash - _hash) <= HASHCUTOFF:
-          if debug:
-            print(score, abs(hash - _hash), _file, file)
           os.remove(_file)
           count += 1
       _file = file
       _hash = hash
       _img = img
     return count
-  def rotate_fotogrammi(self, verbose = False, limit=4000, threshold=180):
+  def rotate_fotogrammi(self, limit=4000, threshold=180):
     count = 0
     for page in self:
-      page.verbose = verbose
       page.limit = limit
       page.threshold = threshold
     with Pool(processes=N_PROCESSES) as mp_pool:

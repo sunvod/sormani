@@ -358,6 +358,8 @@ class Newspaper():
                                      right,
                                      top,
                                      bottom)
+  def get_limits(self):
+    return None
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape
@@ -1225,6 +1227,8 @@ class La_Domenica_del_Corriere(Newspaper):
     return 0, -200, 0, 200
   def get_dimension(self, img=None):
     return 5600, 7400
+  def get_limits(self):
+    return (10550, 7200)
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
@@ -1299,3 +1303,5 @@ class Il_Mondo(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
+
+
