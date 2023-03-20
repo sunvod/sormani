@@ -1487,18 +1487,15 @@ class Page:
         angle = 90 + angle
       if angle > 85:
         limits = self.newspaper.get_limits()
+        _h, _w = img.shape
         if limits is not None:
           if w <= limits[0]:
-            if x - (limits[0] - w) // 2 > 0:
-              x -= (limits[0] - w) // 2
+            x -= (limits[0] - w) // 2 if x - (limits[0] - w) // 2 > 0 else 0
           else:
-            _h, _w = img.shape
             x = (_w - limits[0]) // 2
           if h <= limits[1]:
-            if y - (limits[1] - h) // 2 > 0:
-              y -= (limits[1] - h) // 2
+              y -= (limits[1] - h) // 2 if y - (limits[1] - h) // 2 > 0 else 0
           else:
-            _h, _w = img.shape
             y = (_h - limits[1]) // 2
           w = limits[0]
           h = limits[1]
