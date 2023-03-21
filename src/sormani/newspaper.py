@@ -1228,7 +1228,7 @@ class La_Domenica_del_Corriere(Newspaper):
   def get_dimension(self, img=None):
     return 5600, 7400
   def get_limits(self):
-    return (10550, 7200)
+    return (11000, 7500)
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

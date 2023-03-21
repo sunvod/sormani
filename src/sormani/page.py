@@ -1427,7 +1427,6 @@ class Page:
         cv2.imwrite(file_thresh, thresh)
       cv2.imwrite(file, bimg)
     return count
-
   def remove_borders(self):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
@@ -1476,8 +1475,16 @@ class Page:
         books.append(contour)
     for contour in books:
       x, y, w, h = cv2.boundingRect(contour)
+      x -= 32
+      # y += 32
+      w += 64
+      # h -= 64
       if DEBUG:
-        cv2.drawContours(bimg, contour, -1, (0, 224, 224), 3)
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        cv2.drawContours(bimg, contour, -1, (0, 0, 255), 3)
+        thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB)
+        cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 255, 0), 3)
+        cv2.drawContours(thresh, contour, -1, (0, 0, 255), 3)
     if len(books):
       limits = self.newspaper.get_limits()
       _h, _w = img.shape
@@ -1496,135 +1503,60 @@ class Page:
         h = limits[1]
       x = x if x >= 0 else 0
       y = y if y >= 0 else 0
-      bimg = img[y:y + h, x:x + w]
       if DEBUG:
         cv2.imwrite(file_bing, bimg)
         cv2.imwrite(file_thresh, thresh)
       else:
+        bimg = img[y:y + h, x:x + w]
         cv2.imwrite(file, bimg)
     return 1
-
-    # img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[0,0,0])
-    # thresh = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 255, 3)
-    # _, img = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # Questo riempie i buchi neri
-    # fill_hole = 3
-    # invert_fill_hole = True
-    # if invert_fill_hole:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    # else:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-    # if invert_fill_hole:
-    #   thresh = 255 - thresh
-    # # Questo riempie i buchi bianchi
-    # fill_hole = 3
-    # invert_fill_hole = False
-    # if invert_fill_hole:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    # else:
-    #   thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    # thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-    # if invert_fill_hole:
-    #   thresh = 255 - thresh
-    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    # # contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    # bimg = img.copy()
-    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    # books = []
-    # for contour in contours:
-    #   x, y, w, h = cv2.boundingRect(contour)
-    #   if w > self.limit and h > self.limit:
-    #     if DEBUG:
-    #       cv2.rectangle(bimg, [x, y], [x + w, y + h], (0, 255, 0), 3)
-    #     books.append(contour)
-    # if len(books) == 1:
-    #   x, y, w, h = cv2.boundingRect(books[0])
-    # elif len(books) > 1:
-    #   for i, book in enumerate(books):
-    #     if i == 0:
-    #       x, y, w, h = cv2.boundingRect(books[i])
-    #       continue
-    #     _x, _y, _w, _h = cv2.boundingRect(books[i])
-    #     x, y, w, h = union((x, y, w, h), (_x, _y, _w, _h))
-    #   if DEBUG:
-    #     cv2.rectangle(bimg, [x, y], [x + w, y + h], (0, 255, 0), 13)
-    # if not DEBUG:
-    #   bimg = bimg[y:y + h, x:x + w]
-    #   h, w = bimg.shape[:2]
-    #   mask = np.zeros((h + 2, w + 2), np.uint8)
-    #   cv2.floodFill(bimg, mask, (0, 0), (255, 255, 255));
-    # return bimg, img
-  # def _remove_borders(self, threshold = 220):
-  #   def rotate_image(image, angle):
-  #     image_center = tuple(np.array(image.shape[1::-1]) / 2)
-  #     rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-  #     result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-  #     return result
-  #   def union(a, b):
-  #     x = min(a[0], b[0])
-  #     y = min(a[1], b[1])
-  #     w = max(a[0] + a[2], b[0] + b[2]) - x
-  #     h = max(a[1] + a[3], b[1] + b[3]) - y
-  #     return (x, y, w, h)
-  #   file = self.original_image
-  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-  #   # img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[0,0,0])
-  #   _, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
-  #   # thresh = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 255, 3)
-  #   # _, img = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-  #   # Questo riempie i buchi neri
-  #   fill_hole = 3
-  #   invert_fill_hole = True
-  #   if invert_fill_hole:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-  #   else:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-  #   kernel = np.ones((fill_hole, fill_hole), np.uint8)
-  #   thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-  #   if invert_fill_hole:
-  #     thresh = 255 - thresh
-  #   # Questo riempie i buchi bianchi
-  #   fill_hole = 3
-  #   invert_fill_hole = False
-  #   if invert_fill_hole:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-  #   else:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-  #   kernel = np.ones((fill_hole, fill_hole), np.uint8)
-  #   thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-  #   if invert_fill_hole:
-  #     thresh = 255 - thresh
-  #   contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-  #   # contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-  #   bimg = img.copy()
-  #   bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-  #   books = []
-  #   for contour in contours:
-  #     x, y, w, h = cv2.boundingRect(contour)
-  #     if w > self.limit and h > self.limit:
-  #       if DEBUG:
-  #         cv2.rectangle(bimg, [x, y], [x + w, y + h], (0, 255, 0), 3)
-  #       books.append(contour)
-  #   if len(books) == 1:
-  #     x, y, w, h = cv2.boundingRect(books[0])
-  #   elif len(books) > 1:
-  #     for i, book in enumerate(books):
-  #       if i == 0:
-  #         x, y, w, h = cv2.boundingRect(books[i])
-  #         continue
-  #       _x, _y, _w, _h = cv2.boundingRect(books[i])
-  #       x, y, w, h = union((x, y, w, h), (_x, _y, _w, _h))
-  #     if DEBUG:
-  #       cv2.rectangle(bimg, [x, y], [x + w, y + h], (0, 255, 0), 13)
-  #   if not DEBUG:
-  #     bimg = bimg[y:y + h, x:x + w]
-  #     h, w = bimg.shape[:2]
-  #     mask = np.zeros((h + 2, w + 2), np.uint8)
-  #     cv2.floodFill(bimg, mask, (0, 0), (255, 255, 255));
-  #   return bimg, thresh
+  def remove_frames(self):
+    file = self.original_image
+    file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    h, w = img.shape
+    bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    max_y = 200
+    max_x = 300
+    limit = 150
+    for y in range(max_x):
+      mean = img[y:y+1,0:w].mean()
+      if mean < limit:
+        img[y:y + 1, 0:w] = 0
+        if DEBUG:
+          bimg[y:y + 1, 0:w] = [0,255,0]
+      else:
+        break
+    for y in range(h-1, h-max_x, -1):
+      mean = img[y:y+1,0:w].mean()
+      if mean < limit:
+        img[y:y + 1, 0:w] = 0
+        if DEBUG:
+          bimg[y:y + 1, 0:w] = [0,255,0]
+      else:
+        break
+    for x in range(max_y):
+      mean = img[0:h,x:x+1].mean()
+      if mean < limit:
+        img[0:h,x:x+1] = 0
+        if DEBUG:
+          bimg[0:h,x:x+1] = [0,0,255]
+      else:
+        break
+    for x in range(w-1, w-max_y, -1):
+      mean = img[0:h,x:x+1].mean()
+      if mean < limit:
+        img[0:h,x:x+1] = 0
+        if DEBUG:
+          bimg[0:h,x:x+1] = [0,0,255]
+      else:
+        break
+    if DEBUG:
+      cv2.imwrite(file_bing, bimg)
+    else:
+      cv2.imwrite(file, bimg)
+    return 1
   def divide_image(self):
     file_name_no_ext = Path(self.original_image).stem
     file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)

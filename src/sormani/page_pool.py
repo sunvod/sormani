@@ -378,6 +378,15 @@ class Page_pool(list):
     return sum(result)
   def _remove_borders(self, page):
     return page.remove_borders()
+  def remove_frames(self, limit = 5000, threshold=180):
+    for page in self:
+      page.limit = limit
+      page.threshold = threshold
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._remove_frames, self)
+    return sum(result)
+  def _remove_frames(self, page):
+    return page.remove_frames()
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()
@@ -623,16 +632,17 @@ class Page_pool(list):
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
       h, w = img.shape
-      img = img[1000:h-2000,1000:w-2000]
+      # img = img[1000:h-2000,1000:w-2000]
       img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
       if _img is not None:
         score, _ = structural_similarity(img, _img, full=True)
-        if DEBUG:
-          print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
         if score > SCORECUTOFF or abs(hash - _hash) <= HASHCUTOFF:
-          os.remove(_file)
-          count += 1
+          if DEBUG:
+            print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
+          else:
+            os.remove(_file)
+            count += 1
       _file = file
       _hash = hash
       _img = img

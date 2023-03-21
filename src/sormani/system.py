@@ -53,7 +53,7 @@ NEWSPAPERS = ['Alias',
               'Osservatore Romano',
               'Tutto Libri',
               'Unita']
-SCORECUTOFF = 0.66
+SCORECUTOFF = 0.6
 HASHCUTOFF = 2
 
 global_count = multiprocessing.Value('I', 0)
