@@ -19,7 +19,7 @@ from ocrmypdf.cli import plugins_only_parser, get_parser
 
 warnings.filterwarnings("ignore")
 
-DEBUG = False
+DEBUG = True
 ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 600
 THRESHOLDING=0

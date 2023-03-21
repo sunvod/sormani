@@ -18,8 +18,8 @@ if __name__ == '__main__':
 
   sormani = Sormani('La Domenica del Corriere',
                     year=1900,
-                    months=1,
-                    days=[x for x in range(3,4)])
+                    months=3,
+                    days=[x for x in range(1,2)])
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
   # sormani.bobine_delete_copies()

@@ -1470,44 +1470,38 @@ class Page:
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     books = []
-    rect = None
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
       if w > self.limit and h > self.limit:
         books.append(contour)
     for contour in books:
       x, y, w, h = cv2.boundingRect(contour)
-      rect = cv2.minAreaRect(contour)
       if DEBUG:
-        box = np.int0(cv2.boxPoints(rect))
-        cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-    if rect is not None:
-      angle = rect[2]
-      if angle < 45:
-        angle = 90 + angle
-      if angle > 85:
-        limits = self.newspaper.get_limits()
-        _h, _w = img.shape
-        if limits is not None:
-          if w <= limits[0]:
-            x -= (limits[0] - w) // 2 if x - (limits[0] - w) // 2 > 0 else 0
-          else:
-            x = (_w - limits[0]) // 2
-          if h <= limits[1]:
-              y -= (limits[1] - h) // 2 if y - (limits[1] - h) // 2 > 0 else 0
-          else:
-            y = (_h - limits[1]) // 2
-          w = limits[0]
-          h = limits[1]
-        bimg = img[y:y + h, x:x + w]
+        cv2.drawContours(bimg, contour, -1, (0, 224, 224), 3)
+    if len(books):
+      limits = self.newspaper.get_limits()
+      _h, _w = img.shape
+      if limits is not None:
+        dx = (limits[0] - w) // 2 if x - (limits[0] - w) // 2 > 0 else 0
+        if w <= limits[0] and x + w - dx >= _w:
+          x -= dx
+        else:
+          x = (_w - limits[0]) // 2
+        dy = (limits[1] - h) // 2 if y - (limits[1] - h) // 2 > 0 else 0
+        if h <= limits[1] and y + h - dy >= _h:
+            y -= dy
+        else:
+          y = (_h - limits[1]) // 2
+        w = limits[0]
+        h = limits[1]
+      x = x if x >= 0 else 0
+      y = y if y >= 0 else 0
+      bimg = img[y:y + h, x:x + w]
       if DEBUG:
         cv2.imwrite(file_bing, bimg)
         cv2.imwrite(file_thresh, thresh)
       else:
-        try:
-          cv2.imwrite(file, bimg)
-        except Exception as e:
-          pass
+        cv2.imwrite(file, bimg)
     return 1
 
     # img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=[0,0,0])
