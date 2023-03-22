@@ -1517,45 +1517,36 @@ class Page:
     h, w = img.shape
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    max_y = 200
-    max_x = 300
-    limit = 150
-    for y in range(max_x):
-      mean = img[y:y+1,0:w].mean()
-      if mean < limit:
-        img[y:y + 1, 0:w] = 0
-        if DEBUG:
-          bimg[y:y + 1, 0:w] = [0,255,0]
-      else:
+    max_x = 250
+    max_y = 500
+    limit = 180
+    for y in range(max_y):
+      mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      if mean >= limit:
+        img = img[y:h, 0:w]
+        h, w = img.shape
         break
-    for y in range(h-1, h-max_x, -1):
-      mean = img[y:y+1,0:w].mean()
-      if mean < limit:
-        img[y:y + 1, 0:w] = 0
-        if DEBUG:
-          bimg[y:y + 1, 0:w] = [0,255,0]
-      else:
+    for y in range(h-1, h-max_y, -1):
+      mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      if mean >= limit:
+        img = img[0:y, 0:w]
+        h, w = img.shape
         break
-    for x in range(max_y):
-      mean = img[0:h,x:x+1].mean()
-      if mean < limit:
-        img[0:h,x:x+1] = 0
-        if DEBUG:
-          bimg[0:h,x:x+1] = [0,0,255]
-      else:
+    for x in range(max_x):
+      mean = min(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      if mean >= limit:
+        img = img[0:h,x:w]
+        h, w = img.shape
         break
-    for x in range(w-1, w-max_y, -1):
-      mean = img[0:h,x:x+1].mean()
-      if mean < limit:
-        img[0:h,x:x+1] = 0
-        if DEBUG:
-          bimg[0:h,x:x+1] = [0,0,255]
-      else:
+    for x in range(w-1, w-max_x, -1):
+      mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
+      if mean >= limit or x == w - max_x + 1:
+        img = img[0:h,0:x]
         break
     if DEBUG:
-      cv2.imwrite(file_bing, bimg)
+      cv2.imwrite(file_bing, img)
     else:
-      cv2.imwrite(file, bimg)
+      cv2.imwrite(file, img)
     return 1
   def divide_image(self):
     file_name_no_ext = Path(self.original_image).stem
