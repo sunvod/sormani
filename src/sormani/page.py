@@ -1514,35 +1514,40 @@ class Page:
     file = self.original_image
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    if (img[0:6,0] == np.array([6,4,6,2,2,2])).all():
+      return
     h, w = img.shape
-    bimg = img.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     max_x = 250
     max_y = 500
-    limit = 180
+    limit = 170
     for y in range(max_y):
       mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      # mean = img[y:y + 1, 0:w].mean()
       if mean >= limit:
         img = img[y:h, 0:w]
         h, w = img.shape
         break
-    for y in range(h-1, h-max_y, -1):
+    for y in range(h-50, h-max_y, -1):
       mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      # mean = img[y:y+1,0:w].mean()
       if mean >= limit:
         img = img[0:y, 0:w]
         h, w = img.shape
         break
     for x in range(max_x):
-      mean = min(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
+      # mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
+      mean = img[0:h,x:x+1].mean()
       if mean >= limit:
         img = img[0:h,x:w]
         h, w = img.shape
         break
     for x in range(w-1, w-max_x, -1):
-      mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
+      # mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
+      mean = img[0:h,x:x+1].mean()
       if mean >= limit or x == w - max_x + 1:
         img = img[0:h,0:x]
         break
+    img[0:6,0] = [6,4,6,2,2,2]
     if DEBUG:
       cv2.imwrite(file_bing, img)
     else:
