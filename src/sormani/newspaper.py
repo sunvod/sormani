@@ -1229,6 +1229,16 @@ class La_Domenica_del_Corriere(Newspaper):
     return 5600, 7400
   def get_limits(self):
     return (11000, 7500)
+  def divide(self, img):
+    imgs = []
+    height, width, _ = img.shape
+    parameters = self.get_crop_parameters(1, width, height)
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+    parameters = self.get_crop_parameters(0, width, height)
+    img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+    imgs.append(img1)
+    imgs.append(img2)
+    return imgs
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
