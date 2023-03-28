@@ -1561,28 +1561,35 @@ class Page:
       if invert_fill_hole:
         thresh = 255 - thresh
       return thresh
+
+    def check_intersection(l1, r1, l2, r2):
+      # if rectangle has area 0, no overlap
+      if l1[0] == r1[0] or l1[1] == r1[1] or r2[0] == l2[0] or l2[1] == r2[1]:
+        return False
+      # If one rectangle is on left side of other
+      if l1[0] > r2[0] or l2[0] > r1[0]:
+        return False
+      # If one rectangle is above other
+      if r1[1] > l2[1] or r2[1] > l1[1]:
+        return False
+      return True
     def create_frame(contours):
       if not len(contours):
         return None
       i = 0
       contour = contours[0]
       x, y, w, h = cv2.boundingRect(contour)
-      flag = True
-      while flag:
-        distance = find_distances(np.array(contours), contour, i)
-        flag = False
-        for _distance in distance:
-          if _distance[0] < 5:
-            _x, _y, _w, _h = cv2.boundingRect(contours[_distance[1]])
-            if _x < x or _y < y or _x + _w > x + w or _y + _h > y + h:
-              flag = True
-              x = min(x, _x)
-              y = min(y, _y)
-              if _x + _w > x + w:
-                w = _x + _w - x
-              if _y + _h > y + h:
-                h = _y + _h - y
-        if flag:
+      for _contour in contours:
+        _x, _y, _w, _h = cv2.boundingRect(_contour)
+        rectangle1_cordinates = np.array([[x, y], [x+w, y], [x+w, y+h], [x, y+h]])
+        rectangle2_cordinates = np.array([[_x, _y], [_x+_w, _y], [_x+_w, _y+_h], [_x, _y+_h]])
+        if check_intersection((x,y+h), (x+w,y), (_x,_y+_h), (_x+_w,_y)):
+          x = min(x, _x)
+          y = min(y, _y)
+          if _x + _w > x + w:
+            w = _x + _w - x
+          if _y + _h > y + h:
+            h = _y + _h - y
           list_of_pts = []
           list_of_pts += [pt for pt in [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]]
           contour = np.array(list_of_pts).reshape((-1, 1, 2)).astype(np.int32)
@@ -1636,10 +1643,18 @@ class Page:
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
+      # if x > 0 and y > 0 and w > 300 and h > 300 and  y < 2000 and (x == 555 or x == 2643):
+        # if x > 0 and y > 0 and w > 300 and h > 300 and y < 2000 and (x == 475 or x == 555 or x == 2643):
+      # if x > 0 and y > 0 and w > 300 and h > 300 and (x == 555 or x == 3459):
       if x > 0 and y > 0 and w > 10 and h > 10:
         # cv2.rectangle(dimg, (x, y), (x + w, y + h), (0, 0, 255), 3)
         # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), -1)
         p = []
+        ofset = 20
+        x -= ofset
+        y -= ofset
+        w += ofset
+        h += ofset
         p.append((x, y))
         p.append((x + w, y))
         p.append((x + w, y + h))
@@ -1653,14 +1668,14 @@ class Page:
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       if x > 0 and y > 0 and w > 1 and h > 1:
-        # flag = False
-        # for _contour in _contours:
-        #   _x, _y, _w, _h = cv2.boundingRect(_contour)
-        #   if _x >= x and _y >= y and _x + _w <= x + w and _y + _h <= y + h:
-        #     flag = True
-        #     break
-        # if flag:
-        #   continue
+        flag = False
+        for _contour in _contours:
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if _x >= x and _y >= y and _x + _w <= x + w and _y + _h <= y + h:
+            flag = True
+            break
+        if flag:
+          continue
         contour = create_frame(contours[i:])
         _contours.append(contour)
         x, y, w, h = cv2.boundingRect(contour)
