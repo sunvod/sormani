@@ -56,19 +56,19 @@ class Newspaper_parameters():
     self.max_fillarea = int(max_fillarea * m)
     self.invert = invert
     self.internal_box = internal_box
-    self.fill_hole = int(fill_hole * m)
+    self.fill_hole = int(fill_hole * m) if fill_hole is not None else None
     self.invert_fill_hole = invert_fill_hole
     self.exclude_colors = exclude_colors
     self.can_be_internal = can_be_internal
-    self.max_distance = int(max_distance * m)
+    self.max_distance = int(max_distance * m) if max_distance is not None else None
     self.model = None
-    self.left_free = [int(x * m) for x in left_free]
-    self.right_free = [int(x * m) for x in right_free]
+    self.left_free = [int(x * m) for x in left_free] if left_free is not None else None
+    self.right_free = [int(x * m) for x in right_free] if right_free is not None else None
     self.delete_horizontal = delete_horizontal
     self.delete_vertical = delete_vertical
     self.less_w = int(less_w * m)
     self.less_h = int(less_h * m)
-    self.min_area = int(min_area * m)
+    self.min_area = int(min_area * m) if min_area is not None else None
     self.max_near = int(max_near * m)
     self.n_digits = max(n_digits, 3)
 class Newspaper_crop_parameters():
@@ -1204,6 +1204,21 @@ class La_Domenica_del_Corriere(Newspaper):
     top = 800
     right = width - 800
     bottom = height - 900
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom)
+  def get_crop_parameters(self, i, width, height):
+    if i == 0:
+      left = width // 2
+      top = 0
+      right = width
+      bottom = height
+    elif i == 1:
+      left = 0
+      top = 0
+      right = width // 2
+      bottom = height
     return Newspaper_crop_parameters(left,
                                      right,
                                      top,

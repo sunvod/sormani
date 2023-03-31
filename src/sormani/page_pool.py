@@ -290,15 +290,13 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, limit = 50, color = 255, inversion = False, threshold="b9"):
+  def clean_images(self, color=250, threshold="b9"):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
       print(f'Start cleaning images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
-        page.limit = limit
         page.color = color
-        page.inversion = inversion
         page.threshold = threshold
         page.valid = None
       count = []
@@ -381,13 +379,16 @@ class Page_pool(list):
     return sum(result)
   def _remove_borders(self, page):
     return page.remove_borders()
-  def remove_frames(self, limit = 5000, threshold=180):
+  def remove_frames(self, limit = 5000, threshold=180, default_frame=(0,0,0,0)):
     for page in self:
       page.limit = limit
       page.threshold = threshold
+      page.default_frame = default_frame
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._remove_frames, self)
-    return sum(result)
+    if result is not None and all(v is not None for v in result):
+      return sum(result)
+    return 0
   def _remove_frames(self, page):
     return page.remove_frames()
   def set_image_file_name(self):
@@ -650,11 +651,12 @@ class Page_pool(list):
       _hash = hash
       _img = img
     return count
-  def rotate_fotogrammi(self, limit=4000, threshold=180):
+  def rotate_fotogrammi(self, limit=4000, threshold=180, angle=None):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
+      page.angle = angle
     with Pool(processes=N_PROCESSES) as mp_pool:
       counts = mp_pool.map(self._rotate_fotogrammi, self)
     for i in counts:

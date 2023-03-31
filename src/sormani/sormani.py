@@ -406,14 +406,13 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, limit=None, color=255, inversion=False, threshold="b9"):
+  def clean_images(self, color=250, threshold="b9"):
     if not len(self.elements):
       return
     selfforce = self.force
-    self.inversion = inversion
     self.force = True
     for page_pool in self:
-      page_pool.clean_images(limit=limit, color=color, inversion=inversion, threshold=threshold)
+      page_pool.clean_images(color=color, threshold=threshold)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):
@@ -437,7 +436,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
-  def remove_borders(self, limit = 5000):
+  def remove_borders(self, limit = 5000, threshold=None):
     if not len(self.elements):
       return
     global global_count
@@ -445,14 +444,14 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_borders(limit = limit)
+      count = page_pool.remove_borders(limit = limit, threshold=threshold)
     if count:
       print(
         f'Removing borders of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
-  def remove_frames(self):
+  def remove_frames(self, default_frame=(0,0,0,0)):
     if not len(self.elements):
       return
     global global_count
@@ -460,7 +459,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_frames()
+      count = page_pool.remove_frames(default_frame=default_frame)
     if count:
       print(
         f'Removing frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -767,7 +766,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    self.rotate_fotogrammi()
+    self.rotate_fotogrammi(threshold=threshold)
     self.remove_borders()
     self.bobine_delete_copies()
   def bobine_delete_copies(self):
@@ -782,12 +781,12 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_fotogrammi(self, limit=5000):
+  def rotate_fotogrammi(self, limit=5000, threshold=None, angle=None):
     start_time = time.time()
     print(f'Start Rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_fotogrammi(limit)
+      count += page_pool.rotate_fotogrammi(limit, threshold, angle)
     print(f'End Rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):
     start_time = time.time()
