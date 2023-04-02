@@ -391,6 +391,18 @@ class Page_pool(list):
     return 0
   def _remove_frames(self, page):
     return page.remove_frames()
+  def remove_single_frames(self, limit = 5000, threshold=200, default_frame=(0,0,0,0)):
+    for page in self:
+      page.limit = limit
+      page.threshold = threshold
+      page.default_frame = default_frame
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._remove_single_frames, self)
+    if result is not None and all(v is not None for v in result):
+      return sum(result)
+    return 0
+  def _remove_single_frames(self, page):
+    return page.remove_single_frames()
   def set_image_file_name(self):
     for page in self:
       page.set_file_names()

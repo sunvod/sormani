@@ -1243,7 +1243,7 @@ class La_Domenica_del_Corriere(Newspaper):
   def get_dimension(self, img=None):
     return 5600, 7400
   def get_limits(self):
-    return (11000, 7500)
+    return (9000, 6200)
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape

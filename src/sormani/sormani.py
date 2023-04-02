@@ -451,7 +451,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
-  def remove_frames(self, default_frame=(0,0,0,0)):
+  def remove_frames(self, threshold=200, default_frame=(0,0,0,0)):
     if not len(self.elements):
       return
     global global_count
@@ -459,13 +459,28 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_frames(default_frame=default_frame)
+      count = page_pool.remove_frames(threshold=threshold, default_frame=default_frame)
     if count:
       print(
         f'Removing frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No removing frames is needed for \'{self.newspaper_name}\'.')
+  def remove_single_frames(self, threshold=200, default_frame=(0,0,0,0)):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting removing single frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.remove_single_frames(threshold=threshold, default_frame=default_frame)
+    if count:
+      print(
+        f'Removing single frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No removing single frames is needed for \'{self.newspaper_name}\'.')
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
