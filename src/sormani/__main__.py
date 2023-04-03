@@ -25,16 +25,14 @@ if __name__ == '__main__':
 
   # sormani.improve_images(limit=200, threshold="b0")
 
-  # sormani.rotate_fotogrammi(threshold=200)
-  # sormani.bobine_delete_copies()
-  # sormani.remove_borders(threshold=190, limit=1000)
-  # sormani.remove_frames()
-  # sormani.divide_image()
-  sormani.remove_frames(threshold=200)
-  # sormani.remove_frames(default_frame=(0,200,0,0))
-  # sormani.clean_images(color=248, threshold=230)
-  # sormani.remove_frames()
-  #
+  # sormani.rotate_fotogrammi(threshold=200)                                      # 2
+  # sormani.remove_borders(threshold=190, limit=1000)                             # 3
+  # sormani.bobine_delete_copies()                                                # 4
+  sormani.remove_frames(threshold=200)                                          # 5
+  # sormani.divide_image()                                                        # 6
+  # sormani.remove_single_frames(threshold=200, default_frame=(0,50,0,0))         # 7
+  # sormani.clean_images(color=248, threshold=230)                                # 8
+
   # sormani.create_all_images()
 
   # sormani.change_colors(inversion = True, limit = "ba")
@@ -54,6 +52,8 @@ if __name__ == '__main__':
   # sormani.rename_pages_files(do_prediction=False)
   # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.update_date_creation()
+
+  # sormani.change_contrast(contrast=100)
 
 
 

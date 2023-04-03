@@ -1210,14 +1210,14 @@ class La_Domenica_del_Corriere(Newspaper):
                                      bottom)
   def get_crop_parameters(self, i, width, height):
     if i == 0:
-      left = width // 2
+      left = width // 2 - 20
       top = 0
       right = width
       bottom = height
     elif i == 1:
       left = 0
       top = 0
-      right = width // 2
+      right = width // 2 + 20
       bottom = height
     return Newspaper_crop_parameters(left,
                                      right,
@@ -1243,7 +1243,7 @@ class La_Domenica_del_Corriere(Newspaper):
   def get_dimension(self, img=None):
     return 5600, 7400
   def get_limits(self):
-    return (9000, 6200)
+    return (8800, 6000, 800)
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape
