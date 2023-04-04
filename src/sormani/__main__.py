@@ -19,7 +19,7 @@ if __name__ == '__main__':
   sormani = Sormani('La Domenica del Corriere',
                     year=1900,
                     months=3,
-                    days=[x for x in range(10,11)])
+                    days=[x for x in range(8,9)])
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
 
@@ -28,10 +28,10 @@ if __name__ == '__main__':
   # sormani.rotate_fotogrammi(threshold=200)                                      # 2
   # sormani.remove_borders(threshold=190, limit=1000)                             # 3
   # sormani.bobine_delete_copies()                                                # 4
-  sormani.remove_frames(threshold=200)                                          # 5
+  # sormani.remove_frames(threshold=200)                                          # 5
   # sormani.divide_image()                                                        # 6
   # sormani.remove_single_frames(threshold=200, default_frame=(0,50,0,0))         # 7
-  # sormani.clean_images(color=248, threshold=230)                                # 8
+  sormani.clean_images(color=248, threshold=230)                                # 8
 
   # sormani.create_all_images()
 

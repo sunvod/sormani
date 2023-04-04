@@ -1550,7 +1550,7 @@ class Page:
     threshold = self.threshold
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
-    threshold = _threshold if _threshold < threshold else _threshold
+    threshold = _threshold if _threshold < threshold else threshold
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = 24
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
@@ -1560,134 +1560,13 @@ class Page:
     if not DEBUG:
       cv2.imwrite(file, dimg)
     else:
+      cv2.imwrite(file_bimg, white_nimg)
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_dimg, dimg)
       cv2.imwrite(file_mem, white_nimg)
       cv2.imwrite(file_thresh, thresh)
       pass
     return count
-
-  # def remove_borders(self):
-  #   def union(a, b):
-  #     x = min(a[0], b[0])
-  #     y = min(a[1], b[1])
-  #     w = max(a[0] + a[2], b[0] + b[2]) - x
-  #     h = max(a[1] + a[3], b[1] + b[3]) - y
-  #     return (x, y, w, h)
-  #   def check_intersection(l1, r1, l2, r2):
-  #     # if rectangle has area 0, no overlap
-  #     if l1[0] == r1[0] or l1[1] == r1[1] or r2[0] == l2[0] or l2[1] == r2[1]:
-  #       return False
-  #     # If one rectangle is on left side of other
-  #     if l1[0] > r2[0] or l2[0] > r1[0]:
-  #       return False
-  #     # If one rectangle is above other
-  #     if r1[1] > l2[1] or r2[1] > l1[1]:
-  #       return False
-  #     return True
-  #   def create_frame(contours):
-  #     if len(contours) <= 1:
-  #       return None
-  #     i = 0
-  #     contour = contours[1]
-  #     x, y, w, h = cv2.boundingRect(contour)
-  #     for _contour in contours:
-  #       _x, _y, _w, _h = cv2.boundingRect(_contour)
-  #       if check_intersection((x, y + h), (x + w, y), (_x, _y +_h), (_x +_w, _y)):
-  #         (x, y, w, h) = union((x, y, w, h), (_x, _y, _w, _h))
-  #         list_of_pts = []
-  #         list_of_pts += [pt for pt in [(x, y), (x + w - 1, y), (x + w -1 , y + h - 1), (x, y + h - 1)]]
-  #         contour = np.array(list_of_pts).reshape((-1, 1, 2)).astype(np.int32)
-  #         contour = cv2.convexHull(contour)
-  #     return contour
-  #   def union(a, b):
-  #     x = min(a[0], b[0])
-  #     y = min(a[1], b[1])
-  #     w = max(a[0] + a[2], b[0] + b[2]) - x
-  #     h = max(a[1] + a[3], b[1] + b[3]) - y
-  #     return (x, y, w, h)
-  #   def _ordering_contours(c):
-  #     x, y, w, h = cv2.boundingRect(c)
-  #     return (x, w)
-  #   count = 0
-  #   file = self.original_image
-  #   file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
-  #   file_cimg = '.'.join(file.split('.')[:-1]) + '_cimg.' + file.split('.')[-1]
-  #   file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
-  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-  #   _img = img.copy()
-  #   ret, thresh = cv2.threshold(img, 220, 255, cv2.THRESH_BINARY)
-  #   contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-  #   # fill contours with white
-  #   for i, contour in enumerate(contours):
-  #     x, y, w, h = cv2.boundingRect(contour)
-  #     if w < 200 or h < 200:
-  #       cv2.rectangle(_img, (x, y), (x + w, y + h), (255, 255, 255), -1)
-  #   # _img = cv2.convertScaleAbs(_img, alpha=1.1, beta=0)
-  #   ret, thresh = cv2.threshold(_img, 220, 255, cv2.THRESH_BINARY)
-  #   #get new contours, enlarge them and put in order
-  #   # Questo riempie i buchi bianchi
-  #   fill_hole = 6
-  #   invert_fill_hole = False
-  #   if invert_fill_hole:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-  #   else:
-  #     thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-  #   kernel = np.ones((fill_hole, fill_hole), np.uint8)
-  #   thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=4)
-  #   if invert_fill_hole:
-  #     thresh = 255 - thresh
-  #   contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-  #   bimg = img.copy()
-  #   bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-  #   cimg = img.copy()
-  #   x = None
-  #   for contour in contours:
-  #     _x, _y, _w, _h = cv2.boundingRect(contour)
-  #     if _w > self.limit or _h > self.limit:
-  #       if DEBUG:
-  #         cv2.rectangle(bimg, (_x, _y), (_x + _w, _y + _h), (0, 255, 0), 3)
-  #         cv2.drawContours(bimg, contour, -1, (0, 0, 255), 3)
-  #       if x is None:
-  #         x, y, w, h = cv2.boundingRect(contour)
-  #         continue
-  #       (x, y, w, h) = union((x, y, w, h), (_x, _y, _w, _h))
-  #   if x is not None:
-  #     x -= 32
-  #     y -= 32
-  #     w += 64
-  #     h += 64
-  #     limits = self.newspaper.get_limits()
-  #     _h, _w = img.shape
-  #     if limits is not None:
-  #       dx = (limits[0] - w) // 2 if x - (limits[0] - w) // 2 > 0 else 0
-  #       if w <= limits[0] and x + w - dx >= _w:
-  #         x -= dx
-  #       else:
-  #         x = (_w - limits[0]) // 2
-  #       dy = (limits[1] - h) // 2 if y - (limits[1] - h) // 2 > 0 else 0
-  #       if h <= limits[1] and y + h - dy >= _h:
-  #         y -= dy
-  #       else:
-  #         y = (_h - limits[1]) // 2
-  #         w = limits[0]
-  #         h = limits[1]
-  #       x = x if x >= 0 else 0
-  #       y = y if y >= 0 else 0
-  #     # non considera tutti i calcoli e considera solo i limits
-  #       x = (_w - limits[0]) // 2
-  #       y = (_h - limits[1]) // 2
-  #       w = limits[0]
-  #       h = limits[1]
-  #
-  #     cimg = img[y:y + h, x:x + w]
-  #   if DEBUG:
-  #     cv2.imwrite(file_cimg, cimg)
-  #     # cv2.imwrite(file_bimg, bimg)
-  #     # cv2.imwrite(file_thresh, thresh)
-  #   else:
-  #     cv2.imwrite(file, cimg)
-  #   return 1
   def remove_borders(self):
     count = 0
     file = self.original_image
@@ -1708,71 +1587,6 @@ class Page:
     else:
       cv2.imwrite(file, cimg)
     return 1
-  # def remove_frames(self):
-  #   file = self.original_image
-  #   file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
-  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-  #   if (img[0:6,0] == np.array([6,4,61,2,202,3])).all():
-  #     return
-  #   _img = img.copy()
-  #   h, w = img.shape
-  #   max_x_r = 400
-  #   max_x_l = 1000
-  #   max_y = 1000
-  #   limits = [215, 210, 200, 190]
-  #   for limit in limits:
-  #     for y in range(self.default_frame[0], max_y):
-  #       # mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
-  #       mean = img[y:y+1,0:w].mean()
-  #       if mean >= limit:
-  #         img = img[y-100 if y >= 100 else 0:h, 0:w]
-  #         h, w = img.shape
-  #         break
-  #     if mean >= limit:
-  #       break
-  #   for limit in limits:
-  #     for y in range(h-1-self.default_frame[1], h-max_y, -1):
-  #       # mean = max(img[y:y+1,0:w // 2].mean(), img[y:y+1,w // 2:w].mean())
-  #       mean = img[y:y+1,0:w].mean()
-  #       if mean >= limit:
-  #         img = img[0:y+100, 0:w]
-  #         h, w = img.shape
-  #         break
-  #     if mean >= limit:
-  #       break
-  #   for limit in limits:
-  #     for x in range(self.default_frame[2], max_x_l):
-  #       # mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
-  #       mean = img[0:h,x:x+1].mean()
-  #       if mean >= limit:
-  #         img = img[0 : h, x : w]
-  #         h, w = img.shape
-  #         break
-  #     if mean >= limit:
-  #       break
-  #   for limit in limits:
-  #     for x in range(w-1-self.default_frame[3], w-max_x_r, -1):
-  #       # mean = min(img[0:h//2,x:x+1].mean(), img[h//2:h,x:x+1].mean())
-  #       mean = img[0:h,x:x+1].mean()
-  #       if mean >= limit or x == w - max_x_r + 1:
-  #         img = img[0:h,0:x]
-  #         break
-  #     if mean >= limit:
-  #       break
-  #   _h, _w = _img.shape
-  #   limits = self.newspaper.get_limits()
-  #   if w < limits[0] - 100 or h < limits[1] - 100:
-  #     x = (_w - limits[0]) // 2
-  #     y = (_h - limits[1]) // 2
-  #     w = limits[0]
-  #     h = limits[1]
-  #     img = _img[y:y+h, x:x+w]
-  #   img[0:6,0] = [6,4,61,2,202,3]
-  #   if DEBUG:
-  #     cv2.imwrite(file_bing, img)
-  #   else:
-  #     cv2.imwrite(file, img)
-  #   return 1
   def remove_frames(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
@@ -1783,8 +1597,6 @@ class Page:
     #   return
     _img = img.copy()
     thresh = img.copy()
-    # thresh = self.change_contrast(contrast=100)
-    # thresh = cv2.convertScaleAbs(thresh, alpha=1.0, beta=3)
     thresh = cv2.convertScaleAbs(thresh, alpha=1.1, beta=0)
     ret, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
     _thresh = thresh.copy()
@@ -1869,7 +1681,9 @@ class Page:
     # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
     #   return
     _img = img.copy()
-    ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
+    thresh = img.copy()
+    thresh = cv2.convertScaleAbs(thresh, alpha=1.1, beta=0)
+    ret, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
     _thresh = thresh.copy()
     h, w = thresh.shape
     max_x_r = 800
