@@ -1229,9 +1229,10 @@ class Page:
     ret, thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     #get new contours, enlarge them and put in order
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    lx, ly, _ = self.newspaper.get_limits()
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if x > 0 and y > 0 and w > 10 and h > 10:
+      if x > 0 and y > 0 and w > 50 and h > 50 and w < lx * 0.9 and h < ly * 0.9:
         p = []
         ofset = 10 if w > 300 else 40
         x = x - ofset if ofset < x else 0
@@ -1296,6 +1297,7 @@ class Page:
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
+    threshold = threshold if threshold > 200 else 200
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = 24
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
