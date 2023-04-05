@@ -1231,7 +1231,7 @@ class Page:
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if x > 0 and y > 0 and w > 70 and h > 70:
+      if x > 0 and y > 0 and w > 10 and h > 10:
         p = []
         ofset = 10 if w > 300 else 40
         x = x - ofset if ofset < x else 0
@@ -1265,7 +1265,7 @@ class Page:
           continue
         _x, _y, _w, _h = cv2.boundingRect(_contour)
         if _x >= x and _y >= y and _x + _w <= x + w and _y + _h <= y + h:
-          del contours[j+1]
+          del contours[i]
           flag = True
           break
         if checkIntersection((x,y,w,h), (_x,_y,_w,_h)):
