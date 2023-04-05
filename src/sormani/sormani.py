@@ -466,7 +466,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing frames is needed for \'{self.newspaper_name}\'.')
-  def remove_single_frames(self, threshold=200, default_frame=(0,0,0,0)):
+  def remove_single_frames(self, limit = 5000, threshold=200, default_frame=(50,50,50,50)):
     if not len(self.elements):
       return
     global global_count
@@ -474,13 +474,28 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing single frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_single_frames(threshold=threshold, default_frame=default_frame)
+      count = page_pool.remove_single_frames(limit=limit, threshold=threshold, default_frame=default_frame)
     if count:
       print(
         f'Removing single frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No removing single frames is needed for \'{self.newspaper_name}\'.')
+  def remove_last_single_frames(self, limit=5000, threshold=200, default_frame=(100,100,100,100)):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting removing last single frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.remove_last_single_frames(limit=limit, threshold=threshold, default_frame=default_frame)
+    if count:
+      print(
+        f'Removing last single frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
