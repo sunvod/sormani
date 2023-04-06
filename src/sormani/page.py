@@ -1297,7 +1297,7 @@ class Page:
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
-    threshold = threshold if threshold > 200 else 200
+    threshold = threshold if threshold < 200 else 200
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = 24
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
