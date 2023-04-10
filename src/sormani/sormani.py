@@ -496,6 +496,21 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
+  def center_block(self, threshold=200, color=248):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.center_block(threshold=threshold, color=color)
+    if count:
+      print(
+        f'Centering block of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No removing is needed for \'{self.newspaper_name}\'.')
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return

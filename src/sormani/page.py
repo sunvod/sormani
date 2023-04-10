@@ -1567,7 +1567,7 @@ class Page:
           img = img[y:h, 0:w]
           h, w = img.shape
           break
-      if mean >= limit:
+      if mean <= limit:
         break
     for limit in limits:
       for y in range(h - 1 - self.default_frame[1], h):
@@ -1576,7 +1576,7 @@ class Page:
           img = img[0:y, 0:w]
           h, w = img.shape
           break
-      if mean >= limit:
+      if mean <= limit:
         break
     for limit in limits:
       for x in range(self.default_frame[2], 0, -1):
@@ -1586,7 +1586,7 @@ class Page:
           img = img[0: h, x: w]
           h, w = img.shape
           break
-      if mean >= limit:
+      if mean <= limit:
         break
     for limit in limits:
       for x in range(w - 1 - self.default_frame[3], w):
@@ -1595,11 +1595,124 @@ class Page:
           img = img[0:h, 0:x]
           h, w = img.shape
           break
-      if mean >= limit:
+      if mean <= limit:
         break
     if DEBUG:
       nimg = img.copy()
+      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_bimg, img)
+    else:
+      cv2.imwrite(file, img)
+    return 1
+
+  def fill_black_holes(self, thresh, fill_hole=6, iteration=16):
+    invert_fill_hole = True
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=iteration)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    return thresh
+  def fill_white_holes(self, thresh, fill_hole=4, iteration=16):
+    invert_fill_hole = False
+    if invert_fill_hole:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((fill_hole, fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    return thresh
+  def fill_countours_white(self, img, lower_limit=10, upper_limit=400):
+    contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # fill contours with white
+    for i, contour in enumerate(contours):
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > lower_limit and h > lower_limit and w < upper_limit and h < upper_limit:
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 255, 255), -1)
+    return img
+  def center_block(self):
+    self.default_frame = (500,500,1000,1000)
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
+    # thresh = self.remove_horizontal_lines(thresh)
+    # thresh = self.remove_vertical_lines(thresh)
+    # thresh = self.fill_black_holes(thresh, fill_hole=2, iteration=2)
+    # thresh = self.fill_white_holes(thresh)
+    # thresh = self.fill_black_holes(thresh, fill_hole=2, iteration=2)
+    # thresh = self.fill_countours_white(thresh)
+    _img = img.copy()
+    h, w = img.shape
+    limit = 248
+    dim = 20
+    ofset = 100
+    for y1 in range(self.default_frame[0], 0, -10):
+      mean = thresh[y1:y1 + dim, ofset:w-ofset*2].mean()
+      if mean >= limit:
+        break
+    for y2 in range(h - 1 - self.default_frame[1], h, 10):
+      mean = thresh[y2:y2 + dim, ofset:w-ofset*2].mean()
+      if mean >= limit:
+        break
+    for x1 in range(self.default_frame[2], 0, -10):
+      mean = thresh[ofset:h-ofset*2, x1:x1 + dim].mean()
+      if mean >= limit:
+        break
+    for x2 in range(w - 1 - self.default_frame[3], w, 10):
+      mean = thresh[ofset:h-ofset*2, x2:x2 + dim].mean()
+      if mean >= limit:
+        break
+    # _ofset = 200
+    # _y1 = y1
+    # for thickness in range(dim, _ofset+1, 10):
+    #   if y1 - thickness < 0:
+    #     thickness = y1
+    #   mean = thresh[y1-thickness:y1, ofset:w - ofset].mean()
+    #   if mean >= limit:
+    #     _y1 = y1 - thickness
+    #   else:
+    #     break
+    # _y2 = y2
+    # for thickness in range(dim, _ofset+1, 10):
+    #   if y2 + thickness > h:
+    #     thickness = h - y2
+    #   mean = thresh[y2:y2+thickness, ofset:w - ofset].mean()
+    #   if mean >= limit:
+    #     _y2 = y2 + thickness
+    #   else:
+    #     break
+    # _x1 = x1
+    # for thickness in range(dim, _ofset+1, 10):
+    #   if x1 - thickness < 0:
+    #     thickness = x1
+    #   mean = thresh[ofset:h-ofset*2, x1-thickness:x1].mean()
+    #   if mean >= limit:
+    #     _x1 = x1 - thickness
+    #   else:
+    #     break
+    # _x2 = x2
+    # for thickness in range(dim, _ofset+1, 10):
+    #   if x2 + thickness > w:
+    #     thickness = w - x2
+    #   mean = thresh[ofset:h-ofset * 2, x2:x2+thickness].mean()
+    #   if mean >= limit:
+    #     _x2 = x2 + thickness
+    #   else:
+    #     break
+    # img = img[_y1:_y2, _x1:_x2]
+    # img = cv2.copyMakeBorder(img, 200-(y1-_y1), 200-(_y2-y2), 200-(x1-_x1), 200-(_x2-x2), cv2.BORDER_CONSTANT, value=self.color)
+    img = img[y1:y2, x1:x2]
+    img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
     if DEBUG:
+      nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_bimg, img)
     else:
