@@ -1223,27 +1223,24 @@ class La_Domenica_del_Corriere(Newspaper):
                                      right,
                                      top,
                                      bottom)
-  def is_first_page(self, model):
+  def is_first_page(self, img, model):
     if model is None:
       return False
     dataset = []
-    image = Image.open(self.original_image)
-    cropped = self.newspaper.crop_png(image)
-    img = cv2.cvtColor(cropped, cv2.COLOR_GRAY2RGB)
-    img = Image.fromarray(img)
+    # img = Image.fromarray(img)
     img = tf.image.convert_image_dtype(img, dtype=tf.float32)
     dataset.append(img)
     try:
-      original_predictions = list(np.argmax(self.model.predict(np.array(dataset), verbose=0), axis=-1))
+      predictions = list(np.argmax(model.predict(np.array(dataset), verbose=0), axis=-1))
     except Exception as e:
-      return None, None, None
-    pass
+      return False
+    return predictions[0] == 0
   def get_ofset(self):
     return 0, -200, 0, 200
   def get_dimension(self, img=None):
     return 5600, 7400
   def get_limits(self):
-    return (8800, 6000, 700)
+    return (8800, 6000, 1500)
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape

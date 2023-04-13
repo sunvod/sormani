@@ -18,26 +18,35 @@ if __name__ == '__main__':
 
   sormani = Sormani('La Domenica del Corriere',
                     year=1900,
-                    months=3,
-                    days=[x for x in range(3,4)])
+                    months=1,
+                    days=[10])
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
 
   # sormani.improve_images(limit=200, threshold="b0")
 
-  # sormani.rotate_fotogrammi(threshold=200)                                      # 2
-  # sormani.remove_borders(threshold=190, limit=1000)                             # 3
+  # sormani.rotate_fotogrammi()
+  # sormani.remove_borders()
+  # sormani.bobine_delete_copies()
+  # sormani.clean_images()
+  # sormani.center_block()
+  sormani.center_block()
+  # sormani.divide_image()
+  # sormani.center_block(only_x=True)
+  # sormani.create_all_images()
+
+  # sormani.rotate_fotogrammi()                                                   # 2
+  # sormani.remove_borders()                                                      # 3
   # sormani.bobine_delete_copies()                                                # 4
-  # sormani.remove_frames(threshold=200)                                          # 5
+  # sormani.remove_frames(threshold=190)                                          # 5
   # sormani.divide_image()                                                        # 6
   # sormani.remove_single_frames(threshold=200, default_frame=(0,50,0,0))         # 7
   # sormani.clean_images(color=248, threshold=230)                                # 8
   # sormani.remove_last_single_frames(default_frame=(100,100,200,100))            # 9
+  # sormani.center_block(color=248, model_path='best_model_DenseNet201', use_ai=False)                                                 # 10
   # sormani.create_all_images()
 
-
   # sormani.remove_last_single_frames(default_frame=(300,300,300,300))            # 9
-  sormani.center_block(color=248)
 
   # sormani.change_colors(inversion = True, limit = "ba")
 
@@ -54,7 +63,6 @@ if __name__ == '__main__':
   # sormani.add_pdf_metadata()
   # sormani.convert_all_images()
   # sormani.rename_pages_files(do_prediction=False)
-  # sormani.check_page_numbers(save_images=True, model_path='best_model_DenseNet201')
   # sormani.update_date_creation()
 
   # sormani.change_contrast(contrast=100)

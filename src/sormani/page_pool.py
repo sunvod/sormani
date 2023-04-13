@@ -370,7 +370,7 @@ class Page_pool(list):
     return result
   def _divide_image(self, page):
     return page.divide_image()
-  def remove_borders(self, limit = 5000, threshold=180):
+  def remove_borders(self, limit = 5000, threshold=200):
     for page in self:
       page.limit = limit
       page.threshold = threshold
@@ -415,15 +415,22 @@ class Page_pool(list):
     return 0
   def _remove_last_single_frames(self, page):
     return page.remove_last_single_frames()
-  def center_block(self, threshold, color):
+  def center_block(self, threshold, color, model, only_x):
     for page in self:
       page.threshold = threshold
       page.color = color
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._center_block, self)
-    if result is not None and all(v is not None for v in result):
-      return sum(result)
-    return 0
+      page.model_2 = model
+      page.only_x = only_x
+    if model is None:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._center_block, self)
+      if result is not None and all(v is not None for v in result):
+        count = sum(result)
+    else:
+      count = 0
+      for page in self:
+        count += self._center_block(page)
+    return count
   def _center_block(self, page):
     return page.center_block()
   def set_image_file_name(self):
@@ -686,7 +693,7 @@ class Page_pool(list):
       _hash = hash
       _img = img
     return count
-  def rotate_fotogrammi(self, limit=4000, threshold=180, angle=None):
+  def rotate_fotogrammi(self, limit=4000, threshold=200, angle=None):
     count = 0
     for page in self:
       page.limit = limit

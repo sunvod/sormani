@@ -74,8 +74,8 @@ class Sormani():
     self.days = days
     self.dir_name = ''
     self.roots = []
-    if model_path is not None and use_ai:
-      self.set_GPUs()
+    # if model_path is not None or use_ai:
+    self.set_GPUs()
     for newspaper_name in newspaper_names:
       for month in months:
         for day in days:
@@ -406,7 +406,7 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, color=250, threshold="b9"):
+  def clean_images(self, color=248, threshold=230):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -436,7 +436,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No division is needed for \'{self.newspaper_name}\'.')
-  def remove_borders(self, limit = 5000, threshold=None):
+  def remove_borders(self, limit = 5000, threshold=200):
     if not len(self.elements):
       return
     global global_count
@@ -496,15 +496,19 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def center_block(self, threshold=200, color=248):
+  def center_block(self, threshold=200, color=248, model_path=None, use_ai=False, only_x=False):
     if not len(self.elements):
       return
     global global_count
     global_count.value = 0
     start_time = time.time()
+    model = None
+    if model_path is not None and use_ai:
+      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
+      model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.center_block(threshold=threshold, color=color)
+      count = page_pool.center_block(threshold=threshold, color=color, model=model, only_x=only_x)
     if count:
       print(
         f'Centering block of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -826,7 +830,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_fotogrammi(self, limit=5000, threshold=None, angle=None):
+  def rotate_fotogrammi(self, limit=4000, threshold=210, angle=None):
     start_time = time.time()
     print(f'Start Rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0

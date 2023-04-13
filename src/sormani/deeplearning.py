@@ -99,11 +99,20 @@ class CNN:
       return model, 'SimpleCNN'
     for layer in base_model.layers:
       layer.trainable = True
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(1024, activation='relu')(x)
-    predictions = Dense(num_classes, activation='softmax')(x)
-    model = Model(inputs=base_model.input, outputs=predictions)
+    data_augmentation = tf.keras.Sequential([
+      layers.RandomFlip("horizontal_and_vertical"),
+      layers.RandomRotation(0.2),
+    ])
+    model = tf.keras.Sequential([data_augmentation,
+                                 base_model,
+                                 GlobalAveragePooling2D(),
+                                 Dense(1024, activation='relu'),
+                                 Dense(num_classes, activation='softmax')])
+    # x = base_model.output
+    # x = GlobalAveragePooling2D()(x)
+    # x = Dense(1024, activation='relu')(x)
+    # predictions = Dense(num_classes, activation='softmax')(x)
+    # model = Model(inputs=base_model.input, outputs=predictions)
     return model, type
   def exec_cnn(self, name = None, epochs = 100):
     def process(image, label):
@@ -841,10 +850,38 @@ def show_OT(root):
       print(filedir)
 # set_GPUs()
 
-ns = 'Il Sole 24 Ore'
+def prepare_title_domenica_corriere(root, dest='/home/sunvod/sormani_CNN/giornali/la_domenica_del_corriere/X'):
+  for filedir, dirs, files in os.walk(root):
+    dirs.sort()
+    _, _, files = next(os.walk(dest))
+    file_count = len(files) + 1
+    for file in files:
+      img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
+      w, h = img.shape
+      crop = img[0:1200, 0:w]
+      crop = cv2.resize(crop, (224, 224), Image.Resampling.LANCZOS)
+      cv2.imwrite(os.path.join(dest, 'img_' + str(file_count)) + '.jpg', crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+      file_count += 1
+
+def rename_title_domenica_corriere(dest='/home/sunvod/sormani_CNN/giornali/la_domenica_del_corriere/X'):
+  _, _, files = next(os.walk(dest))
+  file_count = len(files) + 1
+  for file in files:
+    img = cv2.imread(os.path.join(dest, file))
+    cv2.imwrite( os.path.join(dest, 'img_' + str(file_count)) + '.jpeg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    file_count += 1
+
+# prepare_title_domenica_corriere(root='/mnt/storage02/TIFF/La Domenica del Corriere/01/04')
+
+# rename_title_domenica_corriere()
+#
+#
+
+ns = 'La Domenica del Corriere'
 
 cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 50)
+cnn.exec_cnn(ns, epochs = 100)
+
 
 # count_tiff()
 
