@@ -673,24 +673,30 @@ class Page_pool(list):
     _file = None
     _hash = None
     _img = None
+    __img = None
     count = 0
     for page in self:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      h, w = img.shape
+      # img = cv2.convertScaleAbs(img, alpha=1.2, beta=0)
+      oh, ow = img.shape
       # img = img[1000:h-2000,1000:w-2000]
-      img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
+      img = cv2.resize(img, (56, 56), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
-      if _img is not None:
-        score, _ = structural_similarity(img, _img, full=True)
+      if __img is not None:
+        score, _ = structural_similarity(img, __img, full=True)
+        if DEBUG:
+          print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
         if score > SCORECUTOFF or abs(hash - _hash) <= HASHCUTOFF:
-          if DEBUG:
-            print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
-          else:
+          if not DEBUG:
             os.remove(_file)
-            count += 1
+          count += 1
       _file = file
       _hash = hash
+      if ow > oh:
+        __img = img
+      else:
+        __img = _img
       _img = img
     return count
   def rotate_fotogrammi(self, limit=4000, threshold=200, angle=None):

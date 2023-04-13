@@ -1777,59 +1777,65 @@ class Page:
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    isfirst = False
     if self.model_2 is not None:
       _img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-      crop = _img[0:1200, :, :]
+      if ow > oh:
+        crop = _img[0:1200, ow // 2:, :]
+      else:
+        crop = _img[0:1200, :, :]
       crop = cv2.resize(crop, (224, 224), Image.Resampling.LANCZOS)
       cv2.imwrite(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
       crop = Image.open(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'))
       isfirst = self.newspaper.is_first_page(crop, self.model_2)
-      if isfirst:
-        dest = '/home/sunvod/sormani_CNN/firstpage'
-        _, _, files = next(os.walk(dest))
-        file_count = len(files) + 1
-        os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img_no__' + str(file_count) + '.jpeg'))
-      else:
-        dest = '/home/sunvod/sormani_CNN/nofirstpage'
-        _, _, files = next(os.walk(dest))
-        file_count = len(files) + 1
-        os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img__' + str(file_count) + '.jpeg'))
+      # if isfirst:
+      #   dest = '/home/sunvod/sormani_CNN/firstpage'
+      #   _, _, files = next(os.walk(dest))
+      #   file_count = len(files) + 1
+      #   os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img_no__' + str(file_count) + '.jpeg'))
+      # else:
+      #   dest = '/home/sunvod/sormani_CNN/nofirstpage'
+      #   _, _, files = next(os.walk(dest))
+      #   file_count = len(files) + 1
+      #   os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img__' + str(file_count) + '.jpeg'))
     ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     _img = img.copy()
-    oh, ow = img.shape
-    # if oh > 6000:
-    #   print(file, oh)
-    # return 0
     limit = 250
-    dim = 30
-    ofset = 500
+    ofset = 800
+    if isfirst:
+      dim = 100
+    else:
+      dim = 30
     for y1 in range(self.default_frame[0], 0, -10):
-      mean = thresh[y1:y1 + dim, ofset:ow-ofset*2].mean()
+      if ow > oh:
+        mean = min(thresh[y1:y1 + dim, ofset:ow // 2].mean(), thresh[y1:y1 + dim, ow // 2: ow - ofset].mean()) + 2
+      else:
+        mean = thresh[y1:y1 + dim, ofset:ow-ofset].mean()
       if mean >= limit:
         break
     for y2 in range(oh - 1 - self.default_frame[1], oh, 10):
-      mean = thresh[y2:y2 + dim, ofset:ow-ofset*2].mean()
+      mean = thresh[y2:y2 + dim, ofset:ow-ofset].mean()
       if mean >= limit:
         break
     for x1 in range(self.default_frame[2], 0, -10):
-      mean = thresh[ofset:oh-ofset*2, x1:x1 + dim].mean()
+      mean = thresh[ofset:oh-ofset, x1:x1 + dim].mean()
       if mean >= limit:
         break
     for x2 in range(ow - 1 - self.default_frame[3], ow, 10):
-      mean = thresh[ofset:oh-ofset*2, x2:x2 + dim].mean()
+      mean = thresh[ofset:oh-ofset, x2:x2 + dim].mean()
       if mean >= limit:
         break
-    y1 = y1 - dim if y1 - dim > 0 else 0
-    y2 = y2 + dim if y2 + dim < oh else oh
-    x1 = x1 - dim if x1 - dim > 0 else 0
-    x2 = x2 + dim if x2 + dim < ow else ow
+    y1 = y1 - 60 if y1 - 60 > 0 else 0
+    y2 = y2 + 30 if y2 + 30 < oh else oh
+    x1 = x1 - 30 if x1 - 30 > 0 else 0
+    x2 = x2 + 30 if x2 + 30 < ow else ow
     lx, ly, ofset = self.newspaper.get_limits()
     if self.only_x:
       lx = lx // 2
-      ly = ly // 2
     if (not self.only_x and y2 - y1 > ly - ofset * lx // ly) or oh > ly:
       img = img[y1:y2, :]
-      img = cv2.copyMakeBorder(img, 200, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+      img = cv2.copyMakeBorder(img, 170, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
     if x2 - x1 > lx - ofset:
       img = img[ :, x1:x2]
       img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
