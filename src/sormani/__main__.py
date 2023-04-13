@@ -30,9 +30,9 @@ if __name__ == '__main__':
   # sormani.bobine_delete_copies()
   # sormani.clean_images()
   # sormani.center_block()
-  sormani.center_block()
+  # sormani.center_block()
   # sormani.divide_image()
-  # sormani.center_block(only_x=True)
+  sormani.center_block(only_x=True)
   # sormani.create_all_images()
 
   # sormani.rotate_fotogrammi()                                                   # 2

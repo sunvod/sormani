@@ -1282,8 +1282,6 @@ class Page:
     # img[img >= int(self.threshold, 16)] = 240
     ret, thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    dimg = img.copy()
-    dimg = cv2.cvtColor(dimg, cv2.COLOR_GRAY2RGB)
     cnts = []
     # fill contours with white
     for i, contour in enumerate(contours):
@@ -1293,7 +1291,7 @@ class Page:
     ret, thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     #get new contours, enlarge them and put in order
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    lx, ly, _ = self.newspaper.get_limits()
+    lx, ly, lofset = self.newspaper.get_limits()
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       if x > 0 and y > 0 and w > 50 and h > 50 and w < lx * 0.9 and h < ly * 0.9:
@@ -1347,9 +1345,9 @@ class Page:
     dimg[white_nimg == 0] = _img[white_nimg == 0]
     dimg[dimg >= threshold] = self.color
     for contour in _contours:
-      angle = cv2.minAreaRect(contour)[2]
+      # angle = cv2.minAreaRect(contour)[2]
       x, y, w, h = cv2.boundingRect(contour)
-      if h > ly * 0.8:
+      if h > ly - lofset:
         if ly > h:
           _h = ly if ly < oh else oh
           _h = _h if _h > h else h
@@ -1357,7 +1355,7 @@ class Page:
           y = y if y > 0 else 0
           h = _h
         dimg = dimg[y:y + h, :]
-      if w > lx * 0.8:
+      if w > lx - lofset:
         if lx > w:
           _w = lx if lx < ow else ow
           _w = _w if _w > w else w
@@ -1799,6 +1797,9 @@ class Page:
     ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     _img = img.copy()
     oh, ow = img.shape
+    # if oh > 6000:
+    #   print(file, oh)
+    # return 0
     limit = 250
     dim = 30
     ofset = 500
@@ -1826,7 +1827,7 @@ class Page:
     if self.only_x:
       lx = lx // 2
       ly = ly // 2
-    if not self.only_x and y2 - y1 > ly - ofset * lx // ly:
+    if (not self.only_x and y2 - y1 > ly - ofset * lx // ly) or oh > ly:
       img = img[y1:y2, :]
       img = cv2.copyMakeBorder(img, 200, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
     if x2 - x1 > lx - ofset:
