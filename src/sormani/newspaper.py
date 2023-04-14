@@ -359,7 +359,7 @@ class Newspaper():
                                      top,
                                      bottom)
   def get_limits(self):
-    return None
+    return None, None, None, None
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape
@@ -1240,7 +1240,7 @@ class La_Domenica_del_Corriere(Newspaper):
   def get_dimension(self, img=None):
     return 5600, 7400
   def get_limits(self):
-    return (8800, 6000, 1500)
+    return (8800, 6000, 1500, 1500)
   def divide(self, img):
     imgs = []
     height, width, _ = img.shape

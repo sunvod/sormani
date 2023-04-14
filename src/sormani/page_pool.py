@@ -299,11 +299,11 @@ class Page_pool(list):
         page.color = color
         page.threshold = threshold
         page.valid = None
-      count = []
-      for page in self:
-        self._clean_images(page)
-      # with Pool(processes=N_PROCESSES) as mp_pool:
-      #   count = mp_pool.map(self._clean_images, self)
+      count = 0
+      # for page in self:
+      #   count += self._clean_images(page)
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._clean_images, self)
       print(f'The {len(count)} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
@@ -712,7 +712,19 @@ class Page_pool(list):
     return count
   def _rotate_fotogrammi(self, page):
     return page.rotate_fotogrammi()
-
+  def rotate_final_fotogrammi(self, limit=4000, threshold=200, angle=None):
+    count = 0
+    for page in self:
+      page.limit = limit
+      page.threshold = threshold
+      page.angle = angle
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      counts = mp_pool.map(self._rotate_final_fotogrammi, self)
+    for i in counts:
+      count += i
+    return count
+  def _rotate_final_fotogrammi(self, page):
+    return page.rotate_final_fotogrammi()
   def set_fotogrammi_folders(self, model_path):
     # self.set_GPUs()
     if not os.path.join(STORAGE_BASE, model_path):

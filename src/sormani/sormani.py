@@ -515,6 +515,8 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing is needed for \'{self.newspaper_name}\'.')
+    if model_path is not None and use_ai:
+      self.set_GPUs()
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
@@ -832,11 +834,19 @@ class Sormani():
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def rotate_fotogrammi(self, limit=4000, threshold=210, angle=None):
     start_time = time.time()
-    print(f'Start Rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    print(f'Start rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
       count += page_pool.rotate_fotogrammi(limit, threshold, angle)
-    print(f'End Rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  def rotate_final_fotogrammi(self, limit=4000, threshold=210, angle=None):
+    start_time = time.time()
+    print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
+    for page_pool in self:
+      count += page_pool.rotate_final_fotogrammi(limit, threshold, angle)
+    print(
+      f'End rotate {count} final frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):
     start_time = time.time()
     print(f'Start set fotogrammi folders of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
