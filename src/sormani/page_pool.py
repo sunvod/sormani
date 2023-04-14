@@ -681,7 +681,7 @@ class Page_pool(list):
       # img = cv2.convertScaleAbs(img, alpha=1.2, beta=0)
       oh, ow = img.shape
       # img = img[1000:h-2000,1000:w-2000]
-      img = cv2.resize(img, (56, 56), interpolation = cv2.INTER_AREA)
+      img = cv2.resize(img, (32, 32), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
       if __img is not None:
         score, _ = structural_similarity(img, __img, full=True)
@@ -699,32 +699,32 @@ class Page_pool(list):
         __img = _img
       _img = img
     return count
-  def rotate_fotogrammi(self, limit=4000, threshold=200, angle=None):
+  def rotate_frames(self, limit=4000, threshold=200, angle=None):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.angle = angle
     with Pool(processes=N_PROCESSES) as mp_pool:
-      counts = mp_pool.map(self._rotate_fotogrammi, self)
+      counts = mp_pool.map(self._rotate_frames, self)
     for i in counts:
       count += i
     return count
-  def _rotate_fotogrammi(self, page):
-    return page.rotate_fotogrammi()
-  def rotate_final_fotogrammi(self, limit=4000, threshold=200, angle=None):
+  def _rotate_frames(self, page):
+    return page.rotate_frames()
+  def rotate_final_frames(self, limit=4000, threshold=200, angle=None):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.angle = angle
     with Pool(processes=N_PROCESSES) as mp_pool:
-      counts = mp_pool.map(self._rotate_final_fotogrammi, self)
+      counts = mp_pool.map(self._rotate_final_frames, self)
     for i in counts:
       count += i
     return count
-  def _rotate_final_fotogrammi(self, page):
-    return page.rotate_final_fotogrammi()
+  def _rotate_final_frames(self, page):
+    return page.rotate_final_frames()
   def set_fotogrammi_folders(self, model_path):
     # self.set_GPUs()
     if not os.path.join(STORAGE_BASE, model_path):

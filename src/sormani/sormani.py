@@ -817,7 +817,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    self.rotate_fotogrammi(threshold=threshold)
+    self.rotate_frames(threshold=threshold)
     self.remove_borders()
     self.bobine_delete_copies()
   def bobine_delete_copies(self):
@@ -832,19 +832,19 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_fotogrammi(self, limit=4000, threshold=210, angle=None):
+  def rotate_frames(self, limit=4000, threshold=210, angle=None):
     start_time = time.time()
     print(f'Start rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_fotogrammi(limit, threshold, angle)
+      count += page_pool.rotate_frames(limit, threshold, angle)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_final_fotogrammi(self, limit=4000, threshold=210, angle=None):
+  def rotate_final_frames(self, limit=1000, threshold=210, angle=None):
     start_time = time.time()
     print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_final_fotogrammi(limit, threshold, angle)
+      count += page_pool.rotate_final_frames(limit, threshold, angle)
     print(
       f'End rotate {count} final frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):
@@ -857,7 +857,7 @@ class Sormani():
   def set_bobine_pipeline(self, no_set_names = False):
     self.set_bobine_merge_images()
     self.set_bobine_select_images(threshold=5)
-    self.rotate_fotogrammi(limit=4000)
+    self.rotate_frames(limit=4000)
     self.remove_borders()
   def set_giornali_pipeline(self, divide = True, rename = True, change_contrast = True, create_images=True, force_rename=False):
     try:

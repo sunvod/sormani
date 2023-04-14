@@ -1086,7 +1086,7 @@ class Page:
       os.remove(file)
     return (global_file_list, count)
 
-  def rotate_fotogrammi(self):
+  def rotate_frames(self):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -1346,8 +1346,7 @@ class Page:
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
-    threshold = threshold if threshold < 210 else 210
-    threshold = 220
+    threshold = threshold if threshold < 225 else 225
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = dimg[dimg < threshold] * 0.95
     dimg[(dimg < 150) & (dimg >= 100)] = dimg[(dimg < 150) & (dimg >= 100)] - 64
@@ -1359,7 +1358,6 @@ class Page:
     dimg[white_nimg == 0] = _img[white_nimg == 0]
     dimg[dimg >= threshold] = self.color
     for contour in _contours:
-      # angle = cv2.minAreaRect(contour)[2]
       x, y, w, h = cv2.boundingRect(contour)
       if h > ly - y_ofset and y < y_ofset // 2:
         if ly > h:
@@ -1389,32 +1387,7 @@ class Page:
       cv2.imwrite(file_thresh, thresh)
       pass
     return 1
-  # def remove_borders(self):
-  #   count = 0
-  #   file = self.original_image
-  #   file_cimg = '.'.join(file.split('.')[:-1]) + '_cimg.' + file.split('.')[-1]
-  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-  #   limits = self.newspaper.get_limits()
-  #   _h, _w = img.shape
-  #   if limits is not None:
-  #     x = (_w - limits[0]) // 2
-  #     y = (_h - limits[1]) // 2
-  #     w = limits[0]
-  #     h = limits[1]
-  #     cimg = img[y:y + h, x:x + w]
-  #   else:
-  #     cimg = img.copy()
-  #   if DEBUG:
-  #     cv2.imwrite(file_cimg, cimg)
-  #   else:
-  #     cv2.imwrite(file, cimg)
-  #   return 1
   def remove_borders(self):
-    def rotate_image(image, angle):
-      image_center = tuple(np.array(image.shape[1::-1]) / 2)
-      rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-      result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-      return result
     count = 0
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
@@ -1845,7 +1818,8 @@ class Page:
     x1 = x1 - 30 if x1 - 30 > 0 else 0
     x2 = x2 + 30 if x2 + 30 < ow else ow
     lx, ly, y_ofset, y_ofset = self.newspaper.get_limits()
-    edge = ly - ofset * lx // ly if ow < oh else ly - ofset * (lx // 2) // ly
+    # edge = ly - ofset * lx // ly if ow < oh else ly - ofset * (lx // 2) // ly
+    edge = ly - y_ofset if ow < oh else ly - y_ofset // 2
     if ow < oh:
       lx = lx // 2
     upper_edge = 170
@@ -1867,12 +1841,15 @@ class Page:
     else:
       cv2.imwrite(file, img)
     return 1
-  def rotate_final_fotogrammi(self):
+  def rotate_final_frames(self):
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
       result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
       return result
+    def _ordering_contours(c):
+      x, y, w, h = cv2.boundingRect(c)
+      return (x, w)
     count = 0
     file = self.original_image
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
@@ -1883,58 +1860,41 @@ class Page:
       img = rotate_image(img, self.angle)
       cv2.imwrite(file, img)
       return 1
-    if self.threshold is not None:
-      ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
-    else:
-      thresh = img.copy()
-    # Questo riempie i buchi bianchi
-    fill_hole = 8
+    ret, thresh = cv2.threshold(img, 32, 255, cv2.THRESH_BINARY)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w < 5 or h < 5:
+        cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)    # Questo elimina i punti < 3
+    fill_hole = 16
     invert_fill_hole = False
     if invert_fill_hole:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     else:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
-    if invert_fill_hole:
-      thresh = 255 - thresh
-    # Questo riempie i buchi neri
-    fill_hole = 32
-    invert_fill_hole = True
-    if invert_fill_hole:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    else:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=5)
+    kernel = np.ones((fill_hole, 8), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
     if invert_fill_hole:
       thresh = 255 - thresh
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     rect = None
-    x = None
-    y = None
-    w = None
-    h = None
+    _contours = []
     for contour in contours:
-      _x, _y, _w, _h = cv2.boundingRect(contour)
-      if x is None:
-        x = _x
-        y = _y
-        w = _w
-        h = _h
-        continue
-      x = min(x, _x)
-      y = min(y, _y)
-      w = max(x + w, x + _w) - x
-      h = max(y + h, y + _h) - y
-    points = [(x + w + 1, y), (x + _w, y), (x + _w, y + _h), (x + w, y + _h)]
-    _contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
-    rect = cv2.minAreaRect(contour)
-    if DEBUG:
-      box = np.int0(cv2.boxPoints(rect))
-      cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
+      x, y, w, h = cv2.boundingRect(contour)
+      if x > 0 and y > 0  and w > self.limit and h > self.limit:
+        _contours.append(contour)
+    # points = [(x, y), (x + w - 1, y), (x + w - 1, y + h -1 ), (x, y + h - 1)]
+    # contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
+    _contours.sort(key=_ordering_contours)
+    contours = _contours
+    if len(_contours):
+      rect = cv2.minAreaRect(_contours[0])
+    for contour in contours:
+      if DEBUG:
+        cv2.drawContours(bimg, contour, -1, (0, 0, 255), 3)
+      break
     if rect is not None:
       angle = rect[2]
       if angle < 45:
