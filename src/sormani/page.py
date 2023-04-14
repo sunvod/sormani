@@ -1297,12 +1297,19 @@ class Page:
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 255, 255), -1)
     # ret, thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     #get new contours, enlarge them and put in order
+    bimg = _img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     thresh = self.remove_all_lines(thresh)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      # if DEBUG:
+      #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      if x > 0 and y > 0 and w > 50 and h > 50 and w < lx * 0.9 and h < ly * 0.9:
+      cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 3)
+      if x > 0 and y > 0 and w > 50 and h > 50 and w < lx * 0.8 and h < ly * 0.8:
         p = []
         ofset = 10 if w > 300 else 20
         x = x - ofset if ofset < x else 0
@@ -1311,8 +1318,9 @@ class Page:
         w = w if x + w < ow else ow - x - 1
         h += ofset * 2
         h = h if y + h < oh else oh - y - 1
-        if x < ow // 2 and x + w > ow // 2:
-          continue
+        # if x < ow // 2 and x + w > ow // 2:
+        #   continue
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 16)
         p.append((x, y))
         p.append((x + w, y))
         p.append((x + w, y + h))
@@ -1321,12 +1329,10 @@ class Page:
         cnts.append(ctr)
     contours = list(cnts)
     contours.sort(key=_ordering_contours)
-    bimg = _img.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if DEBUG:
-        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
+    # for contour in contours:
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   if DEBUG:
+    #     cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
     # join all the overlapping contours
     contours = union(contours)
     # fill contours in black
@@ -1347,13 +1353,14 @@ class Page:
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
     threshold = threshold if threshold < 225 else 225
+    threshold = threshold if threshold > 210 else 210
     dimg[dimg >= threshold] = self.color
-    dimg[dimg < threshold] = dimg[dimg < threshold] * 0.95
-    dimg[(dimg < 150) & (dimg >= 100)] = dimg[(dimg < 150) & (dimg >= 100)] - 64
-    dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 48
-    dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 32
+    dimg[dimg < threshold] = dimg[dimg < threshold] * 0.96
+    dimg[(dimg < 150) & (dimg >= 50)] = dimg[(dimg < 150) & (dimg >= 50)] - 48
+    dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 32
+    dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 24
     dimg[(dimg < threshold) & (dimg >= 200)] = dimg[(dimg < threshold) & (dimg >= 200)] - 8
-    dimg[dimg < 100] = 32
+    dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
     dimg[dimg >= threshold] = self.color
@@ -1375,8 +1382,8 @@ class Page:
           x = x if x > 0 else 0
           w = _w
         dimg = dimg[:, x:x+w]
-      if DEBUG:
-        cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
+      # if DEBUG:
+      #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
     if not DEBUG:
       cv2.imwrite(file, dimg)
     else:
@@ -1823,12 +1830,15 @@ class Page:
     if ow < oh:
       lx = lx // 2
     upper_edge = 170
+    lower_edge = 200
     if y2 - y1 < edge:
       y1 = 0
+      y2 = oh
       upper_edge = 0
+      lower_edge = 0
     if not self.only_x  or oh > ly:
       img = img[y1:y2, :]
-      img = cv2.copyMakeBorder(img, upper_edge, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+      img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
     if x2 - x1 > lx - ofset:
       img = img[ :, x1:x2]
       img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
