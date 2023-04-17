@@ -406,13 +406,13 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, color=248, threshold=230):
+  def clean_images(self, color=248, threshold=230, final_threshold=180): #230
     if not len(self.elements):
       return
     selfforce = self.force
     self.force = True
     for page_pool in self:
-      page_pool.clean_images(color=color, threshold=threshold)
+      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):
@@ -839,7 +839,7 @@ class Sormani():
     for page_pool in self:
       count += page_pool.rotate_frames(limit, threshold, angle)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_final_frames(self, limit=1000, threshold=210, angle=None):
+  def rotate_final_frames(self, limit=100, threshold=210, angle=None):
     start_time = time.time()
     print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0

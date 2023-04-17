@@ -871,16 +871,26 @@ def rename_title_domenica_corriere(dest='/home/sunvod/sormani_CNN/giornali/la_do
     cv2.imwrite( os.path.join(dest, 'img_' + str(file_count)) + '.jpeg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
     file_count += 1
 
+def delete_test_files(root):
+  for filedir, dirs, files in os.walk(root):
+    for file in files:
+      fs = file.split('_')[-1]
+      if fs != '1.tif' and fs != '2.tif':
+        # print(file)
+        os.remove(os.path.join(filedir, file))
+
+# delete_test_files('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01/03')
+
 # prepare_title_domenica_corriere(root='/mnt/storage02/TIFF/La Domenica del Corriere/01/04')
 
 # rename_title_domenica_corriere()
 #
 #
 
-ns = 'La Domenica del Corriere'
-
-cnn = CNN(ns)
-cnn.exec_cnn(ns, epochs = 100)
+# ns = 'La Domenica del Corriere'
+#
+# cnn = CNN(ns)
+# cnn.exec_cnn(ns, epochs = 100)
 
 
 # count_tiff()

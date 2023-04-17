@@ -1308,7 +1308,7 @@ class Page:
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
-      cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 3)
+      # cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 3)
       if x > 0 and y > 0 and w > 50 and h > 50 and w < lx * 0.8 and h < ly * 0.8:
         p = []
         ofset = 10 if w > 300 else 20
@@ -1341,7 +1341,7 @@ class Page:
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
       if DEBUG:
-        # cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 0, 255), 5)
+        cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 0, 255), 5)
         cv2.rectangle(thresh, (x, y), (x + w, y + h), 0, -1)
       cv2.rectangle(nimg, (x, y), (x + w, y + h), 0, -1)
       cv2.rectangle(white_nimg, (x, y), (x + w, y + h), 0, -1)
@@ -1353,17 +1353,21 @@ class Page:
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
     threshold = threshold if threshold < 225 else 225
-    threshold = threshold if threshold > 210 else 210
+    self.final_threshold = self.final_threshold if threshold >= 180 else self.final_threshold - (180 - threshold) // 2
+    threshold = threshold if threshold > self.final_threshold else self.final_threshold
+    threshold = threshold if threshold >= 160 else 160
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = dimg[dimg < threshold] * 0.96
-    dimg[(dimg < 150) & (dimg >= 50)] = dimg[(dimg < 150) & (dimg >= 50)] - 48
-    dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 32
-    dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 24
-    dimg[(dimg < threshold) & (dimg >= 200)] = dimg[(dimg < threshold) & (dimg >= 200)] - 8
+    # dimg[(dimg < 150) & (dimg >= 50)] = dimg[(dimg < 150) & (dimg >= 50)] - 48
+    # dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 32
+    # dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 24
+    # dimg[(dimg < threshold) & (dimg >= 200)] = dimg[(dimg < threshold) & (dimg >= 200)] - 8
+    dimg = cv2.convertScaleAbs(dimg, alpha=0.84, beta=0)
+    dimg[dimg >= threshold] = self.color
     dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
-    dimg[dimg >= threshold] = self.color
+    dimg[dimg >= 200] = self.color
     for contour in _contours:
       x, y, w, h = cv2.boundingRect(contour)
       if h > ly - y_ofset and y < y_ofset // 2:
@@ -1604,16 +1608,22 @@ class Page:
     my = None
     mw = None
     mh = None
+    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    lx = lx // 2
+    count = 0
     for limit in limits:
       for y in range(self.default_frame[0], max_y):
         # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
         mean = thresh[y:y + 1, 0:w].mean()
         if mean >= limit:
-          thresh = thresh[y - 100 if y >= 100 else 0:h, 0:w]
-          img = img[y - 100 if y >= 100 else 0:h, 0:w]
+          # thresh = thresh[y - 100 if y >= 100 else 0:h, 0:w]
+          # img = img[y - 100 if y >= 100 else 0:h, 0:w]
+          thresh = thresh[y:h, 0:w]
+          img = img[y:h, 0:w]
           h, w = thresh.shape
           my = y
           mh = h
+          count = 1
           break
       if mean >= limit:
         break
@@ -1622,10 +1632,13 @@ class Page:
         # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
         mean = thresh[y:y + 1, 0:w].mean()
         if mean >= limit:
-          thresh = thresh[0:y + 100, 0:w]
-          img = img[0:y + 100, 0:w]
+          # thresh = thresh[0:y + 100, 0:w]
+          # img = img[0:y + 100, 0:w]
+          thresh = thresh[0:y, 0:w]
+          img = img[0:y, 0:w]
           h, w = thresh.shape
           mh = h
+          count = 1
           break
       if mean >= limit:
         break
@@ -1639,6 +1652,7 @@ class Page:
           h, w = thresh.shape
           mx = x
           mw = w
+          count = 1
           break
       if mean >= limit:
         break
@@ -1650,6 +1664,7 @@ class Page:
           img = img[0:h, 0:x]
           h, w = thresh.shape
           mw = w
+          count = 1
           break
       if mean >= limit:
         break
@@ -1657,8 +1672,6 @@ class Page:
       nimg = img.copy()
     h, w = img.shape
     _h, _w = _img.shape
-    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
-    lx = lx // 2
     if w < lx - x_ofset or h < ly - y_ofset:
       if _w > lx and w < lx - x_ofset:
         x = (_w - lx) // 2
@@ -1671,6 +1684,7 @@ class Page:
         y = my if my is not None else 0
         h = mh if mh is not None else ly
       img = _img[y:y + h, x:x + w]
+      count = 1
     img[0:6, 0] = [3, 202, 2, 61, 4, 6]
     if DEBUG:
       cv2.imwrite(file_nimg, nimg)
@@ -1678,7 +1692,7 @@ class Page:
       cv2.imwrite(file_thresh, _thresh)
     else:
       cv2.imwrite(file, img)
-    return 1
+    return count
   def remove_last_single_frames(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
@@ -1824,14 +1838,12 @@ class Page:
     y2 = y2 + 30 if y2 + 30 < oh else oh
     x1 = x1 - 30 if x1 - 30 > 0 else 0
     x2 = x2 + 30 if x2 + 30 < ow else ow
-    lx, ly, y_ofset, y_ofset = self.newspaper.get_limits()
-    # edge = ly - ofset * lx // ly if ow < oh else ly - ofset * (lx // 2) // ly
-    edge = ly - y_ofset if ow < oh else ly - y_ofset // 2
+    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     if ow < oh:
       lx = lx // 2
     upper_edge = 170
     lower_edge = 200
-    if y2 - y1 < edge:
+    if y2 - y1 < ly - y_ofset:
       y1 = 0
       y2 = oh
       upper_edge = 0
@@ -1839,7 +1851,7 @@ class Page:
     if not self.only_x  or oh > ly:
       img = img[y1:y2, :]
       img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
-    if x2 - x1 > lx - ofset:
+    if x2 - x1 > lx - x_ofset:
       img = img[ :, x1:x2]
       img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
     # img = img[y1:y2, x1:x2]
@@ -1893,18 +1905,18 @@ class Page:
     _contours = []
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
-      if x > 0 and y > 0  and w > self.limit and h > self.limit:
+      if (x > 0 or y > 0) and w > self.limit and h > self.limit:
         _contours.append(contour)
     # points = [(x, y), (x + w - 1, y), (x + w - 1, y + h -1 ), (x, y + h - 1)]
     # contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
     _contours.sort(key=_ordering_contours)
     contours = _contours
     if len(_contours):
-      rect = cv2.minAreaRect(_contours[0])
-    for contour in contours:
+      contour = max(contours, key=cv2.contourArea)
+      rect = cv2.minAreaRect(contour)
       if DEBUG:
-        cv2.drawContours(bimg, contour, -1, (0, 0, 255), 3)
-      break
+        box = np.int0(cv2.boxPoints(rect))
+        cv2.drawContours(bimg, [box], -1, (0, 0, 255), 3)
     if rect is not None:
       angle = rect[2]
       if angle < 45:
@@ -1913,7 +1925,7 @@ class Page:
         angle = angle - 90
         if angle < 5.0:
           img = rotate_image(img, angle)
-        count += 1
+          count += 1
       if DEBUG:
         cv2.imwrite(file_ning, img)
         cv2.imwrite(file_bing, bimg)
