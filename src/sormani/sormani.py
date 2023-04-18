@@ -8,6 +8,8 @@ import cv2
 import numpy as np
 from PIL.Image import DecompressionBombError
 
+from src.sormani.AI import ISFIRSTPAGE, AIs
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
 
@@ -46,7 +48,10 @@ class Sormani():
                thresholding=0,
                rename_folders=True,
                model_path=None,
-               use_ai=False):
+               use_ai=False,
+               use_ai_for_pages=False,
+               is_frames=False,
+               ais=None):
     if year is not None and isinstance(year, list) and not len(year):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -74,7 +79,6 @@ class Sormani():
     self.days = days
     self.dir_name = ''
     self.roots = []
-    # if model_path is not None or use_ai:
     self.set_GPUs()
     for newspaper_name in newspaper_names:
       for month in months:
@@ -95,7 +99,10 @@ class Sormani():
                      notcheckimages,
                      rename_folders,
                      model_path,
-                     use_ai)
+                     use_ai,
+                     use_ai_for_pages,
+                     is_frames,
+                     ais)
     self.set_elements()
     self.pages_pool = []
     for _ in self:
@@ -117,7 +124,10 @@ class Sormani():
             notcheckimages,
             rename_folders,
             model_path,
-            use_ai):
+            use_ai,
+            use_ai_for_pages,
+            is_frames,
+            ais):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -156,8 +166,12 @@ class Sormani():
     if model_path is not None and use_ai:
       model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
       self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
+    if ais is not None:
+      self.ais = AIs(self.newspaper_name, ais)
     self.model_path = model_path
     self.use_ai = use_ai
+    self.use_ai_for_pages = use_ai_for_pages
+    self.is_frames = is_frames
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -290,7 +304,7 @@ class Sormani():
         print(f'Not a valid image: {os.path.join(filedir, file_name)}')
         return False
       img = cv2.imread(os.path.join(filedir, file_name), cv2.IMREAD_UNCHANGED)
-      if img.shape[2] == 4:
+      if img.ndim > 2 and img.shape[2] == 4:
         img = img[:,:,:3]
         cv2.imwrite(os.path.join(filedir, file_name), img)
     return True
@@ -406,13 +420,17 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, color=248, threshold=230, final_threshold=180): #230
+  def clean_images(self, color=248, threshold=230, final_threshold=180, use_ai=False): #230
     if not len(self.elements):
       return
     selfforce = self.force
     self.force = True
+    model = None
+    if use_ai:
+      model = self.ais.get_model(ISFIRSTPAGE)
+      assert model is not None, 'Because \'use_ai\' is True \'ISFIRSTPAGE AI\' must be active in definition of Sormani.'
     for page_pool in self:
-      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold)
+      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, model=model)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):
@@ -503,9 +521,9 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     model = None
-    if model_path is not None and use_ai:
-      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
-      model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
+    if use_ai:
+      model = self.ais.get_model(ISFIRSTPAGE)
+      assert model is not None, 'Because \'use_ai\' is True \'ISFIRSTPAGE AI\' must be active in definition of Sormani.'
     print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
       count = page_pool.center_block(threshold=threshold, color=color, model=model, only_x=only_x)

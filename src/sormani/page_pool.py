@@ -290,7 +290,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, color=248, threshold=230, final_threshold=200):
+  def clean_images(self, color=248, threshold=230, final_threshold=200, model=None):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -300,12 +300,16 @@ class Page_pool(list):
         page.threshold = threshold
         page.final_threshold = final_threshold
         page.valid = None
+        page.model_2 = model
       count = 0
-      # for page in self:
-      #   count += self._clean_images(page)
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        count = mp_pool.map(self._clean_images, self)
-      print(f'The {len(count)} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      if model is not None:
+        for page in self:
+          count += self._clean_images(page)
+      else:
+        with Pool(processes=N_PROCESSES) as mp_pool:
+          count = mp_pool.map(self._clean_images, self)
+        count = len(count)
+      print(f'The {count} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
   def _clean_images(self, page):

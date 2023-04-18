@@ -879,6 +879,29 @@ def delete_test_files(root):
         # print(file)
         os.remove(os.path.join(filedir, file))
 
+def divide_image(root=None):
+  if root is None:
+    root = os.getcwd()
+  for filedir, dirs, files in os.walk(root):
+    for file in files:
+      file_name = os.path.join(filedir, file)
+      file_name_no_ext = Path(file).stem
+      file_path_no_ext = os.path.join(filedir, file_name_no_ext)
+      ext = Path(file_name).suffix
+      if ext != '.tif':
+        continue
+      img = cv2.imread(file_name)
+      h, w, _ = img.shape
+      if w < h:
+        continue
+      imgs = []
+      imgs.append(img[0:h, 0 : w // 2])
+      imgs.append(img[0:h, w // 2 : w])
+      for i, _img in enumerate(imgs):
+        cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
+      # os.remove(file_name)
+
+
 # delete_test_files('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01/03')
 
 # prepare_title_domenica_corriere(root='/mnt/storage02/TIFF/La Domenica del Corriere/01/04')

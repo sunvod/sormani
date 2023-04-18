@@ -67,7 +67,7 @@ class Images_group():
     for file in self.files:
       if pathlib.Path(file).suffix == '.' + ext:
         page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, model)
-        if use_ai and model is not None and not page.isAlreadySeen():
+        if use_ai and model is not None and not page.isAlreadySeen() and self.use_ai_for_pages:
           if page.file_name.split('_')[-1] == '0' or dir_path.split('/')[-1].split()[-1][0:2] == 'OT':
             image = Image.open(page.original_image)
             w, h = image.size

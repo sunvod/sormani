@@ -590,7 +590,7 @@ class Page:
     self.add_boxes(images, img, contours, hierarchy, parameters, file_name, no_resize, part)
     return images, img
   def get_pages_numbers(self, no_resize = False, filedir = None, save_head = True, force=False):
-    if self.newspaper.isfirstpage:
+    if self.newspaper.is_first_page():
       return None
     if self.isAlreadySeen() or force:
       images = self.get_images_list(no_resize = no_resize)
@@ -1164,7 +1164,6 @@ class Page:
     file_name_no_ext = Path(self.original_image).stem
     file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
     ext = Path(self.original_image).suffix
-    # img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
     img = cv2.imread(self.original_image)
     imgs = self.newspaper.divide(img)
     for i, _img in enumerate(imgs):
@@ -1348,13 +1347,17 @@ class Page:
     _contours = union(contours, True)
     dimg = nimg.copy()
     # dimg = cv2.convertScaleAbs(dimg, alpha=1.1, beta=5)
+    isfirst = False
+    if self.model_2 is not None:
+      isfirst = self.newspaper.is_first_page(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB), self.model_2)
     threshold = self.threshold
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
     threshold = _threshold if _threshold < threshold else threshold
     threshold = threshold if threshold < 225 else 225
-    self.final_threshold = self.final_threshold if threshold >= 180 else self.final_threshold - (180 - threshold) // 2
-    threshold = threshold if threshold > self.final_threshold else self.final_threshold
+    final_threshold = self.final_threshold
+    final_threshold = final_threshold if threshold >= 180 else final_threshold - (180 - threshold) // 2
+    threshold = threshold if threshold > final_threshold else final_threshold
     threshold = threshold if threshold >= 160 else 160
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = dimg[dimg < threshold] * 0.96
@@ -1788,15 +1791,7 @@ class Page:
     oh, ow = img.shape
     isfirst = False
     if self.model_2 is not None:
-      _img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-      if ow > oh:
-        crop = _img[0:1200, ow // 2:, :]
-      else:
-        crop = _img[0:1200, :, :]
-      crop = cv2.resize(crop, (224, 224), Image.Resampling.LANCZOS)
-      cv2.imwrite(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-      crop = Image.open(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'))
-      isfirst = self.newspaper.is_first_page(crop, self.model_2)
+      isfirst = self.newspaper.is_first_page(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB), self.model_2)
       # if isfirst:
       #   dest = '/home/sunvod/sormani_CNN/firstpage'
       #   _, _, files = next(os.walk(dest))
