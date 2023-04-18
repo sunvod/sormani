@@ -7,6 +7,8 @@ import cv2
 
 from os import listdir
 
+from PIL.Image import DecompressionBombError
+
 from src.sormani.AI import PAGE, ISFIRSTPAGE
 from src.sormani.page import Page
 from src.sormani.page_pool import Page_pool
@@ -47,7 +49,23 @@ class Images_group():
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
-  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais):
+  def is_image(self, filedir, file):
+    try:
+      img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_UNCHANGED)
+    except DecompressionBombError:
+      pass
+    except:
+      img = None
+    if img is None:
+      with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
+        sormani_log.write('No valid Image: ' + os.path.join(filedir, file) + '\n')
+      print(f'Not a valid image: {os.path.join(filedir, file)}')
+      return False
+    if img.ndim > 2 and img.shape[2] == 4:
+      img = img[:,:,:3]
+      cv2.imwrite(os.path.join(filedir, file), img)
+    return True
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages):
     page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
@@ -67,6 +85,8 @@ class Images_group():
         return page_pool
     for file in self.files:
       if pathlib.Path(file).suffix == '.' + ext:
+        if checkimages and not self.is_image(self.filedir, file):
+          continue
         page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
         ai = ais.get_model(PAGE)
         model = ai.model if ai is not None else None

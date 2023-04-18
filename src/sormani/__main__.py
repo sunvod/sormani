@@ -20,11 +20,11 @@ if __name__ == '__main__':
   sormani = Sormani('La Domenica del Corriere',
                     is_frames=True,
                     year=1900,
-                    months=1,
+                    months=3,
                     days=[x for x in range(17,18)],
                     # days=10,
                     ais=[AI('best_model_isfirstpage_DenseNet201', ISFIRSTPAGE, True)],
-                    notcheckimages=True)
+                    checkimages=True)
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
 

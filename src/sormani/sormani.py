@@ -45,7 +45,7 @@ class Sormani():
                exclude_ins=False,
                only_ins=False,
                valid_ins=[],
-               notcheckimages=True,
+               checkimages=True,
                thresholding=0,
                rename_folders=True,
                model_path=None,
@@ -95,7 +95,7 @@ class Sormani():
                      exclude_ins,
                      only_ins,
                      valid_ins,
-                     notcheckimages,
+                     checkimages,
                      rename_folders,
                      model_path,
                      is_frames,
@@ -118,7 +118,7 @@ class Sormani():
             exclude_ins,
             only_ins,
             valid_ins,
-            notcheckimages,
+            checkimages,
             rename_folders,
             model_path,
             is_frames,
@@ -155,7 +155,7 @@ class Sormani():
     self.exclude_ins = exclude_ins
     self.only_ins = only_ins
     self.valid_ins = valid_ins
-    self.notcheckimages = notcheckimages
+    self.checkimages = checkimages
     self.roots.append(self.new_root)
     if ais is not None:
       self.ais = AIs(self.newspaper_name, ais)
@@ -179,7 +179,8 @@ class Sormani():
                                                         self.path_exist,
                                                         self.force,
                                                         self.thresholding,
-                                                        self.ais)
+                                                        self.ais,
+                                                        self.checkimages)
         if len(page_pool):
           if page_pool.isAlreadySeen():
             page_pool.set_pages_already_seen()
@@ -275,29 +276,9 @@ class Sormani():
           filedirs.append((filedir, files))
       filedirs.sort()
       for filedir, files in filedirs:
-        if self.notcheckimages or self.check_if_image(filedir, files):
-          if not filedir in _filedirs:
-            self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name),
-                                              self.newspaper_name,
-                                              filedir,
-                                              files))
-            _filedirs.append(filedir)
-  def check_if_image(self, filedir, files):
-    for file_name in files:
-      try:
-        Image.open(os.path.join(filedir, file_name))
-      except DecompressionBombError:
-        pass
-      except:
-        with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
-          sormani_log.write('No valid Image: ' + os.path.join(filedir, file_name) + '\n')
-        print(f'Not a valid image: {os.path.join(filedir, file_name)}')
-        return False
-      img = cv2.imread(os.path.join(filedir, file_name), cv2.IMREAD_UNCHANGED)
-      if img.ndim > 2 and img.shape[2] == 4:
-        img = img[:,:,:3]
-        cv2.imwrite(os.path.join(filedir, file_name), img)
-    return True
+        if not filedir in _filedirs:
+          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files))
+          _filedirs.append(filedir)
   def _get_elements(self, n):
     # n = e[:5]
     n = ''.join(c for c in n if c.isdigit())
