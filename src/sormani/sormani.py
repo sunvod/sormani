@@ -100,6 +100,8 @@ class Sormani():
                      model_path,
                      is_frames,
                      ais)
+    if ais is not None:
+      self.ais = AIs(self.newspaper_name, ais)
     self.set_elements()
     self.pages_pool = []
     for _ in self:
@@ -157,8 +159,6 @@ class Sormani():
     self.valid_ins = valid_ins
     self.checkimages = checkimages
     self.roots.append(self.new_root)
-    if ais is not None:
-      self.ais = AIs(self.newspaper_name, ais)
     self.model_path = model_path
     self.is_frames = is_frames
   def __len__(self):
@@ -168,7 +168,6 @@ class Sormani():
   def __next__(self):
     if self.i < len(self.elements):
       if self.i >= len(self.pages_pool) or self.pages_pool[self.i] is None:
-        # self.set_GPUs()
         self.ais.get_model(ISFIRSTPAGE)
         ai = self.ais.get_model(PAGE)
         use_ai = ai.use if ai is not None else False
