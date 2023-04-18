@@ -83,7 +83,7 @@ class Newspaper_crop_parameters():
     self.bottom = bottom
 class Newspaper():
   @staticmethod
-  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None, model=None):
+  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
     if date is None and month is None:
       file_name = Path(file_path).stem
       year = ''.join(filter(str.isdigit, file_name.split('_')[-4]))
@@ -137,7 +137,6 @@ class Newspaper():
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     newspaper.month = month
-    newspaper.model = model
     newspaper.n_page = None
     newspaper.use_ai = False
     newspaper._is_first_page = None

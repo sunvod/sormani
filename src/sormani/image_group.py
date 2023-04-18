@@ -77,14 +77,16 @@ class Images_group():
             w, h = image.size
             if h > w:
               page.prediction = page.get_prediction()
-          ais.garbage_model(PAGE)
+          # ais.garbage_model(PAGE)
         ai = ais.get_model(ISFIRSTPAGE)
         model = ai.model if ai is not None else None
         use_ai = ai.use if ai is not None else False
         if use_ai and model is not None and page.newspaper.is_first_page() is None:
           img = cv2.imread(page.original_image)
           page.newspaper.is_first_page(img, model)
-          ais.garbage_model(ISFIRSTPAGE)
+          # ais.garbage_model(ISFIRSTPAGE)
         page_pool.append(page)
+    ais.garbage_model(PAGE)
+    ais.garbage_model(ISFIRSTPAGE)
     return page_pool
 

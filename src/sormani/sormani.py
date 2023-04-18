@@ -169,6 +169,7 @@ class Sormani():
     if self.i < len(self.elements):
       if self.i >= len(self.pages_pool) or self.pages_pool[self.i] is None:
         # self.set_GPUs()
+        self.ais.get_model(ISFIRSTPAGE)
         ai = self.ais.get_model(PAGE)
         use_ai = ai.use if ai is not None else False
         page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
