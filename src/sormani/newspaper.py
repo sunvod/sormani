@@ -1226,9 +1226,11 @@ class La_Domenica_del_Corriere(Newspaper):
                                      right,
                                      top,
                                      bottom)
-  def is_first_page(self, img, model):
+  def is_first_page(self, img=None, model=None):
     if self._is_first_page  is not None:
       return self._is_first_page
+    if img is None or model is None:
+      return None
     oh, ow, _ = img.shape
     if ow > oh:
       crop = img[0:1200, ow // 2:, :]

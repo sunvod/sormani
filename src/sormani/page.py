@@ -31,7 +31,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, model, debug=False):
+  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -53,9 +53,7 @@ class Page:
     self.page_control = -1
     self.is_bobina = False
     self.isdivided = False
-    self.model = model
     self.prediction = None
-    self.debug = debug
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -1348,8 +1346,8 @@ class Page:
     dimg = nimg.copy()
     # dimg = cv2.convertScaleAbs(dimg, alpha=1.1, beta=5)
     isfirst = False
-    if self.model_2 is not None:
-      isfirst = self.newspaper.is_first_page(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB), self.model_2)
+    if self.use_ai:
+      isfirst = self.newspaper.is_first_page()
     threshold = self.threshold
     df_describe = pd.DataFrame(dimg[white_nimg > 0])
     _threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
@@ -1370,7 +1368,10 @@ class Page:
     dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
-    dimg[dimg >= 200] = self.color
+    threshold = 200
+    if isfirst:
+      threshold = 160
+    dimg[dimg >= threshold] = self.color
     for contour in _contours:
       x, y, w, h = cv2.boundingRect(contour)
       if h > ly - y_ofset and y < y_ofset // 2:
@@ -1790,8 +1791,8 @@ class Page:
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     oh, ow = img.shape
     isfirst = False
-    if self.model_2 is not None:
-      isfirst = self.newspaper.is_first_page(cv2.cvtColor(img, cv2.COLOR_GRAY2RGB), self.model_2)
+    if self.use_ai is not None:
+      isfirst = self.newspaper.is_first_page()
       # if isfirst:
       #   dest = '/home/sunvod/sormani_CNN/firstpage'
       #   _, _, files = next(os.walk(dest))

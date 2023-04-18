@@ -23,7 +23,7 @@ warnings.filterwarnings("ignore")
 global_count_contrast = multiprocessing.Value('I', 0)
 
 class Page_pool(list):
-  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=None,model=None, use_ai=False):
+  def __init__(self, newspaper_name, filedir, name_complete, new_root, date, force = False, thresholding=None, ais=None):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.new_root = new_root
@@ -33,8 +33,7 @@ class Page_pool(list):
     self.thresholding = thresholding if thresholding is not None else THRESHOLDING
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.need_rotation = filedir.split(' ')[-1][0:2] == 'OT' and len(filedir.split(' ')[-1].split('-')) > 1 and filedir.split(' ')[-1].split('-')[1].isdigit()
-    self.model = model
-    self.use_ai = use_ai
+    self.ais = ais
 
   def _n_page_sort(self, page):
     n_page = str(page.newspaper.n_page)
@@ -290,7 +289,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, color=248, threshold=230, final_threshold=200, model=None):
+  def clean_images(self, color=248, threshold=230, final_threshold=200, use_ai=False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -300,15 +299,10 @@ class Page_pool(list):
         page.threshold = threshold
         page.final_threshold = final_threshold
         page.valid = None
-        page.model_2 = model
-      count = 0
-      if model is not None:
-        for page in self:
-          count += self._clean_images(page)
-      else:
-        with Pool(processes=N_PROCESSES) as mp_pool:
-          count = mp_pool.map(self._clean_images, self)
-        count = len(count)
+        page.use_ai = use_ai
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._clean_images, self)
+        count = sum(count)
       print(f'The {count} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
@@ -365,12 +359,14 @@ class Page_pool(list):
           continue
       pages.append(page)
     result = 0
-    if self.model is not None and self.use_ai:
-      for page in pages:
-        result += self._divide_image(page)
-    else:
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        result = mp_pool.map(self._divide_image, pages)
+    # if self.model is not None and self.use_ai:
+    #   for page in pages:
+    #     result += self._divide_image(page)
+    # else:
+    #   with Pool(processes=N_PROCESSES) as mp_pool:
+    #     result = mp_pool.map(self._divide_image, pages)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._divide_image, pages)
       result = sum(result)
     return result
   def _divide_image(self, page):
@@ -420,21 +416,16 @@ class Page_pool(list):
     return 0
   def _remove_last_single_frames(self, page):
     return page.remove_last_single_frames()
-  def center_block(self, threshold, color, model, only_x):
+  def center_block(self, threshold, color, use_ai, only_x):
     for page in self:
       page.threshold = threshold
       page.color = color
-      page.model_2 = model
+      page.use_ai = use_ai
       page.only_x = only_x
-    if model is None:
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        result = mp_pool.map(self._center_block, self)
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._center_block, self)
       if result is not None and all(v is not None for v in result):
         count = sum(result)
-    else:
-      count = 0
-      for page in self:
-        count += self._center_block(page)
     return count
   def _center_block(self, page):
     return page.center_block()

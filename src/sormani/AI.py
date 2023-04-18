@@ -13,6 +13,8 @@ from src.sormani.system import *
 from src.sormani.newspaper import Newspaper
 
 import tensorflow as tf
+import gc
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 import warnings
@@ -34,7 +36,7 @@ class AIs():
   def __init__(self,  newspaper_name, ais=[]):
     if isinstance(ais, str):
       ais = [ais]
-    self.newspaper_name = self.newspaper_name
+    self.newspaper_name = newspaper_name
     self.ais = ais
     for ai in ais:
       ai.model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), ai.model_path)
@@ -45,7 +47,17 @@ class AIs():
   def get_model(self, type):
     for ai in self.ais:
       if ai.type == type:
-        if ai.model is None:
-          ai.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, self.model_path))
+        if ai.model is None and ai.use:
+          ai.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, ai.model_path))
         return ai
     return None
+
+  def garbage_model(self, type):
+    for ai in self.ais:
+      if ai.type == type:
+        if ai.model is not None and ai.use:
+          del ai.model
+          gc.collect()
+          ai.model = None
+          return
+

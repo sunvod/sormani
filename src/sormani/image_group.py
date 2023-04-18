@@ -7,6 +7,7 @@ import cv2
 
 from os import listdir
 
+from src.sormani.AI import PAGE, ISFIRSTPAGE
 from src.sormani.page import Page
 from src.sormani.page_pool import Page_pool
 from src.sormani.system import *
@@ -46,8 +47,8 @@ class Images_group():
       error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
       raise OSError(error)
     self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
-  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, model, use_ai):
-    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, model, use_ai)
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais):
+    page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
@@ -66,13 +67,24 @@ class Images_group():
         return page_pool
     for file in self.files:
       if pathlib.Path(file).suffix == '.' + ext:
-        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, model)
-        if use_ai and model is not None and not page.isAlreadySeen() and self.use_ai_for_pages:
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
+        ai = ais.get_model(PAGE)
+        model = ai.model if ai is not None else None
+        use_ai = ai.use if ai is not None else False
+        if use_ai and model is not None and not page.isAlreadySeen():
           if page.file_name.split('_')[-1] == '0' or dir_path.split('/')[-1].split()[-1][0:2] == 'OT':
             image = Image.open(page.original_image)
             w, h = image.size
             if h > w:
               page.prediction = page.get_prediction()
+          ais.garbage_model(PAGE)
+        ai = ais.get_model(ISFIRSTPAGE)
+        model = ai.model if ai is not None else None
+        use_ai = ai.use if ai is not None else False
+        if use_ai and model is not None and page.newspaper.is_first_page() is None:
+          img = cv2.imread(page.original_image)
+          page.newspaper.is_first_page(img, model)
+          ais.garbage_model(ISFIRSTPAGE)
         page_pool.append(page)
     return page_pool
 

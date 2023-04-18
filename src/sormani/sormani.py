@@ -5,10 +5,11 @@ import pathlib
 import re
 import os
 import cv2
+import gc
 import numpy as np
 from PIL.Image import DecompressionBombError
 
-from src.sormani.AI import ISFIRSTPAGE, AIs
+from src.sormani.AI import ISFIRSTPAGE, AIs, PAGE
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import tensorflow as tf
@@ -48,8 +49,6 @@ class Sormani():
                thresholding=0,
                rename_folders=True,
                model_path=None,
-               use_ai=False,
-               use_ai_for_pages=False,
                is_frames=False,
                ais=None):
     if year is not None and isinstance(year, list) and not len(year):
@@ -99,8 +98,6 @@ class Sormani():
                      notcheckimages,
                      rename_folders,
                      model_path,
-                     use_ai,
-                     use_ai_for_pages,
                      is_frames,
                      ais)
     self.set_elements()
@@ -124,8 +121,6 @@ class Sormani():
             notcheckimages,
             rename_folders,
             model_path,
-            use_ai,
-            use_ai_for_pages,
             is_frames,
             ais):
     self.newspaper_name = newspaper_name
@@ -162,15 +157,9 @@ class Sormani():
     self.valid_ins = valid_ins
     self.notcheckimages = notcheckimages
     self.roots.append(self.new_root)
-    self.model = None
-    if model_path is not None and use_ai:
-      model_path = os.path.join('models', self.newspaper_name.lower().replace(' ', '_'), model_path)
-      self.model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, model_path))
     if ais is not None:
       self.ais = AIs(self.newspaper_name, ais)
     self.model_path = model_path
-    self.use_ai = use_ai
-    self.use_ai_for_pages = use_ai_for_pages
     self.is_frames = is_frames
   def __len__(self):
     return len(self.elements)
@@ -179,8 +168,9 @@ class Sormani():
   def __next__(self):
     if self.i < len(self.elements):
       if self.i >= len(self.pages_pool) or self.pages_pool[self.i] is None:
-        # if self.model is not None and not self.i:
-        #   self.set_GPUs()
+        # self.set_GPUs()
+        ai = self.ais.get_model(PAGE)
+        use_ai = ai.use if ai is not None else False
         page_pool = self.elements[self.i].get_page_pool(self.newspaper_name,
                                                         self.new_root,
                                                         self.ext,
@@ -188,13 +178,12 @@ class Sormani():
                                                         self.path_exist,
                                                         self.force,
                                                         self.thresholding,
-                                                        self.model,
-                                                        self.use_ai)
+                                                        self.ais)
         if len(page_pool):
           if page_pool.isAlreadySeen():
             page_pool.set_pages_already_seen()
           else:
-            page_pool.set_pages(use_ai=self.use_ai)
+            page_pool.set_pages(use_ai=use_ai)
         if self.i < len(self.pages_pool) and self.pages_pool[self.i] is None:
           self.pages_pool[self.i] = page_pool
         else:
@@ -425,12 +414,8 @@ class Sormani():
       return
     selfforce = self.force
     self.force = True
-    model = None
-    if use_ai:
-      model = self.ais.get_model(ISFIRSTPAGE)
-      assert model is not None, 'Because \'use_ai\' is True \'ISFIRSTPAGE AI\' must be active in definition of Sormani.'
     for page_pool in self:
-      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, model=model)
+      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, use_ai=use_ai)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):
@@ -466,7 +451,7 @@ class Sormani():
     if count:
       print(
         f'Removing borders of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-      self.set_elements()
+      # self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
   def remove_frames(self, threshold=200, default_frame=(0,0,0,0)):
@@ -496,7 +481,7 @@ class Sormani():
     if count:
       print(
         f'Removing single frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-      self.set_elements()
+      # self.set_elements()
     else:
       print(f'No removing single frames is needed for \'{self.newspaper_name}\'.')
   def remove_last_single_frames(self, limit=5000, threshold=200, default_frame=(100,100,100,100)):
@@ -514,27 +499,25 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def center_block(self, threshold=200, color=248, model_path=None, use_ai=False, only_x=False):
+  def center_block(self, threshold=200, color=248, use_ai=False, only_x=False):
     if not len(self.elements):
       return
     global global_count
     global_count.value = 0
     start_time = time.time()
-    model = None
-    if use_ai:
-      model = self.ais.get_model(ISFIRSTPAGE)
-      assert model is not None, 'Because \'use_ai\' is True \'ISFIRSTPAGE AI\' must be active in definition of Sormani.'
     print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.center_block(threshold=threshold, color=color, model=model, only_x=only_x)
+      count = page_pool.center_block(threshold=threshold, color=color, use_ai=use_ai, only_x=only_x)
     if count:
       print(
         f'Centering block of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-      self.set_elements()
+      # self.set_elements()
     else:
       print(f'No removing is needed for \'{self.newspaper_name}\'.')
-    if model_path is not None and use_ai:
-      self.set_GPUs()
+    # if use_ai:
+    #   self.ais.garbage_model(ISFIRSTPAGE)
+    # if use_ai:
+    #   self.set_GPUs()
   def add_pdf_metadata(self, first_number = None):
     if not len(self.elements):
       return
@@ -835,6 +818,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    self.set_GPUs()
     self.rotate_frames(threshold=threshold)
     self.remove_borders()
     self.bobine_delete_copies()
