@@ -24,11 +24,12 @@ PAGE = 1
 ISFIRSTPAGE = 2
 
 class AI():
-  def __init__(self,  model_path, type, use=False):
+  def __init__(self,  model_path, type, use=False, save=False):
     assert model_path is not None, 'model_path must have a value'
     self.model_path = model_path
     self.type = type
     self.use = use
+    self.save = save
     self.model = None
 
 class AIs():

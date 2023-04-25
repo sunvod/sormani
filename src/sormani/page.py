@@ -1368,6 +1368,11 @@ class Page:
     dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
+    # df_describe = pd.DataFrame(dimg[dimg > 64])
+    # threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
+    # mean = dimg[dimg > 64].mean()
+    # print(mean, threshold)
+    # threshold = threshold if threshold <= 200 else 200
     threshold = 200
     if isfirst:
       threshold = 160
@@ -1450,6 +1455,18 @@ class Page:
       rect = cv2.minAreaRect(contour)
       if DEBUG:
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
+    # lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    # if rect is not None and w > len(img[1]) // 3 * 2 and h > ly - y_ofset and y < y_ofset // 2:
+    #   img = img[y:y+h, x:x+w]
+    # else:
+    #   _h, _w = img.shape
+    #   if lx is not None:
+    #     if lx < _w:
+    #       x = (_w - lx) // 2
+    #       img = img[0 : _h, x : x + lx]
+    #     if ly < _h:
+    #       y = (_h - ly) // 2
+    #       img = img[y : y + ly, 0 : _w]
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     if rect is not None and w > len(img[1]) // 3 * 2 and h > ly - y_ofset and y < y_ofset // 2:
       img = img[y:y+h, x:x+w]
@@ -1648,7 +1665,6 @@ class Page:
         break
     for limit in limits:
       for x in range(self.default_frame[2], max_x_l):
-        # mean = min(thresh[0:h//2,x:x+1].mean(), thresh[h//2:h,x:x+1].mean())
         mean = thresh[0:h, x:x + 1].mean()
         if mean >= limit:
           thresh = thresh[0: h, x: w]
@@ -1783,30 +1799,22 @@ class Page:
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 255, 255), -1)
     return img
   def center_block(self):
-    self.default_frame = (1000,1000,1000,1000)
+    self.default_frame = (1500,1000,1000,1000)
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+      return 0
     oh, ow = img.shape
     isfirst = False
     if self.use_ai is not None:
       isfirst = self.newspaper.is_first_page()
-      # if isfirst:
-      #   dest = '/home/sunvod/sormani_CNN/firstpage'
-      #   _, _, files = next(os.walk(dest))
-      #   file_count = len(files) + 1
-      #   os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img_no__' + str(file_count) + '.jpeg'))
-      # else:
-      #   dest = '/home/sunvod/sormani_CNN/nofirstpage'
-      #   _, _, files = next(os.walk(dest))
-      #   file_count = len(files) + 1
-      #   os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, 'img__' + str(file_count) + '.jpeg'))
     ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     _img = img.copy()
     limit = 250
-    ofset = 800
+    ofset = 400
     if isfirst:
       dim = 100
     else:
@@ -1830,19 +1838,20 @@ class Page:
       mean = thresh[ofset:oh-ofset, x2:x2 + dim].mean()
       if mean >= limit:
         break
-    y1 = y1 - 60 if y1 - 60 > 0 else 0
+    y1 = y1 - 120 if y1 - 120 > 0 else 0
     y2 = y2 + 30 if y2 + 30 < oh else oh
     x1 = x1 - 30 if x1 - 30 > 0 else 0
     x2 = x2 + 30 if x2 + 30 < ow else ow
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     if ow < oh:
       lx = lx // 2
-    upper_edge = 170
+    upper_edge = 110
     lower_edge = 200
-    if y2 - y1 < ly - y_ofset:
+    if y1 > y_ofset // 3 * 2:
       y1 = 0
-      y2 = oh
       upper_edge = 0
+    if oh - y2 > y_ofset // 3 * 2:
+      y2 = oh
       lower_edge = 0
     if not self.only_x  or oh > ly:
       img = img[y1:y2, :]
@@ -1929,5 +1938,37 @@ class Page:
       else:
         cv2.imwrite(file, img)
     return count
-
-
+  def remove_last_single_frames_2(self):
+    self.color = 248
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    h, w = img.shape
+    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    limit = 240
+    _y_ofset = (h - ly + y_ofset) * 2
+    for y in range(_y_ofset, 0, -1):
+      mean = img[y:y + 1, 0:w].mean()
+      if mean >=limit:
+        y = y - 10 if y - 10 > 0 else 0
+        img = img[y:h, 0:w]
+        img = cv2.copyMakeBorder(img, 200, 0, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+        h, w = img.shape
+        break
+    for y in range(h - 1 - _y_ofset, h):
+      mean = img[y:y + 1, 0:w].mean()
+      if mean >= limit:
+        y = y - 10 if y - 10 > 0 else 0
+        img = img[0:y, 0:w]
+        img = cv2.copyMakeBorder(img, 0, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+        h, w = img.shape
+        break
+    if DEBUG:
+      nimg = img.copy()
+      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_bimg, img)
+    else:
+      cv2.imwrite(file, img)
+    return 1

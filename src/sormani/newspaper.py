@@ -1225,10 +1225,10 @@ class La_Domenica_del_Corriere(Newspaper):
                                      right,
                                      top,
                                      bottom)
-  def is_first_page(self, img=None, model=None):
-    if self._is_first_page  is not None:
+  def is_first_page(self, img=None, model=None, get_crop=False):
+    if self._is_first_page  is not None and not get_crop:
       return self._is_first_page
-    if img is None or model is None:
+    if img is None or model is None and not get_crop:
       return None
     oh, ow, _ = img.shape
     if ow > oh:
@@ -1238,16 +1238,18 @@ class La_Domenica_del_Corriere(Newspaper):
     crop = cv2.resize(crop, (224, 224), Image.Resampling.LANCZOS)
     cv2.imwrite(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
     crop = Image.open(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'))
-    if model is None:
-      return False
+    if self._is_first_page  is not None and get_crop:
+      return self._is_first_page, crop
     dataset = []
     crop = tf.image.convert_image_dtype(crop, dtype=tf.float32)
     dataset.append(crop)
     try:
       predictions = list(np.argmax(model.predict(np.array(dataset), verbose=0), axis=-1))
     except Exception as e:
-      return False
+      predictions[0] = 1
     self._is_first_page = predictions[0] == 0
+    if get_crop:
+      return self._is_first_page, crop
     return self._is_first_page
   def get_ofset(self):
     return 0, -200, 0, 200

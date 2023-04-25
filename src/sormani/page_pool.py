@@ -416,6 +416,18 @@ class Page_pool(list):
     return 0
   def _remove_last_single_frames(self, page):
     return page.remove_last_single_frames()
+  def remove_last_single_frames_2(self, limit, threshold, default_frame):
+    for page in self:
+      page.limit = limit
+      page.threshold = threshold
+      page.default_frame = default_frame
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._remove_last_single_frames_2, self)
+    if result is not None and all(v is not None for v in result):
+      return sum(result)
+    return 0
+  def _remove_last_single_frames_2(self, page):
+    return page.remove_last_single_frames_2()
   def center_block(self, threshold, color, use_ai, only_x):
     for page in self:
       page.threshold = threshold

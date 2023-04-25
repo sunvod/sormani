@@ -102,7 +102,17 @@ class Images_group():
         use_ai = ai.use if ai is not None else False
         if use_ai and model is not None and page.newspaper.is_first_page() is None:
           img = cv2.imread(page.original_image)
-          page.newspaper.is_first_page(img, model)
+          isfirst, crop = page.newspaper.is_first_page(img, model, get_crop=True)
+          file_name = file.split('.')[0]
+          if ai.save:
+            if isfirst:
+              dest = '/home/sunvod/sormani_CNN/firstpage'
+              Path(dest).mkdir(parents=True, exist_ok=True)
+              os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, str(self.date)  + '_' + file_name+ '.jpeg'))
+            else:
+              dest = '/home/sunvod/sormani_CNN/nofirstpage'
+              Path(dest).mkdir(parents=True, exist_ok=True)
+              os.rename(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), os.path.join(dest, str(self.date)  + '_' + file_name+ '.jpeg'))
         page_pool.append(page)
     ais.garbage_model(PAGE)
     ais.garbage_model(ISFIRSTPAGE)
