@@ -743,6 +743,7 @@ def build_firstpage_csv(root):
       writer.writerow(e)
 
 def check_firstpage_csv():
+  nl = []
   with open(os.path.join(STORAGE_BASE, 'firstpage.csv'), 'r') as f:
     l = csv.reader(f)
     _n = None
@@ -751,12 +752,22 @@ def check_firstpage_csv():
       n = int(e[1])
       file = e[2]
       if _n is None:
+        _file = file
         _n = n
         continue
-      if n - _n != 1 and n - _n > 18:
-        print(i, date, _n, _file)
+      if _n + 2 == n:
+        _file = file
+        _n = n
+        continue
+      if n - _n != 1:
+        nl.append([date, _n, _file])
       _n = n
       _file = file
+  nl.sort()
+  with open(os.path.join(STORAGE_BASE, 'firstpage_r.csv'), 'w') as f:
+    writer = csv.writer(f)
+    for e in nl:
+      writer.writerow(e)
 
 
 def renumerate_frames(root):

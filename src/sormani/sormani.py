@@ -480,7 +480,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def remove_last_single_frames_2(self, limit=5000, threshold=200, default_frame=(100,100,100,100)):
+  def remove_last_single_frames_2(self, threshold=200, default_frame=(1200,0,0,0)):
     if not len(self.elements):
       return
     global global_count
@@ -488,13 +488,28 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing last single frames 2 of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_last_single_frames_2(limit=limit, threshold=threshold, default_frame=default_frame)
+      count = page_pool.remove_last_single_frames_2(threshold=threshold, default_frame=default_frame)
     if count:
       print(
         f'Removing last single frames 2 of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No removing last single frames 2 is needed for \'{self.newspaper_name}\'.')
+  def delete_gray_on_borders(self, threshold=50,  default_frame=(1200,0,0,0), color=248):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting removing gray of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.delete_gray_on_borders(threshold=threshold, default_frame=default_frame, color=color)
+    if count:
+      print(
+        f'Removing gray of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No removing gray is needed for \'{self.newspaper_name}\'.')
   def center_block(self, threshold=200, color=248, use_ai=False, only_x=False):
     if not len(self.elements):
       return

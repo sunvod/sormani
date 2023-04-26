@@ -22,7 +22,7 @@ if __name__ == '__main__':
                     year=1900,
                     months=3,
                     # days=[x for x in range(1,6)],
-                    days=[10],
+                    days=[2,3,4,5],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False)
@@ -31,17 +31,25 @@ if __name__ == '__main__':
 
   # sormani.improve_images(limit=200, threshold="b0")
 
-  sormani.rotate_frames()
-  sormani.remove_borders()
-  sormani.bobine_delete_copies()
-  sormani.clean_images(use_ai=True)
-  sormani.center_block(use_ai=True)
-  sormani.center_block()
-  sormani.divide_image()
-  sormani.center_block(use_ai=True)
-  sormani.rotate_final_frames()
+  # sormani.rotate_frames()
+  # sormani.remove_borders()
+  # sormani.bobine_delete_copies()
+  # sormani.clean_images(use_ai=True)
+  # sormani.center_block(use_ai=True)
+  # sormani.center_block()
+  # sormani.divide_image()
+  # sormani.center_block(use_ai=True)
+  # sormani.rotate_final_frames(angle=5)
+  # sormani.remove_single_frames()
+  # sormani.center_block()
+
+  sormani.delete_gray_on_borders()
   sormani.remove_single_frames()
   sormani.center_block()
+  sormani.center_block()
+
+  # sormani.remove_last_single_frames_2()
+
   # sormani.create_all_images()
 
   # sormani.rotate_fotogrammi()                                                   # 2

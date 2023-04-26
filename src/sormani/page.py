@@ -1839,20 +1839,24 @@ class Page:
       if mean >= limit:
         break
     y1 = y1 - 120 if y1 - 120 > 0 else 0
-    y2 = y2 + 30 if y2 + 30 < oh else oh
+    y2 = y2 + 120 if y2 + 120 < oh else oh
     x1 = x1 - 30 if x1 - 30 > 0 else 0
     x2 = x2 + 30 if x2 + 30 < ow else ow
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     if ow < oh:
       lx = lx // 2
     upper_edge = 110
-    lower_edge = 200
+    lower_edge = 110
     if y1 > y_ofset // 3 * 2:
       y1 = 0
-      upper_edge = 0
+      upper_edge = 200
+      # y1 = y_ofset // 2
+      # upper_edge = 200
     if oh - y2 > y_ofset // 3 * 2:
       y2 = oh
       lower_edge = 0
+      # y2 = oh - y_ofset // 2
+      # lower_edge = 200
     if not self.only_x  or oh > ly:
       img = img[y1:y2, :]
       img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
@@ -1896,9 +1900,9 @@ class Page:
     fill_hole = 16
     invert_fill_hole = False
     if invert_fill_hole:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     else:
-      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     kernel = np.ones((fill_hole, 8), np.uint8)
     thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
     if invert_fill_hole:
@@ -1939,32 +1943,159 @@ class Page:
         cv2.imwrite(file, img)
     return count
   def remove_last_single_frames_2(self):
-    self.color = 248
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    oh, ow = img.shape
+    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
+    #   return
+    _img = img.copy()
     h, w = img.shape
+    limit = 200
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
-    limit = 240
-    _y_ofset = (h - ly + y_ofset) * 2
-    for y in range(_y_ofset, 0, -1):
+    for y in range(0, self.default_frame[0]):
       mean = img[y:y + 1, 0:w].mean()
-      if mean >=limit:
-        y = y - 10 if y - 10 > 0 else 0
+      if mean <= limit:
+        y = y if h - y >  ly - y_ofset else h - ly + y_ofset
         img = img[y:h, 0:w]
-        img = cv2.copyMakeBorder(img, 200, 0, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
         h, w = img.shape
         break
-    for y in range(h - 1 - _y_ofset, h):
-      mean = img[y:y + 1, 0:w].mean()
+    # for y in range(h, self.default_frame[1], -1):
+    #   mean = img[y:y + 1, 0:w].mean()
+    #   if mean <= limit:
+    #     img = img[0:y, 0:w]
+    #     h, w = img.shape
+    #     break
+    #   for x in range(self.default_frame[2], 0, -1):
+    #     # mean = img[0:h, x:x + 1].mean()
+    #     mean = max([img[_y:_y + h // 4, x:x + 1].mean() for _y in range(0, h, h // 4)])
+    #     if mean <= limit:
+    #       img = img[0: h, x: w]
+    #       h, w = img.shape
+    #       break
+    #   for x in range(w - 1 - self.default_frame[3], w):
+    #     mean = max([img[_y:_y + h // 4, x:x + 1].mean() for _y in range(0, h, h // 4)])
+    #     if mean <= limit:
+    #       img = img[0:h, 0:x]
+    #       h, w = img.shape
+    #       break
+    if DEBUG:
+      nimg = img.copy()
+      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_bimg, img)
+    else:
+      cv2.imwrite(file, img)
+    return 1
+
+  # def delete_gray_on_borders(self):
+  #   self.color = 248
+  #   file = self.original_image
+  #   file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+  #   file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+  #   oh, ow = img.shape
+  #   lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+  #   if oh < ly - y_ofset // 2:
+  #     return
+  #   bimg = img.copy()
+  #   bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+  #
+  #   # for i, df in enumerate(self.default_frame):
+  #   #   if df == 0:
+  #   #     continue
+  #   #   if i == 0 :
+  #   #     roi = img[0:df, 0:ow]
+  #   #     roi[roi >= self.threshold] = 255
+  #   #     img[0:df, 0:ow] = roi
+  #
+  #   for i, df in enumerate(self.default_frame):
+  #     if df == 0:
+  #       continue
+  #     if i == 0 :
+  #       roi = img[0:df, 0:ow]
+  #       _, thresh = cv2.threshold(roi, 220, 255, cv2.THRESH_BINARY)
+  #       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+  #       for contour in contours:
+  #         x, y, w, h = cv2.boundingRect(contour)
+  #         if w > 3000:
+  #           if DEBUG:
+  #             cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
+  #           cv2.rectangle(thresh, (x, y), (x + w, y + h), self.color, -1)  # Questo elimina i punti > 20
+  #           # cv2.drawContours(roi, contour, -1, (255, 255, 255), -1)
+  #       img[0:df, 0:ow] = thresh
+  #
+  #   if DEBUG:
+  #     cv2.imwrite(file_bimg, bimg)
+  #     cv2.imwrite(file_nimg, img)
+  #   else:
+  #     cv2.imwrite(file, img)
+  #   return 1
+
+  def delete_gray_on_borders(self):
+    # self.default_frame = (1000,1000,1000,1000)
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+      return 0
+    oh, ow = img.shape
+    ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
+    _img = img.copy()
+    limit = 250
+    ofset = 400
+    dim = 30
+    y1 = 0
+    y2 = oh
+    x1 = 0
+    x2 = ow
+    for y1 in range(self.default_frame[0], 0, -10):
+      if ow > oh:
+        mean = min(thresh[y1:y1 + dim, ofset:ow // 2].mean(), thresh[y1:y1 + dim, ow // 2: ow - ofset].mean()) + 2
+      else:
+        mean = thresh[y1:y1 + dim, ofset:ow-ofset].mean()
       if mean >= limit:
-        y = y - 10 if y - 10 > 0 else 0
-        img = img[0:y, 0:w]
-        img = cv2.copyMakeBorder(img, 0, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
-        h, w = img.shape
         break
+    for y2 in range(oh - 1 - self.default_frame[1], oh, 10):
+      mean = thresh[y2:y2 + dim, ofset:ow-ofset].mean()
+      if mean >= limit:
+        break
+    for x1 in range(self.default_frame[2], 0, -10):
+      mean = thresh[ofset:oh-ofset, x1:x1 + dim].mean()
+      if mean >= limit:
+        break
+    for x2 in range(ow - 1 - self.default_frame[3], ow, 10):
+      mean = thresh[ofset:oh-ofset, x2:x2 + dim].mean()
+      if mean >= limit:
+        break
+    y1 = y1 - 120 if y1 - 120 > 0 else 0
+    y2 = y2 + 120 if y2 + 120 < oh else oh
+    x1 = x1 - 30 if x1 - 30 > 0 else 0
+    x2 = x2 + 30 if x2 + 30 < ow else ow
+    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    if ow < oh:
+      lx = lx // 2
+    upper_edge = 110
+    lower_edge = 110
+    if y1 > y_ofset // 3 * 2:
+      # y1 = 0
+      # upper_edge = 200
+      y1 = y_ofset // 2
+      upper_edge = 200
+    if oh - y2 > y_ofset // 3 * 2:
+      # y2 = oh
+      # lower_edge = 0
+      y2 = oh - y_ofset // 2
+      lower_edge = 200
+    if oh > ly:
+      img = img[y1:y2, :]
+      img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+    # if x2 - x1 > lx - x_ofset:
+    #   img = img[ :, x1:x2]
+    #   img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
+    # img = img[y1:y2, x1:x2]
+    # img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
     if DEBUG:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
