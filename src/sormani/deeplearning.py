@@ -400,7 +400,7 @@ def get_max_box(name = None):
   print(f'Media (min , max): {round(min_mean, 3)} , {round(max_mean, 3)}')
 
 def save_page_numbers(name):
-  sormani = Sormani(name, year=2016, months=2, days=None)
+  sormani = Sormani(name, years=2016, months=2, days=None)
   sormani.get_pages_numbers(no_resize=True, filedir = os.path.join(STORAGE_BASE, 'tmp'))
 
 def open_win_rename_images_files(count, filedir, file):
@@ -805,7 +805,7 @@ def reallocate_frame(csv_file='list_first_pages.csv'):
     for row in csv_file:
       csv_list.append(row)
     for i, row in enumerate(csv_list):
-      if i < len(csv_list):
+      if i < len(csv_list) - 1:
         _row = csv_list[i + 1]
         _n = int(_row[1])
       else:
@@ -828,7 +828,7 @@ def reallocate_frame(csv_file='list_first_pages.csv'):
           shutil.copyfile(file_path, file_path_destination)
 
 
-reallocate_frame()
+# reallocate_frame()
 
 # convert_crops('/home/sunvod/sormani_CNN/X')
 # build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')

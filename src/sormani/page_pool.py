@@ -697,12 +697,15 @@ class Page_pool(list):
       page.filedir = self.filedir
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._set_bobine_select_images, self)
-    count = 0
-    for elements in result:
-      if elements is None:
-        continue
-      count += elements[1]
-    return count
+    try:
+      count = 0
+      for elements in result:
+        if elements is None:
+          continue
+        count += elements[1]
+      return count
+    except:
+      return 0
   def _set_bobine_select_images(self, page):
     try:
       return page.set_bobine_select_images()

@@ -17,17 +17,27 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
-  sormani = Sormani('La Domenica del Corriere',
+  # sormani = Sormani('La Domenica del Corriere',
+  #                   is_frames=True,
+  #                   years=[x for x in range(1901, 1951)],
+  #                   months=None,
+  #                   # days=[x for x in range(1,6)],
+  #                   days=None,
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False)
+  #
+  sormani = Sormani('Il Mondo',
                     is_frames=True,
-                    year=1900,
-                    months=4,
+                    years=[1950],
+                    months=[2],
                     # days=[x for x in range(1,6)],
-                    days=[2,3,4,5],
+                    days=[1],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True)],
+                    ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False)
-  # sormani.set_bobine_merge_images()
-  # sormani.set_bobine_select_images()
+  sormani.set_bobine_merge_images()
+  sormani.set_bobine_select_images()
 
   # sormani.improve_images(limit=200, threshold="b0")
 
@@ -51,11 +61,12 @@ if __name__ == '__main__':
   # sormani.center_block()
 
   # ultimo tentativo di pulire il bordo superiore
-  sormani.remove_last_single_frames_2()
-  sormani.center_block(use_ai=True)
+  # sormani.remove_last_single_frames_2()
+  # sormani.center_block(use_ai=True)
   # sormani.remove_single_frames(valid=[True,False,False,False])
 
-  # sormani.create_all_images()
+  # sormani.set_all_images_names()
+  # sormani.create_all_images(ocr = False)
 
   # sormani.rotate_fotogrammi()                                                   # 2
   # sormani.remove_borders()                                                      # 3

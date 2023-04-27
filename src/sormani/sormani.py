@@ -34,7 +34,7 @@ class Sormani():
   def __init__(self,
                newspaper_names,
                root = IMAGE_ROOT,
-               year = None,
+               years = None,
                months = None,
                days = None,
                ext = 'tif',
@@ -51,7 +51,7 @@ class Sormani():
                model_path=None,
                is_frames=False,
                ais=None):
-    if year is not None and isinstance(year, list) and not len(year):
+    if years is not None and isinstance(years, list) and not len(years):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
     if months is not None and isinstance(months, list) and not len(months):
@@ -80,26 +80,27 @@ class Sormani():
     self.roots = []
     self.set_GPUs()
     for newspaper_name in newspaper_names:
-      for month in months:
-        for day in days:
-          self._init(newspaper_name,
-                     root,
-                     year,
-                     month,
-                     day,
-                     ext,
-                     image_path,
-                     path_exclude,
-                     path_exist,
-                     force,
-                     exclude_ins,
-                     only_ins,
-                     valid_ins,
-                     checkimages,
-                     rename_folders,
-                     model_path,
-                     is_frames,
-                     ais)
+      for year in years:
+        for month in months:
+          for day in days:
+            self._init(newspaper_name,
+                       root,
+                       year,
+                       month,
+                       day,
+                       ext,
+                       image_path,
+                       path_exclude,
+                       path_exist,
+                       force,
+                       exclude_ins,
+                       only_ins,
+                       valid_ins,
+                       checkimages,
+                       rename_folders,
+                       model_path,
+                       is_frames,
+                       ais)
     if ais is not None:
       self.ais = AIs(self.newspaper_name, ais)
     self.set_elements()
@@ -295,7 +296,8 @@ class Sormani():
                         ocr = True,
                         converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
                         number = None,
-                        thresholding=None):
+                        thresholding=None,
+                        convert=True):
     if not len(self.elements):
       return
     for page_pool in self:
@@ -304,7 +306,8 @@ class Sormani():
       if thresholding is not None:
         page_pool.thresholding = thresholding
       page_pool.create_pdf(number, ocr = ocr)
-      page_pool.convert_images(converts)
+      if convert:
+        page_pool.convert_images(converts)
   def convert_all_images(self,
                         ocr = True,
                         converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
@@ -829,7 +832,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-    self.set_GPUs()
+    # self.set_GPUs()
     self.rotate_frames(threshold=threshold)
     self.remove_borders()
     self.bobine_delete_copies()

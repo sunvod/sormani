@@ -274,9 +274,11 @@ class Newspaper():
     if e.isdigit():
       return int(e)
     return 0
+  def get_start_year(self):
+    return 2016
   def get_head(self):
     number = self.get_number()
-    year = self.init_year + self.date.year - 2016
+    year = self.init_year + self.date.year - self.get_start_year()
     if self.year_change is not None and \
         (self.year_change[1] < self.date.month or \
         (self.year_change[1] == self.date.month and self.year_change[0] <= self.date.day)):
@@ -1184,7 +1186,7 @@ class Scenario(Newspaper):
 
 class La_Domenica_del_Corriere(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
-    self.init_year = 17
+    self.init_year = 1
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Domenica del Corriere', file_path, date, year, number, init_page = 3)
     self.contrast = 50
@@ -1201,8 +1203,9 @@ class La_Domenica_del_Corriere(Newspaper):
       #   pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
-      page.newspaper.n_page = n_page
-
+      page.newspaper.n_page = n_page + 1
+  def get_start_year(self):
+    return 1899
   def get_remove_borders_parameters(self, i, width, height):
     left = 950
     top = 800
@@ -1299,14 +1302,11 @@ class Il_Mondo(Newspaper):
     l = n_pages
     count_zero = 0
     for n_page, page in enumerate(page_pool):
-      try:
-        page.newspaper.n_page
-        continue
-      except:
-        pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (11000, 8000, 500, 500)
   def get_remove_borders_parameters(self, i, width, height):
     o = 200
     if i == 0:
