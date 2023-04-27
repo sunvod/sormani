@@ -404,6 +404,8 @@ class Newspaper():
     if self._is_first_page is not None:
       return self._is_first_page
     return False
+  def delete_first_page(self):
+    self._is_first_page = None
   def get_ofset(self):
     return 0, -200, 0, 0
   def get_dimension(self, img):
@@ -1239,7 +1241,7 @@ class La_Domenica_del_Corriere(Newspaper):
     cv2.imwrite(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
     crop = Image.open(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'))
     if self._is_first_page  is not None and get_crop:
-      return self._is_first_page, crop
+      return self._is_first_page, np.array(crop)
     dataset = []
     crop = tf.image.convert_image_dtype(crop, dtype=tf.float32)
     dataset.append(crop)
@@ -1249,7 +1251,7 @@ class La_Domenica_del_Corriere(Newspaper):
       predictions[0] = 1
     self._is_first_page = predictions[0] == 0
     if get_crop:
-      return self._is_first_page, crop
+      return self._is_first_page, np.array(crop)
     return self._is_first_page
   def get_ofset(self):
     return 0, -200, 0, 200

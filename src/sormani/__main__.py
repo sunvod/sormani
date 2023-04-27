@@ -20,11 +20,11 @@ if __name__ == '__main__':
   sormani = Sormani('La Domenica del Corriere',
                     is_frames=True,
                     year=1900,
-                    months=3,
+                    months=4,
                     # days=[x for x in range(1,6)],
                     days=[2,3,4,5],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True)],
                     checkimages=False)
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
@@ -39,16 +39,21 @@ if __name__ == '__main__':
   # sormani.center_block()
   # sormani.divide_image()
   # sormani.center_block(use_ai=True)
-  # sormani.rotate_final_frames(angle=5)
   # sormani.remove_single_frames()
   # sormani.center_block()
 
-  sormani.delete_gray_on_borders()
-  sormani.remove_single_frames()
-  sormani.center_block()
-  sormani.center_block()
+  # sormani.rotate_final_frames(angle=5)
 
-  # sormani.remove_last_single_frames_2()
+  # tentativo di pulire il bordo superiore
+  # sormani.delete_gray_on_borders()
+  # sormani.remove_single_frames()
+  # sormani.center_block()
+  # sormani.center_block()
+
+  # ultimo tentativo di pulire il bordo superiore
+  sormani.remove_last_single_frames_2()
+  sormani.center_block(use_ai=True)
+  # sormani.remove_single_frames(valid=[True,False,False,False])
 
   # sormani.create_all_images()
 

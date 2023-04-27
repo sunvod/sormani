@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import pathlib
@@ -31,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path):
+  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, ais):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -54,6 +55,7 @@ class Page:
     self.is_bobina = False
     self.isdivided = False
     self.prediction = None
+    self.ais = ais
   def add_conversion(self, conversion):
     if isinstance(conversion, list):
       for conv in conversion:
@@ -1632,62 +1634,69 @@ class Page:
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     lx = lx // 2
     count = 0
-    for limit in limits:
-      for y in range(self.default_frame[0], max_y):
-        # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
-        mean = thresh[y:y + 1, 0:w].mean()
+    if self.valid[0]:
+      for limit in limits:
+        for y in range(self.default_frame[0], max_y):
+          # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
+          mean = thresh[y:y + 1, 0:w].mean()
+          if mean >= limit:
+            # thresh = thresh[y - 100 if y >= 100 else 0:h, 0:w]
+            # img = img[y - 100 if y >= 100 else 0:h, 0:w]
+            y = y if h - y >= ly - y_ofset - 200 else h - ly + y_ofset - 200
+            y = y if y >= 0 else 0
+            thresh = thresh[y:h, 0:w]
+            img = img[y:h, 0:w]
+            h, w = thresh.shape
+            my = y
+            mh = h
+            count = 1
+            break
         if mean >= limit:
-          # thresh = thresh[y - 100 if y >= 100 else 0:h, 0:w]
-          # img = img[y - 100 if y >= 100 else 0:h, 0:w]
-          thresh = thresh[y:h, 0:w]
-          img = img[y:h, 0:w]
-          h, w = thresh.shape
-          my = y
-          mh = h
-          count = 1
           break
-      if mean >= limit:
-        break
-    for limit in limits:
-      for y in range(h - 1 - self.default_frame[1], h - max_y, -1):
-        # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
-        mean = thresh[y:y + 1, 0:w].mean()
+    if self.valid[1]:
+      for limit in limits:
+        for y in range(h - 1 - self.default_frame[1], h - max_y, -1):
+          # mean = max(thresh[y:y+1,0:w // 2].mean(), thresh[y:y+1,w // 2:w].mean())
+          mean = thresh[y:y + 1, 0:w].mean()
+          if mean >= limit:
+            # thresh = thresh[0:y + 100, 0:w]
+            # img = img[0:y + 100, 0:w]
+            y = y if h - y >= ly - y_ofset else h - ly + y_ofset
+            thresh = thresh[0:y, 0:w]
+            img = img[0:y, 0:w]
+            h, w = thresh.shape
+            mh = h
+            count = 1
+            break
         if mean >= limit:
-          # thresh = thresh[0:y + 100, 0:w]
-          # img = img[0:y + 100, 0:w]
-          thresh = thresh[0:y, 0:w]
-          img = img[0:y, 0:w]
-          h, w = thresh.shape
-          mh = h
-          count = 1
           break
-      if mean >= limit:
-        break
-    for limit in limits:
-      for x in range(self.default_frame[2], max_x_l):
-        mean = thresh[0:h, x:x + 1].mean()
+    if self.valid[2]:
+      for limit in limits:
+        for x in range(self.default_frame[2], max_x_l):
+          mean = thresh[0:h, x:x + 1].mean()
+          if mean >= limit:
+            thresh = thresh[0: h, x: w]
+            img = img[0: h, x: w]
+            h, w = thresh.shape
+            mx = x
+            mw = w
+            count = 1
+            break
         if mean >= limit:
-          thresh = thresh[0: h, x: w]
-          img = img[0: h, x: w]
-          h, w = thresh.shape
-          mx = x
-          mw = w
-          count = 1
           break
-      if mean >= limit:
-        break
-    for limit in limits:
-      for x in range(w - 1 - self.default_frame[3], w - max_x_r, -1):
-        # mean = min(thresh[0:h//2,x:x+1].mean(), thresh[h//2:h,x:x+1].mean())
-        mean = thresh[0:h, x:x + 1].mean()
+    if self.valid[3]:
+      for limit in limits:
+        for x in range(w - 1 - self.default_frame[3], w - max_x_r, -1):
+          # mean = min(thresh[0:h//2,x:x+1].mean(), thresh[h//2:h,x:x+1].mean())
+          mean = thresh[0:h, x:x + 1].mean()
+          if mean >= limit:
+            img = img[0:h, 0:x]
+            h, w = thresh.shape
+            mw = w
+            count = 1
+            break
         if mean >= limit:
-          img = img[0:h, 0:x]
-          h, w = thresh.shape
-          mw = w
-          count = 1
           break
-      if mean >= limit:
-        break
     if DEBUG:
       nimg = img.copy()
     h, w = img.shape
@@ -1703,6 +1712,8 @@ class Page:
       else:
         y = my if my is not None else 0
         h = mh if mh is not None else ly
+      w = w if w >= lx - x_ofset else lx - x_ofset
+      h = h if h >= ly - y_ofset else ly - y_ofset
       img = _img[y:y + h, x:x + w]
       count = 1
     img[0:6, 0] = [3, 202, 2, 61, 4, 6]
@@ -1943,45 +1954,53 @@ class Page:
         cv2.imwrite(file, img)
     return count
   def remove_last_single_frames_2(self):
+    self.color = 248
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    isfirst = self.newspaper.is_first_page()
     # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
     #   return
     _img = img.copy()
-    h, w = img.shape
+    oh, ow = img.shape
     limit = 200
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    if isfirst:
+      y_ofset -= 400
+    max_y = 800
+    if oh < ly - y_ofset:
+      return 0
+    theash = img.copy()
+    theash[theash < 248] = 0
     for y in range(0, self.default_frame[0]):
-      mean = img[y:y + 1, 0:w].mean()
-      if mean <= limit:
-        y = y if h - y >  ly - y_ofset else h - ly + y_ofset
-        img = img[y:h, 0:w]
-        h, w = img.shape
+      mean = theash[y:y + 1, 200:ow-200].mean()
+      if mean <= limit or y > y_ofset // 3 * 2:
+        y = y if oh - y >  ly - y_ofset else oh - ly + y_ofset
+        oh = oh + 100 if y - 100 > 0 else oh
+        y = y - 100 if y - 100 > 0 else 0
+        img = img[y:oh, 0:ow]
         break
-    # for y in range(h, self.default_frame[1], -1):
-    #   mean = img[y:y + 1, 0:w].mean()
-    #   if mean <= limit:
-    #     img = img[0:y, 0:w]
-    #     h, w = img.shape
-    #     break
-    #   for x in range(self.default_frame[2], 0, -1):
-    #     # mean = img[0:h, x:x + 1].mean()
-    #     mean = max([img[_y:_y + h // 4, x:x + 1].mean() for _y in range(0, h, h // 4)])
-    #     if mean <= limit:
-    #       img = img[0: h, x: w]
-    #       h, w = img.shape
-    #       break
-    #   for x in range(w - 1 - self.default_frame[3], w):
-    #     mean = max([img[_y:_y + h // 4, x:x + 1].mean() for _y in range(0, h, h // 4)])
-    #     if mean <= limit:
-    #       img = img[0:h, 0:x]
-    #       h, w = img.shape
-    #       break
+    oh, ow = img.shape
+    if oh < ly - y_ofset:
+      return 0
+    limit = 160
+    theash = img.copy()
+    theash[theash < 248] = 0
+    if theash[101:140, 200:ow-200].mean() >= limit:
+      if oh < ly - y_ofset // 3 * 2:
+        img = cv2.copyMakeBorder(img, 200, 0, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+    else:
+      for y in range(101, self.default_frame[0]):
+        mean = theash[y:y + 40, 200:ow-200].mean()
+        if mean >= limit or y > y_ofset // 3 * 2:
+          y = y if oh - y >  ly - y_ofset else oh - ly + y_ofset
+          # y = y - 100 if y - 100 > 0 else 0
+          img = img[y:oh + 100, 0:ow]
+          img = cv2.copyMakeBorder(img, 100, 0, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+          break
     if DEBUG:
-      nimg = img.copy()
-      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_nimg, theash)
       cv2.imwrite(file_bimg, img)
     else:
       cv2.imwrite(file, img)
@@ -2038,9 +2057,12 @@ class Page:
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    if oh < ly - y_ofset // 2:
+      return 0
     if img is None:
       return 0
-    oh, ow = img.shape
     ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     _img = img.copy()
     limit = 250
@@ -2073,7 +2095,6 @@ class Page:
     y2 = y2 + 120 if y2 + 120 < oh else oh
     x1 = x1 - 30 if x1 - 30 > 0 else 0
     x2 = x2 + 30 if x2 + 30 < ow else ow
-    lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
     if ow < oh:
       lx = lx // 2
     upper_edge = 110

@@ -20,9 +20,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 import warnings
 warnings.filterwarnings("ignore")
 
-PAGE = 1
-ISFIRSTPAGE = 2
-
 class AI():
   def __init__(self,  model_path, type, use=False, save=False):
     assert model_path is not None, 'model_path must have a value'

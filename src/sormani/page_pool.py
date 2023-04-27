@@ -392,11 +392,12 @@ class Page_pool(list):
     return 0
   def _remove_frames(self, page):
     return page.remove_frames()
-  def remove_single_frames(self, limit = 5000, threshold=200, default_frame=(0,0,0,0)):
+  def remove_single_frames(self, limit = 5000, threshold=200, default_frame=(0,0,0,0), valid=[True,True,True,True]):
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.default_frame = default_frame
+      page.valid = valid
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._remove_single_frames, self)
     if result is not None and all(v is not None for v in result):
@@ -425,6 +426,25 @@ class Page_pool(list):
     if result is not None and all(v is not None for v in result):
       return sum(result)
     return 0
+  # def remove_last_single_frames_2(self, threshold, default_frame):
+  #   result = 0
+  #   for i, page in enumerate(self):
+  #     if not i:
+  #       ai = page.ais.get_model(ISFIRSTPAGE)
+  #       model = ai.model if ai is not None else None
+  #     page.threshold = threshold
+  #     page.default_frame = default_frame
+  #     page.model = model
+  #   if model is None:
+  #     with Pool(processes=N_PROCESSES) as mp_pool:
+  #       result = mp_pool.map(self._remove_last_single_frames_2, self)
+  #     if result is not None and all(v is not None for v in result):
+  #       return sum(result)
+  #     return 0
+  #   else:
+  #     for page in self:
+  #       result += self._remove_last_single_frames_2(page)
+  #     return result
   def _remove_last_single_frames_2(self, page):
     return page.remove_last_single_frames_2()
   def delete_gray_on_borders(self, threshold, default_frame, color):

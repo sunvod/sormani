@@ -9,7 +9,6 @@ from os import listdir
 
 from PIL.Image import DecompressionBombError
 
-from src.sormani.AI import PAGE, ISFIRSTPAGE
 from src.sormani.page import Page
 from src.sormani.page_pool import Page_pool
 from src.sormani.system import *
@@ -87,7 +86,7 @@ class Images_group():
       if pathlib.Path(file).suffix == '.' + ext:
         if checkimages and not self.is_image(self.filedir, file):
           continue
-        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path)
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais)
         ai = ais.get_model(PAGE)
         model = ai.model if ai is not None else None
         use_ai = ai.use if ai is not None else False

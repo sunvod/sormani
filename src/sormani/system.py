@@ -56,6 +56,8 @@ NEWSPAPERS = ['Alias',
               'Unita']
 SCORECUTOFF = 0.6
 HASHCUTOFF = 2
+PAGE = 1
+ISFIRSTPAGE = 2
 
 global_count = multiprocessing.Value('I', 0)
 

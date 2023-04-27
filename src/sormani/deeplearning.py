@@ -755,10 +755,10 @@ def check_firstpage_csv():
         _file = file
         _n = n
         continue
-      if _n + 2 == n:
-        _file = file
-        _n = n
-        continue
+      # if _n + 2 == n:
+      #   _file = file
+      #   _n = n
+      #   continue
       if n - _n != 1:
         nl.append([date, _n, _file])
       _n = n
@@ -790,12 +790,53 @@ def rename_frames(root):
       new_name = date + '_' + n + '.jpeg'
       os.rename(os.path.join(filedir, file), os.path.join(filedir, new_name))
 
+def convert_crops(root):
+  for filedir, dirs,files in os.walk(root):
+    files.sort()
+    for i, file in enumerate(files):
+      img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_GRAYSCALE)
+      ret, thresh = cv2.threshold(img, 48, 255, cv2.THRESH_BINARY)
+      cv2.imwrite(os.path.join(filedir, file), thresh, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
-build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
+def reallocate_frame(csv_file='list_first_pages.csv'):
+  with open(os.path.join(STORAGE_BASE, csv_file), 'r') as f:
+    csv_file = csv.reader(f)
+    csv_list = []
+    for row in csv_file:
+      csv_list.append(row)
+    for i, row in enumerate(csv_list):
+      if i < len(csv_list):
+        _row = csv_list[i + 1]
+        _n = int(_row[1])
+      else:
+        _n = n + 100
+      filedir = os.path.join(IMAGE_ROOT, IMAGE_PATH, 'La Domenica del Corriere', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
+      year = row[3].split('/')[2]
+      if len(year) == 2 and year == '99':
+        year = '1899'
+      elif len(year) == 2:
+        year = '19' + year
+      filedir_destination = os.path.join(IMAGE_ROOT, IMAGE_PATH, '_La Domenica del Corriere', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
+      __n = int(row[1])
+      for n in range(__n, _n):
+        file_name = 'Scan_' + str(n) + '.tif'
+        file_path = os.path.join(filedir, file_name)
+        file_path_destination = os.path.join(filedir_destination, file_name)
+        if os.path.isfile(file_path):
+          print(file_path, file_path_destination)
+          # Path(filedir_destination).mkdir(parents=True, exist_ok=True)
+          # shutil.copyfile(file_path, file_path_destination)
+      if i > 1000:
+        break
 
-check_firstpage_csv()
+reallocate_frame()
+
+# convert_crops('/home/sunvod/sormani_CNN/X')
+# build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
 #
-# rename_frames('/home/sunvod/sormani_CNN/nofirstpage')
+# check_firstpage_csv()
+#
+# rename_frames('/home/sunvod/sormani_CNN/firstpage')
 
 # renumerate_frames('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01')
 
