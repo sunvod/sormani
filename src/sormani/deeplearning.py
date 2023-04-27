@@ -824,10 +824,9 @@ def reallocate_frame(csv_file='list_first_pages.csv'):
         file_path_destination = os.path.join(filedir_destination, file_name)
         if os.path.isfile(file_path):
           print(file_path, file_path_destination)
-          # Path(filedir_destination).mkdir(parents=True, exist_ok=True)
-          # shutil.copyfile(file_path, file_path_destination)
-      if i > 1000:
-        break
+          Path(filedir_destination).mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(file_path, file_path_destination)
+
 
 reallocate_frame()
 
