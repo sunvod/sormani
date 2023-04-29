@@ -827,6 +827,21 @@ def reallocate_frame(csv_file='list_first_pages.csv'):
           Path(filedir_destination).mkdir(parents=True, exist_ok=True)
           shutil.copyfile(file_path, file_path_destination)
 
+def set_folders_pdf_name(root='/mnt/storage01/sormani/JPG-PDF/Il Sole 24 Ore/2016'):
+  for filedir, dirs, files in os.walk(root):
+    dirs.sort()
+    if not len(dirs) or len(dirs) == 3:
+      continue
+    for dir in dirs:
+      if len(dir.split()) <=3:
+        continue
+      new_dir = ' '.join(dir.split()[:3])
+      # print(os.path.join(filedir, dir),' ;' ,  os.path.join(filedir, new_dir))
+      os.rename(os.path.join(filedir, dir), os.path.join(filedir, new_dir))
+
+
+set_folders_pdf_name()
+
 
 # reallocate_frame()
 

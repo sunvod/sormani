@@ -313,7 +313,7 @@ class Page_pool(list):
     for page in self:
       page.first_number = first_number
     # for page in self:
-    #   count += page.add_pdf_metadata(self.first_number)
+    #   count += page.add_pdf_metadata()
     with Pool(processes=N_PROCESSES) as mp_pool:
       count = mp_pool.map(self._add_pdf_metadata, self)
     return count
@@ -426,6 +426,18 @@ class Page_pool(list):
     if result is not None and all(v is not None for v in result):
       return sum(result)
     return 0
+  def remove_dark_border(self, threshold, limit, valid):
+    for page in self:
+      page.limit = limit
+      page.threshold = threshold
+      page.valid=valid
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._remove_dark_border, self)
+    if result is not None and all(v is not None for v in result):
+      return sum(result)
+    return 0
+  def _remove_dark_border(self, page):
+    return page.remove_dark_border()
   # def remove_last_single_frames_2(self, threshold, default_frame):
   #   result = 0
   #   for i, page in enumerate(self):

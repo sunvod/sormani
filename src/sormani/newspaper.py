@@ -402,7 +402,7 @@ class Newspaper():
     return imgs
 
   # image1 = image.crop((parameters.left, parameters.top, parameters.right, parameters.bottom))
-  def is_first_page(self, model):
+  def is_first_page(self, model = None):
     if self._is_first_page is not None:
       return self._is_first_page
     return False

@@ -652,7 +652,7 @@ class Page:
                      + ' ; Anno:' + str(self.year)
                      + ' ; Mese:' + str(self.month)
                      + ' ; Giorno:' + str(self.day)
-                     + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
+                     # + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
                      + ' ; Anno del quotidiano:' + self.newspaper.year,
         '/Title': self.newspaper.name,
         '/Nome_del_periodico': self.newspaper.name,
@@ -661,7 +661,7 @@ class Page:
         '/Giorno': str(self.day),
         '/Data': str(self.newspaper.date),
         '/Pagina:': str(self.newspaper.n_page),
-        '/Numero_del_quotidiano': str(self.newspaper.number),
+        # '/Numero_del_quotidiano': str(self.newspaper.number),
         '/Anno_del_quotidiano': str(self.newspaper.year),
         '/Producer': 'osi-servizi-informatici@cloud - Milano'
       })
@@ -2124,3 +2124,64 @@ class Page:
     else:
       cv2.imwrite(file, img)
     return 1
+  def remove_dark_border(self):
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
+    #   return
+    _img = img.copy()
+    thresh = img.copy()
+    # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
+    _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
+    _thresh = thresh.copy()
+    h, w = thresh.shape
+    max_x_r = 800
+    max_x_l = 800
+    max_y = 800
+    count = 0
+    if self.valid[0]:
+      for y in range(10, max_y):
+        mean = thresh[y:y + 1, 0:w].mean()
+        if mean >= self.limit:
+          img = img[y:h, 0:w]
+          thresh = thresh[y:h, 0:w]
+          h, w = thresh.shape
+          count = 0
+          break
+    if self.valid[1]:
+      for y in range(h - 11, h - max_y, -1):
+        mean = thresh[y:y + 1, 0:w].mean()
+        if mean >= self.limit:
+          img = img[0:y, 0:w]
+          thresh = thresh[0:y, 0:w]
+          h, w = thresh.shape
+          count = 0
+          break
+    if self.valid[2]:
+      for x in range(10, max_x_l):
+        mean = thresh[0:h, x:x + 1].mean()
+        if mean >= self.limit:
+          img = img[0: h, x: w]
+          thresh = thresh[0: h, x: w]
+          h, w = thresh.shape
+          count = 0
+          break
+    if self.valid[3]:
+      for x in range(w - 11, w - max_x_r, -1):
+        mean = thresh[0:h, x:x + 1].mean()
+        if mean >= self.limit:
+          img = img[0:h, 0:x]
+          thresh = thresh[0:h, 0:x]
+          h, w = thresh.shape
+          count = 0
+          break
+    # img[0:6, 0] = [3, 202, 2, 61, 4, 6]
+    if DEBUG:
+      cv2.imwrite(file_bimg, img)
+      cv2.imwrite(file_thresh, thresh)
+    else:
+      cv2.imwrite(file, img)
+    return count
