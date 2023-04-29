@@ -17,28 +17,28 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
-  sormani = Sormani('La Domenica del Corriere',
-                    is_frames=True,
-                    years=[x for x in range(1900, 1951)],
-                    months=None,
-                    # days=[x for x in range(1,6)],
-                    days=None,
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    force=True)
-
-  sormani.add_pdf_metadata()
-
-  # sormani = Sormani('Il Mondo',
+  # sormani = Sormani('La Domenica del Corriere',
   #                   is_frames=True,
-  #                   years=[1951],
-  #                   months=[1],
+  #                   years=[x for x in range(1900, 1951)],
+  #                   months=None,
   #                   # days=[x for x in range(1,6)],
-  #                   days=[10],
+  #                   days=None,
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-  #                   checkimages=False)
+  #                   ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   force=True)
+
+  # sormani.add_pdf_metadata()
+
+  sormani = Sormani('Il Mondo',
+                    is_frames=True,
+                    years=[1951],
+                    months=[1],
+                    # days=[x for x in range(1,6)],
+                    days=[1],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    checkimages=False)
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
 
@@ -68,11 +68,11 @@ if __name__ == '__main__':
   # sormani.center_block()
 
   # tentativo di pulire il bordo superiore il mondo
-  # sormani.rotate_frames()
-  # sormani.remove_dark_border(valid=[False,False,True,True])
-  # sormani.divide_image()
-  # sormani.remove_dark_border(valid=[True,True,False,False])
-  # sormani.clean_images()
+  sormani.rotate_frames()
+  sormani.remove_dark_border(valid=[False,False,True,True])
+  sormani.divide_image()
+  sormani.remove_dark_border(valid=[True,True,False,False])
+  sormani.clean_images()
 
   # ultimo tentativo di pulire il bordo superiore
   # sormani.remove_last_single_frames_2()
