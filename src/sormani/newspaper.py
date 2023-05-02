@@ -1328,6 +1328,16 @@ class Il_Mondo(Newspaper):
                                      right,
                                      top,
                                      bottom)
+  def divide(self, img):
+    imgs = []
+    height, width = img.shape
+    parameters = self.get_crop_parameters(1, width, height)
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right + 20]
+    parameters = self.get_crop_parameters(0, width, height)
+    img2 = img[parameters.top:parameters.bottom, parameters.left - 20:parameters.right]
+    imgs.append(img1)
+    imgs.append(img2)
+    return imgs
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

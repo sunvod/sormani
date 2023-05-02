@@ -393,13 +393,13 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, color=248, threshold=230, final_threshold=180, use_ai=False): #230
+  def clean_images(self, color=248, threshold=230, final_threshold=180, last_threshold=None, use_ai=False): #230
     if not len(self.elements):
       return
     selfforce = self.force
     self.force = True
     for page_pool in self:
-      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, use_ai=use_ai)
+      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, last_threshold=last_threshold, use_ai=use_ai)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):
@@ -438,6 +438,19 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
+  def set_grayscale(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(f'Starting setting grayscale of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.set_grayscale()
+    if count:
+      print(
+        f'Removing setting grayscale of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      # self.set_elements()
+    else:
+      print(f'No setting grayscale is needed for \'{self.newspaper_name}\'.')
   def remove_frames(self, threshold=200, default_frame=(0,0,0,0)):
     if not len(self.elements):
       return
@@ -848,7 +861,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def remove_dark_border(self, threshold=200, limit=150, valid=[True,True,True,True]):
+  def remove_dark_border(self, threshold=120, limit=150, valid=[True,True,True,True]):
     if not len(self.elements):
       return
     global global_count

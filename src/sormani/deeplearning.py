@@ -839,8 +839,54 @@ def set_folders_pdf_name(root='/mnt/storage01/sormani/JPG-PDF/Il Sole 24 Ore/201
       # print(os.path.join(filedir, dir),' ;' ,  os.path.join(filedir, new_dir))
       os.rename(os.path.join(filedir, dir), os.path.join(filedir, new_dir))
 
+# def invert_left_right_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/01'):
+def invert_left_right_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1951/01/10'):
+  for filedir, dirs, files in os.walk(root):
+    if not len(files):
+      continue
+    files.sort()
+    for file in files:
+      if file.split('_')[-2] == '':
+        continue
+      file_name_no_ext = Path(file).stem
+      file_path_no_ext = os.path.join(filedir, file_name_no_ext)
+      ext = Path(file).suffix
+      n = file_name_no_ext.split('_')[-1]
+      new_file = '_'.join(file_name_no_ext.split('_')[:-1]) + ('__1' if str(n) == '2' else '__2')
+      # print(os.path.join(filedir, file), ' ;', os.path.join(filedir, new_file) + '.tif')
+      os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file) + '.tif')
 
-set_folders_pdf_name()
+def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/02', source='02'):
+  for filedir, dirs, files in os.walk(root):
+    if not len(files):
+      continue
+    files.sort()
+    _n1 = None
+    _n2 = None
+    _file_name_no_ext = None
+    for file in files:
+      file_name_no_ext = Path(file).stem
+      file_path_no_ext = os.path.join(filedir, file_name_no_ext)
+      ext = Path(file).suffix
+      n1 = int(file_name_no_ext.split('_')[-2])
+      n2 = int(file_name_no_ext.split('_')[-1])
+      if _n1 is None:
+        _n1 = n1
+        _n2 = n2
+        _file_name_no_ext = file_name_no_ext
+        continue
+      if n1 == _n1 + 1 and n2 == _n2:
+        if n2 == 1:
+          file_missing = '_'.join(_file_name_no_ext.split('_')[:-1]) + '.tif'
+        else:
+          file_missing = '_'.join(file_name_no_ext.split('_')[:-1]) + '.tif'
+        img = cv2.imread(os.path.join('/mnt/storage02/TIFF/Bobine/IL MONDO', source, file_missing))
+        cv2.imwrite(os.path.join('/mnt/storage01/sormani/TIFF/Il Mondo/1960/01/10', file_missing), img)
+      _n1 = n1
+      _n2 = n2
+      _file_name_no_ext = file_name_no_ext
+
+cover_missing_pages()
 
 
 # reallocate_frame()

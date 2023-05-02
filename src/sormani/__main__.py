@@ -28,14 +28,28 @@ if __name__ == '__main__':
   #                   checkimages=False,
   #                   force=True)
 
+  # sormani = Sormani('La Domenica del Corriere',
+  #                   is_frames=True,
+  #                   years=[x for x in range(1900, 1901)],
+  #                   months=[10,11,12],
+  #                   # days=[x for x in range(1,6)],
+  #                   days=None,
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   force=True)
+
+
+  # sormani.create_all_images(convert=False)
   # sormani.add_pdf_metadata()
 
   sormani = Sormani('Il Mondo',
                     is_frames=True,
-                    years=[1951],
+                    years=[1960],
                     months=[1],
                     # days=[x for x in range(1,6)],
-                    days=[1],
+                    # days=[5,11,12,17],
+                    days=[10],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False)
@@ -61,20 +75,21 @@ if __name__ == '__main__':
 
   # sormani.rotate_final_frames(angle=5)
 
-  # tentativo di pulire il bordo superiore La DOmenica del Corriere
+  # tentativo di pulire il bordo superiore La Domenica del Corriere
   # sormani.delete_gray_on_borders()
   # sormani.remove_single_frames()
   # sormani.center_block()
   # sormani.center_block()
 
-  # tentativo di pulire il bordo superiore il mondo
-  sormani.rotate_frames()
+  # tentativo di pulire il bordo superiore Il Mondo
   sormani.remove_dark_border(valid=[False,False,True,True])
   sormani.divide_image()
+  sormani.bobine_delete_copies()
   sormani.remove_dark_border(valid=[True,True,False,False])
-  sormani.clean_images()
+  sormani.clean_images(last_threshold=None)
+  sormani.bobine_delete_copies()
 
-  # ultimo tentativo di pulire il bordo superiore
+  # ultimo tentativo di pulire il bordo superiore La DOmenica del Corriere
   # sormani.remove_last_single_frames_2()
   # sormani.center_block(use_ai=True)
   # sormani.remove_single_frames(valid=[True,False,False,False])

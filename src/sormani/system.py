@@ -21,6 +21,8 @@ warnings.filterwarnings("ignore")
 
 DEBUG = False
 # DEBUG = True
+MULTIPROCESSING = True
+# MULTIPROCESSING = False
 ORIGINAL_DPI = 400
 UPSAMPLING_DPI = 600
 THRESHOLDING=0

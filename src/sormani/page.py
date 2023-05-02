@@ -1164,12 +1164,22 @@ class Page:
     file_name_no_ext = Path(self.original_image).stem
     file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
     ext = Path(self.original_image).suffix
-    img = cv2.imread(self.original_image)
+    img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
+    h, w = img.shape
+    if h == 0 or w == 0 or h > w:
+      return 0
     imgs = self.newspaper.divide(img)
     for i, _img in enumerate(imgs):
-      cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
+      h, w = _img.shape
+      if _img is not None and h > 0 and w > 0:
+        cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
     os.remove(self.original_image)
     self.isdivided = True
+    return 1
+  def set_grayscale(self):
+    file = self.original_image
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    cv2.imwrite(file, img)
     return 1
   def drawline(self, img, pt1, pt2, color, thickness=1, style='dotted', gap=20):
     dist = ((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2) ** .5
@@ -1365,8 +1375,11 @@ class Page:
     # dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 32
     # dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 24
     # dimg[(dimg < threshold) & (dimg >= 200)] = dimg[(dimg < threshold) & (dimg >= 200)] - 8
-    dimg = cv2.convertScaleAbs(dimg, alpha=0.84, beta=0)
-    dimg[dimg >= threshold] = self.color
+    if self.last_threshold is not None:
+      dimg[dimg >= self.last_threshold] = self.color
+    else:
+      dimg = cv2.convertScaleAbs(dimg, alpha=0.84, beta=0)
+      dimg[dimg >= threshold] = self.color
     dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
@@ -2138,9 +2151,9 @@ class Page:
     _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
     _thresh = thresh.copy()
     h, w = thresh.shape
-    max_x_r = 800
-    max_x_l = 800
-    max_y = 800
+    max_x_r = w // 2
+    max_x_l = w // 2
+    max_y = h // 2
     count = 0
     if self.valid[0]:
       for y in range(10, max_y):
@@ -2149,7 +2162,7 @@ class Page:
           img = img[y:h, 0:w]
           thresh = thresh[y:h, 0:w]
           h, w = thresh.shape
-          count = 0
+          count = 1
           break
     if self.valid[1]:
       for y in range(h - 11, h - max_y, -1):
@@ -2158,7 +2171,7 @@ class Page:
           img = img[0:y, 0:w]
           thresh = thresh[0:y, 0:w]
           h, w = thresh.shape
-          count = 0
+          count = 1
           break
     if self.valid[2]:
       for x in range(10, max_x_l):
@@ -2167,7 +2180,7 @@ class Page:
           img = img[0: h, x: w]
           thresh = thresh[0: h, x: w]
           h, w = thresh.shape
-          count = 0
+          count = 1
           break
     if self.valid[3]:
       for x in range(w - 11, w - max_x_r, -1):
@@ -2176,7 +2189,7 @@ class Page:
           img = img[0:h, 0:x]
           thresh = thresh[0:h, 0:x]
           h, w = thresh.shape
-          count = 0
+          count = 1
           break
     # img[0:6, 0] = [3, 202, 2, 61, 4, 6]
     if DEBUG:

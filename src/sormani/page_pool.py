@@ -289,7 +289,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, color=248, threshold=230, final_threshold=200, use_ai=False):
+  def clean_images(self, color=248, threshold=230, final_threshold=200, last_threshold=160, use_ai=False):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -298,6 +298,7 @@ class Page_pool(list):
         page.color = color
         page.threshold = threshold
         page.final_threshold = final_threshold
+        page.last_threshold = last_threshold
         page.valid = None
         page.use_ai = use_ai
       with Pool(processes=N_PROCESSES) as mp_pool:
@@ -354,6 +355,7 @@ class Page_pool(list):
           cv2.imwrite(page.original_image, img)
         elif flag:
           os.rename(page.original_image, file_path_no_ext + '_0' + ext)
+          page.original_image = file_path_no_ext + '_0' + ext
           continue
         else:
           continue
@@ -365,10 +367,16 @@ class Page_pool(list):
     # else:
     #   with Pool(processes=N_PROCESSES) as mp_pool:
     #     result = mp_pool.map(self._divide_image, pages)
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._divide_image, pages)
-      result = sum(result)
-    return result
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._divide_image, pages)
+        result = sum(result)
+      return result
+    else:
+      count = 0
+      for page in self:
+        count += self._divide_image(page)
+      return count
   def _divide_image(self, page):
     return page.divide_image()
   def remove_borders(self, limit = 5000, threshold=200):
@@ -380,6 +388,12 @@ class Page_pool(list):
     return sum(result)
   def _remove_borders(self, page):
     return page.remove_borders()
+  def set_grayscale(self,):
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._set_grayscale, self)
+    return sum(result)
+  def _set_grayscale(self, page):
+    return page.set_grayscale()
   def remove_frames(self, limit = 5000, threshold=180, default_frame=(0,0,0,0)):
     for page in self:
       page.limit = limit
@@ -431,11 +445,17 @@ class Page_pool(list):
       page.limit = limit
       page.threshold = threshold
       page.valid=valid
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._remove_dark_border, self)
-    if result is not None and all(v is not None for v in result):
-      return sum(result)
-    return 0
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._remove_dark_border, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+      return 0
+    else:
+      count = 0
+      for page in self:
+        count += self._remove_dark_border(page)
+      return count
   def _remove_dark_border(self, page):
     return page.remove_dark_border()
   # def remove_last_single_frames_2(self, threshold, default_frame):
@@ -725,9 +745,11 @@ class Page_pool(list):
       return 0
   def bobine_delete_copies(self):
     _file = None
+    file3 = None
     _hash = None
+    hash3 = None
     _img = None
-    __img = None
+    img3 = None
     count = 0
     for page in self:
       file = page.original_image
@@ -737,20 +759,27 @@ class Page_pool(list):
       # img = img[1000:h-2000,1000:w-2000]
       img = cv2.resize(img, (32, 32), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
-      if __img is not None:
-        score, _ = structural_similarity(img, __img, full=True)
+      if img3 is not None:
+        score, _ = structural_similarity(img, img3, full=True)
         if DEBUG:
-          print(score, abs(hash - _hash), os.path.basename(_file), os.path.basename(file))
-        if score > SCORECUTOFF or abs(hash - _hash) <= HASHCUTOFF:
+          print(score, abs(hash - hash3), os.path.basename(file3), os.path.basename(file))
+        if score > SCORECUTOFF or abs(hash - hash3) <= HASHCUTOFF:
           if not DEBUG:
-            os.remove(_file)
+            n1 = int(file3.split('_')[-2])
+            n2 = int(file.split('_')[-2])
+            if n2 - n1 <= 2:
+              os.remove(file3)
           count += 1
+      if ow > oh:
+        file3 = file
+        hash3 = hash
+        img3 = img
+      else:
+        file3 = _file
+        hash3 = _hash
+        img3 = _img
       _file = file
       _hash = hash
-      if ow > oh:
-        __img = img
-      else:
-        __img = _img
       _img = img
     return count
   def rotate_frames(self, limit=4000, threshold=200, angle=None):
