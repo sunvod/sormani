@@ -128,7 +128,7 @@ class CNN:
     else:
       name = ''
     # model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type = 'SimpleCNN')
-    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='DenseNet201', name='DenseNet201_5')
+    model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='DenseNet201', name='DenseNet201_firstpage_2')
     # model, model_name = self.create_model_cnn(num_classes=len(self.class_names), type='EfficientNetV2L')
     Path(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name)).mkdir(parents=True, exist_ok=True)
     # model = tf.keras.models.load_model(os.path.join(STORAGE_BASE, 'models', name, 'last_model_' + model_name))
@@ -224,7 +224,7 @@ class customCallback(keras.callbacks.Callback):
             f' did not improve from {self.val_sparse_categorical_accuracy}')
 
 
-ns = 'La Domenica del Corriere'
+ns = 'Il Mondo'
 
 cnn = CNN(ns)
 cnn.exec_cnn(ns, epochs = 100)

@@ -743,6 +743,9 @@ class Page_pool(list):
       return page.set_bobine_select_images()
     except:
       return 0
+
+  # def _page_sort(self, page):
+  #   return page.original_image
   def bobine_delete_copies(self):
     _file = None
     file3 = None
@@ -751,10 +754,18 @@ class Page_pool(list):
     _img = None
     img3 = None
     count = 0
-    for page in self:
+    _ow = None
+    _oh = None
+    pages = []
+    # for page in self:
+    #   pages.append(page)
+    # pages.sort(key=self._page_sort)
+    for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
       # img = cv2.convertScaleAbs(img, alpha=1.2, beta=0)
+      if img is None:
+        pass
       oh, ow = img.shape
       # img = img[1000:h-2000,1000:w-2000]
       img = cv2.resize(img, (32, 32), interpolation = cv2.INTER_AREA)
@@ -763,7 +774,7 @@ class Page_pool(list):
         score, _ = structural_similarity(img, img3, full=True)
         if DEBUG:
           print(score, abs(hash - hash3), os.path.basename(file3), os.path.basename(file))
-        if score > SCORECUTOFF or abs(hash - hash3) <= HASHCUTOFF:
+        if score > SCORECUTOFF or abs(hash - hash3) <= HASHCUTOFF: # or (ow == ow3 and oh == oh3):
           if not DEBUG:
             n1 = int(file3.split('_')[-2])
             n2 = int(file.split('_')[-2])
@@ -774,13 +785,19 @@ class Page_pool(list):
         file3 = file
         hash3 = hash
         img3 = img
+        ow3 = ow
+        oh3 = oh
       else:
         file3 = _file
         hash3 = _hash
         img3 = _img
+        ow3 = _ow
+        oh3 = _oh
       _file = file
       _hash = hash
       _img = img
+      _ow = ow
+      _oh = oh
     return count
   def rotate_frames(self, limit=4000, threshold=200, angle=None):
     count = 0

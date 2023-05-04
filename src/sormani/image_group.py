@@ -115,5 +115,6 @@ class Images_group():
         page_pool.append(page)
     ais.garbage_model(PAGE)
     ais.garbage_model(ISFIRSTPAGE)
+    page_pool.sort(key=lambda x: x.original_image)
     return page_pool
 

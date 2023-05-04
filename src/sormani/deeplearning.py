@@ -8,6 +8,8 @@ import time
 import shutil
 import csv
 from datetime import datetime as dt
+from PyPDF2 import PdfWriter, PdfReader
+import aspose.words as aw
 
 from src.sormani.newspaper import Newspaper
 
@@ -734,7 +736,7 @@ def build_firstpage_csv(root):
     for file in files:
       date = (file.split('_')[0])
       date = dt.strptime(date, '%Y-%m-%d').date()
-      n = file.split('_')[1].split('.')[0]
+      n = file.split('_')[2].split('.')[0]
       l.append([date, n, file])
   l.sort()
   with open(os.path.join(STORAGE_BASE, 'firstpage.csv'), 'w') as f:
@@ -856,7 +858,8 @@ def invert_left_right_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1951/01/1
       # print(os.path.join(filedir, file), ' ;', os.path.join(filedir, new_file) + '.tif')
       os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file) + '.tif')
 
-def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/02', source='02'):
+def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/', source='01'):
+  root = os.path.join(root, source)
   for filedir, dirs, files in os.walk(root):
     if not len(files):
       continue
@@ -880,20 +883,40 @@ def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/02', 
           file_missing = '_'.join(_file_name_no_ext.split('_')[:-1]) + '.tif'
         else:
           file_missing = '_'.join(file_name_no_ext.split('_')[:-1]) + '.tif'
-        img = cv2.imread(os.path.join('/mnt/storage02/TIFF/Bobine/IL MONDO', source, file_missing))
-        cv2.imwrite(os.path.join('/mnt/storage01/sormani/TIFF/Il Mondo/1960/01/10', file_missing), img)
+        img = cv2.imread(os.path.join('/mnt/storage02/TIFF/Bobine/IL MONDO', source, file_missing), cv2.IMREAD_GRAYSCALE)
+        cv2.imwrite(os.path.join('/mnt/storage01/sormani/TIFF/Il Mondo/1960/01/31', file_missing), img)
       _n1 = n1
       _n2 = n2
       _file_name_no_ext = file_name_no_ext
 
-cover_missing_pages()
+def divide_pdf(root, file_name):
+  # inputpdf = PdfReader(open(os.path.join(root, file_name), "rb"))
+  # for i in range(len(inputpdf.pages)):
+  #   output = PdfWriter()
+  #   output.add_page(inputpdf.pages[i])
+  #   with open(os.path.join(root, "Scan_%s.pdf" % i), "wb") as outputStream:
+  #     output.write(outputStream)
+  for filedir, dirs, files in os.walk(root):
+    files.sort()
+    for file in files:
+      new_file = file.split('.')[0] + '.tif'
+      doc = aw.Document(os.path.join(root, file))
+      doc.save(os.path.join(root, new_file))
+      # os.remove(os.path.join(root, file))
+
+
+# divide_pdf(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/06', file_name='006 1955-1956--001-200.pdf')
+
+# cover_missing_pages(source='29')
 
 
 # reallocate_frame()
 
 # convert_crops('/home/sunvod/sormani_CNN/X')
-# build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
-#
+
+build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
+
+
 # check_firstpage_csv()
 #
 # rename_frames('/home/sunvod/sormani_CNN/firstpage')
