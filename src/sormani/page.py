@@ -1043,13 +1043,14 @@ class Page:
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     books = []
+    w1, w2, h1, h2 = self.newspaper.get_limits_select_images()
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
       rect = cv2.minAreaRect(contour)
       if self.debug:
         box = np.int0(cv2.boxPoints(rect))
         cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
-      if w > 10000 and h > 5000 and w < 15000:
+      if w > w1 and h > h1 and w < w2 and h < h2:
         books.append((x, y, w, h))
     books.sort(key=_order)
     for book in books:

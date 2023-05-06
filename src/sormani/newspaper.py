@@ -145,6 +145,8 @@ class Newspaper():
     return ['top']
   def get_page_ins_position(self):
     return ['top']
+  def get_limits_select_images(self):
+    return (10000, 15000, 5000, 100000)
   @staticmethod
   def get_parameters(name):
     if name == 'La Stampa':
@@ -1138,15 +1140,13 @@ class Scenario(Newspaper):
     l = n_pages
     count_zero = 0
     for n_page, page in enumerate(page_pool):
-      try:
-        page.newspaper.n_page
-        continue
-      except:
-        pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       page.newspaper.n_page = n_page
-
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 10000, 5000, 100000)
   def get_remove_borders_parameters(self, i, width, height):
     o = 400
     if i == 0:

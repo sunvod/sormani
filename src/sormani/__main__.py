@@ -31,16 +31,16 @@ if __name__ == '__main__':
   # sormani.create_all_images(convert=False)
   # sormani.add_pdf_metadata()
 
-  sormani = Sormani('Il Mondo',
-                    is_frames=True,
-                    years=[1950],
-                    months=[1],
-                    # days=[x for x in range(1,7)],
-                    days=[16],
-                    # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
-                    ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False)
+  # sormani = Sormani('Il Mondo',
+  #                   is_frames=True,
+  #                   years=[1950],
+  #                   months=[1],
+  #                   # days=[x for x in range(1,7)],
+  #                   days=[16],
+  #                   # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
+  #                   ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False)
 
   sormani = Sormani('Scenario',
                     is_frames=True,
@@ -48,12 +48,13 @@ if __name__ == '__main__':
                     months=[1],
                     # days=[x for x in range(1,7)],
                     days=[4,5,6,7,8,9,10,11,12],
+                    # days=[10],
                     # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
                     # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False)
 
-  sormani.set_bobine_merge_images()
+  # sormani.set_bobine_merge_images()
   sormani.set_bobine_select_images()
 
   # sormani.bobine_delete_copies()

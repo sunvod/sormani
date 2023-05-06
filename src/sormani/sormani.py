@@ -833,7 +833,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Merging {count} frames ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 5):
+  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 48):
     start_time = time.time()
     print(f'Extracting frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
