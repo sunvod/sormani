@@ -534,7 +534,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.center_block(threshold=threshold, color=color, use_ai=use_ai, only_x=only_x)
+      count = page_pool.center_block(threshold=threshold, color=color, use_ai=use_ai, only_x=only_x,)
     if count:
       print(
         f'Centering block of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -876,6 +876,21 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing dark frames is needed for \'{self.newspaper_name}\'.')
+  def remove_fix_border(self, check=[None,None], limit=[0,0,0,0], max=False, color=248, border=[False,False]):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting removing fixed frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.remove_fix_border(check=check, limit=limit, max=max, color=color, border=border)
+    if count:
+      print(
+        f'Removing fixed frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      # self.set_elements()
+    else:
+      print(f'No removing fixed frames is needed for \'{self.newspaper_name}\'.')
   def rotate_frames(self, limit=4000, threshold=210, angle=None):
     start_time = time.time()
     print(f'Start rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')

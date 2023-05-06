@@ -800,7 +800,7 @@ def convert_crops(root):
       ret, thresh = cv2.threshold(img, 48, 255, cv2.THRESH_BINARY)
       cv2.imwrite(os.path.join(filedir, file), thresh, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
 
-def reallocate_frame(csv_file='list_first_pages.csv'):
+def reallocate_frame_la_domenica_Del_corriere(csv_file='list_first_pages.csv'):
   with open(os.path.join(STORAGE_BASE, csv_file), 'r') as f:
     csv_file = csv.reader(f)
     csv_list = []
@@ -819,6 +819,33 @@ def reallocate_frame(csv_file='list_first_pages.csv'):
       elif len(year) == 2:
         year = '19' + year
       filedir_destination = os.path.join(IMAGE_ROOT, IMAGE_PATH, '_La Domenica del Corriere', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
+      __n = int(row[1])
+      for n in range(__n, _n):
+        file_name = 'Scan_' + str(n) + '.tif'
+        file_path = os.path.join(filedir, file_name)
+        file_path_destination = os.path.join(filedir_destination, file_name)
+        if os.path.isfile(file_path):
+          print(file_path, file_path_destination)
+          Path(filedir_destination).mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(file_path, file_path_destination)
+
+def reallocate_frame_il_mondo(csv_file='first_pages_il_mondo.csv'):
+  with open(os.path.join(STORAGE_BASE, csv_file), 'r') as f:
+    csv_file = csv.reader(f)
+    csv_list = []
+    for row in csv_file:
+      csv_list.append(row)
+    for i, row in enumerate(csv_list):
+      if i < len(csv_list) - 1:
+        _row = csv_list[i + 1]
+        _n = int(_row[1])
+      else:
+        _n = n + 100
+      filedir = os.path.join(IMAGE_ROOT, IMAGE_PATH, 'Il Mondo', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
+      year = row[3].split('/')[2]
+      if len(year) == 2:
+        year = '19' + year
+      filedir_destination = os.path.join(IMAGE_ROOT, IMAGE_PATH, '_Il Mondo', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
       __n = int(row[1])
       for n in range(__n, _n):
         file_name = 'Scan_' + str(n) + '.tif'
@@ -921,7 +948,7 @@ build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
 #
 # rename_frames('/home/sunvod/sormani_CNN/firstpage')
 
-# renumerate_frames('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01')
+# renumerate_frames('/mnt/storage01/sormani/TIFF/Il Mondo/1950/01')
 
 # delete_test_files('/mnt/storage01/sormani/TIFF/La Domenica del Corriere/1900/01/03')
 

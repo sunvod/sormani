@@ -1408,6 +1408,7 @@ class Page:
           _w = _w if _w > w else w
           x = x - (_w - w) // 2
           x = x if x > 0 else 0
+          x = x if x > 0 else 0
           w = _w
         dimg = dimg[:, x:x+w]
       # if DEBUG:
@@ -2198,3 +2199,40 @@ class Page:
     else:
       cv2.imwrite(file, img)
     return count
+  def remove_fix_border(self):
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    limit = [x for x in self.limit]
+    if ow == 5555:
+      pass
+    if self.check[0] is not None and oh < self.check[0]:
+      limit[0] = 0
+      limit[1] = 0
+    elif max:
+      limit[0] = 0
+      limit[1] = 0
+    if self.check[1] is not None and ow < self.check[1]:
+      limit[2] = 0
+      limit[3] = 0
+    elif max:
+      if limit[2] == 0 and limit[3] == 0:
+        pass
+      elif limit[3] == 0:
+        limit[2] = ow - self.check[1]
+      if limit[2] == 0:
+        limit[3] = ow - self.check[1]
+      else:
+        limit[2] = ow - self.check[1] // 2
+        limit[3] = ow - self.check[1] // 2
+    img = img[limit[0]:oh-limit[1], limit[2]:ow-limit[3]]
+    if self.check[0] is not None and ow >= self.check[0] and self.border[0]:
+      img = cv2.copyMakeBorder(img, 200, 200, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+    if self.check[1] is not None and ow >= self.check[1] and self.border[1]:
+      img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
+    if DEBUG:
+      cv2.imwrite(file_bimg, img)
+    else:
+      cv2.imwrite(file, img)
+    return 1

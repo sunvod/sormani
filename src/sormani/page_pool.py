@@ -458,6 +458,26 @@ class Page_pool(list):
       return count
   def _remove_dark_border(self, page):
     return page.remove_dark_border()
+  def remove_fix_border(self, check, limit, max, color, border):
+    for page in self:
+      page.limit = limit
+      page.check = check
+      page.max = max
+      page.color = color
+      page.border = border
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._remove_fix_border, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+      return 0
+    else:
+      count = 0
+      for page in self:
+        count += self._remove_dark_border(page)
+      return count
+  def _remove_fix_border(self, page):
+    return page.remove_fix_border()
   # def remove_last_single_frames_2(self, threshold, default_frame):
   #   result = 0
   #   for i, page in enumerate(self):
@@ -744,8 +764,8 @@ class Page_pool(list):
     except:
       return 0
 
-  # def _page_sort(self, page):
-  #   return page.original_image
+  def _page_sort(self, page):
+    return page.original_image
   def bobine_delete_copies(self):
     _file = None
     file3 = None
@@ -757,9 +777,9 @@ class Page_pool(list):
     _ow = None
     _oh = None
     pages = []
-    # for page in self:
-    #   pages.append(page)
-    # pages.sort(key=self._page_sort)
+    for page in self:
+      pages.append(page)
+    pages.sort(key=self._page_sort)
     for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
