@@ -917,12 +917,6 @@ def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/', so
       _file_name_no_ext = file_name_no_ext
 
 def divide_pdf(root, file_name):
-  # inputpdf = PdfReader(open(os.path.join(root, file_name), "rb"))
-  # for i in range(len(inputpdf.pages)):
-  #   output = PdfWriter()
-  #   output.add_page(inputpdf.pages[i])
-  #   with open(os.path.join(root, "Scan_%s.pdf" % i), "wb") as outputStream:
-  #     output.write(outputStream)
   for filedir, dirs, files in os.walk(root):
     files.sort()
     for file in files:
@@ -932,7 +926,7 @@ def divide_pdf(root, file_name):
       # os.remove(os.path.join(root, file))
 
 
-# divide_pdf(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/06', file_name='006 1955-1956--001-200.pdf')
+divide_pdf(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica/02', file_name='002 ok.pdf')
 
 # cover_missing_pages(source='29')
 
@@ -941,7 +935,7 @@ def divide_pdf(root, file_name):
 
 # convert_crops('/home/sunvod/sormani_CNN/X')
 
-build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
+# build_firstpage_csv('/home/sunvod/sormani_CNN/firstpage')
 
 
 # check_firstpage_csv()

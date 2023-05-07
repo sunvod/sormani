@@ -187,6 +187,8 @@ class Newspaper():
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     return parameters
+  def get_start(ofset):
+    return None
   def get_ins_parameters(self):
     return self.get_parameters()
   def __init__(self, newspaper_base, name, file_path, date, year, number, init_page, model=None):
@@ -1132,6 +1134,31 @@ class Scenario(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
     self.contrast = 50
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1932','2','--','1932','10','--')
+    elif ofset == 2:
+      return ('1932', '11', '--', '1933', '7', '--')
+    elif ofset == 3:
+      return ('1933', '8', '--', '1934', '4', '--')
+    elif ofset == 4:
+      return ('1934', '5', '--', '1935', '1', '--')
+    elif ofset == 5:
+      return ('1935', '2', '--', '1935', '12', '--')
+    elif ofset == 6:
+      return ('1936', '1', '--', '1932', '12', '--')
+    elif ofset == 7:
+      return ('1937', '1', '--', '1937', '12', '--')
+    elif ofset == 8:
+      return ('1938', '1', '--', '1938', '12', '--')
+    elif ofset == 9:
+      return ('1939', '1', '--', '1940', '5', '--')
+    elif ofset == 10:
+      return ('1940', '6', '--', '1941', '12', '--')
+    elif ofset == 11:
+      return ('1942', '1', '--', '1943', '12', '--')
+    elif ofset == 12:
+      return ('1949', '12', '--', '1950', '1', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

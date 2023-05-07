@@ -647,24 +647,45 @@ class Page:
       os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
       pdf_merger = PdfFileMerger()
       pdf_merger.append(file_in)
-      pdf_merger.addMetadata({
-        '/Keywords': 'Nome del periodico:' + self.newspaper.name
-                     + ' ; Anno:' + str(self.year)
-                     + ' ; Mese:' + str(self.month)
-                     + ' ; Giorno:' + str(self.day)
-                     # + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
-                     + ' ; Anno del quotidiano:' + self.newspaper.year,
-        '/Title': self.newspaper.name,
-        '/Nome_del_periodico': self.newspaper.name,
-        '/Anno': str(self.year),
-        '/Mese': str(self.month),
-        '/Giorno': str(self.day),
-        '/Data': str(self.newspaper.date),
-        '/Pagina:': str(self.newspaper.n_page),
-        # '/Numero_del_quotidiano': str(self.newspaper.number),
-        '/Anno_del_quotidiano': str(self.newspaper.year),
-        '/Producer': 'osi-servizi-informatici@cloud - Milano'
-      })
+      if self.is_bobina:
+        date = self.newspaper.get_start(self.day)
+        pdf_merger.addMetadata({
+          '/Keywords': 'Nome del periodico:' + self.newspaper.name
+                       + ' ; Anno iniziale:' + date[0]
+                       + ' ; Mese iniziale:' + date[1]
+                       + ' ; Giorno iniziale:' + date[2]
+                       + ' ; Anno iniziale:' + date[3]
+                       + ' ; Mese iniziale:' + date[4]
+                       + ' ; Giorno iniziale:' + date[5],
+          '/Title': self.newspaper.name,
+          '/Nome_del_periodico': self.newspaper.name,
+          '/Anno iniziale': date[0],
+          '/Mese iniziale': date[1],
+          '/Giorno iniziale': date[2],
+          '/Anno finale': date[3],
+          '/Mese finale': date[4],
+          '/Giorno finale': date[5],
+          '/Producer': 'osi-servizi-informatici@cloud - Milano'
+        })
+      else:
+        pdf_merger.addMetadata({
+          '/Keywords': 'Nome del periodico:' + self.newspaper.name
+                       + ' ; Anno:' + str(self.year)
+                       + ' ; Mese:' + str(self.month)
+                       + ' ; Giorno:' + str(self.day)
+                       + ' ; Numero del quotidiano:' + str(int(self.newspaper.number) + first_number)
+                       + ' ; Anno del quotidiano:' + self.newspaper.year,
+          '/Title': self.newspaper.name,
+          '/Nome_del_periodico': self.newspaper.name,
+          '/Anno': str(self.year),
+          '/Mese': str(self.month),
+          '/Giorno': str(self.day),
+          '/Data': str(self.newspaper.date),
+          '/Pagina:': str(self.newspaper.n_page),
+          '/Numero_del_quotidiano': str(self.newspaper.number),
+          '/Anno_del_quotidiano': str(self.newspaper.year),
+          '/Producer': 'osi-servizi-informatici@cloud - Milano'
+        })
       file_out = open(self.pdf_file_name, 'wb')
       pdf_merger.write(file_out)
       file_in.close()

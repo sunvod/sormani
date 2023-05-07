@@ -788,7 +788,7 @@ class Page_pool(list):
         pass
       oh, ow = img.shape
       # img = img[1000:h-2000,1000:w-2000]
-      img = cv2.resize(img, (32, 32), interpolation = cv2.INTER_AREA)
+      img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
       if img3 is not None:
         score, _ = structural_similarity(img, img3, full=True)
@@ -796,10 +796,13 @@ class Page_pool(list):
           print(score, abs(hash - hash3), os.path.basename(file3), os.path.basename(file))
         if score > SCORECUTOFF or abs(hash - hash3) <= HASHCUTOFF: # or (ow == ow3 and oh == oh3):
           if not DEBUG:
-            n1 = int(file3.split('_')[-2])
-            n2 = int(file.split('_')[-2])
-            if n2 - n1 <= 2:
-              os.remove(file3)
+            try:
+              n1 = int(file3.split('_')[-2])
+              n2 = int(file.split('_')[-2])
+              if n2 - n1 <= 2:
+                os.remove(file3)
+            except:
+              continue
           count += 1
       if ow > oh:
         file3 = file

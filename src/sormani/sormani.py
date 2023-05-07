@@ -848,7 +848,7 @@ class Sormani():
     # self.set_GPUs()
     self.rotate_frames(threshold=threshold)
     self.remove_borders()
-    self.bobine_delete_copies()
+    # self.bobine_delete_copies()
   def bobine_delete_copies(self):
     start_time = time.time()
     print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
