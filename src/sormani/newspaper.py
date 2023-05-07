@@ -187,7 +187,7 @@ class Newspaper():
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
     return parameters
-  def get_start(ofset):
+  def get_start(self, ofset):
     return None
   def get_ins_parameters(self):
     return self.get_parameters()
@@ -1134,7 +1134,7 @@ class Scenario(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
     self.contrast = 50
-  def get_start(ofset):
+  def get_start(self, ofset):
     if ofset == 1:
       return ('1932','2','--','1932','10','--')
     elif ofset == 2:

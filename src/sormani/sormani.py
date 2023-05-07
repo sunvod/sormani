@@ -50,7 +50,8 @@ class Sormani():
                rename_folders=True,
                model_path=None,
                is_frames=False,
-               ais=[]):
+               ais=[],
+               is_bobina=False):
     if years is not None and isinstance(years, list) and not len(years):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -100,7 +101,8 @@ class Sormani():
                        rename_folders,
                        model_path,
                        is_frames,
-                       ais)
+                       ais,
+                       is_bobina)
     if ais is not None:
       self.ais = AIs(self.newspaper_name, ais)
     self.set_elements()
@@ -125,7 +127,8 @@ class Sormani():
             rename_folders,
             model_path,
             is_frames,
-            ais):
+            ais,
+            is_bobina):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -162,6 +165,7 @@ class Sormani():
     self.roots.append(self.new_root)
     self.model_path = model_path
     self.is_frames = is_frames
+    self.is_bobina = is_bobina
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -180,7 +184,8 @@ class Sormani():
                                                         self.force,
                                                         self.thresholding,
                                                         self.ais,
-                                                        self.checkimages)
+                                                        self.checkimages,
+                                                        is_bobina=self.is_bobina)
         if len(page_pool):
           if page_pool.isAlreadySeen():
             page_pool.set_pages_already_seen()

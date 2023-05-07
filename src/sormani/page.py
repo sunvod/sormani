@@ -32,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, ais):
+  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, ais, is_bobina):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -44,6 +44,20 @@ class Page:
     self.day = date.day
     self.isins = isins
     self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
+    if is_bobina:
+      ofset = int(pdf_path.split('/')[-1])
+      limiti = self.newspaper.get_start(ofset)
+      path_name = 'Da ' + \
+                  ((limiti[2] + ' ') if limiti[2] != '--' else '') +\
+                  MONTHS[int(limiti[1]) - 1] +\
+                  ' ' + limiti[0]
+      path_name += ' a ' +\
+                   ((limiti[5] + ' ') if limiti[2] != '--' else '') +\
+                   MONTHS[int(limiti[4]) - 1] +\
+                   ' ' + limiti[3]
+      pdf_path = os.path.join('/'.join(pdf_path.split('/')[:-1]), path_name)
+      jpg_path = os.path.join('/'.join(jpg_path.split('/')[:-1]), path_name)
+      txt_path = os.path.join('/'.join(txt_path.split('/')[:-1]), path_name)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -52,7 +66,7 @@ class Page:
     self.original_txt_file_name = self.txt_file_name
     self.conversions = []
     self.page_control = -1
-    self.is_bobina = False
+    self.is_bobina = is_bobina
     self.isdivided = False
     self.prediction = None
     self.ais = ais

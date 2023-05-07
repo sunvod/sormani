@@ -64,12 +64,19 @@ class Images_group():
       img = img[:,:,:3]
       cv2.imwrite(os.path.join(filedir, file), img)
     return True
-  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages):
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages, is_bobina=False):
     page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit()
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
     dir_in_filedir = list(map(lambda x: x.replace(image_path, JPG_PDF_PATH), dir_in_filedir))
+    if is_bobina:
+      _dir_in_filedir = dir_in_filedir[-1]
+      dir_in_filedir = dir_in_filedir[:-3]
+      dir_in_filedir.append(_dir_in_filedir)
+      _txt_in_filedir = txt_in_filedir[-1]
+      txt_in_filedir = txt_in_filedir[:-3]
+      txt_in_filedir.append(_txt_in_filedir)
     dir_path = '/'.join(dir_in_filedir)
     txt_path = '/'.join(txt_in_filedir)
     filedir = os.path.join(dir_path, path_exist)
@@ -86,7 +93,7 @@ class Images_group():
       if pathlib.Path(file).suffix == '.' + ext:
         if checkimages and not self.is_image(self.filedir, file):
           continue
-        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais)
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais, is_bobina)
         ai = ais.get_model(PAGE)
         model = ai.model if ai is not None else None
         use_ai = ai.use if ai is not None else False
