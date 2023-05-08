@@ -133,6 +133,10 @@ class Newspaper():
       newspaper = Il_Mondo(newspaper_base, file_path, date, year, number)
     elif name == 'Il Sole 24 Ore':
       newspaper = Il_Sole_24_Ore(newspaper_base, file_path, date, year, number)
+    elif name == 'Le Grandi Firme':
+      newspaper = Le_Grandi_Firme(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Secolo Illustrato':
+      newspaper = Il_Secolo_Illustrato(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -1469,39 +1473,39 @@ class Il_Mondo(Newspaper):
     if ofset == 1:
       return ('1949', '02', '19', '1949', '12', '31')
     elif ofset == 2:
-      return ('1950', '01', '01', '1950', '12', '31')
+      return ('1950', '01', '--', '1950', '12', '31')
     elif ofset == 3:
-      return ('1951', '01', '01', '1952', '12', '31')
+      return ('1951', '01', '--', '1952', '12', '31')
     elif ofset == 4:
       return ('1953', '01', '03', '1953', '12', '29')
     elif ofset == 5:
       return ('1954', '01', '05', '1954', '12', '28')
     elif ofset == 6:
-      return ('1955', '01', '01', '1956', '12', '31')
+      return ('1955', '01', '--', '1956', '12', '--')
     elif ofset == 7:
-      return ('1957', '01', '01', '1957', '12', '31')
+      return ('1957', '01', '--', '1957', '12', '--')
     elif ofset == 8:
-      return ('1958', '01', '01', '1959', '12', '31')
+      return ('1958', '01', '--', '1959', '12', '--')
     elif ofset == 9:
-      return ('1960', '01', '01', '1961', '11', '10')
+      return ('1960', '01', '--', '1961', '11', '10')
     elif ofset == 10:
-      return ('1961', '11', '14', '1961', '12', '31')
+      return ('1961', '11', '14', '1961', '12', '--')
     elif ofset == 11:
       return ('1962', '01', '02', '1962', '12', '25')
     elif ofset == 12:
-      return ('1963', '01', '01', '1963', '06', '25')
+      return ('1963', '01', '--', '1963', '06', '25')
     elif ofset == 13:
-      return ('1963', '06', '11', '1963', '12', '31')
+      return ('1963', '06', '11', '1963', '12', '--')
     elif ofset == 14:
-      return ('1964', '01', '01', '1964', '12', '31')
+      return ('1964', '01', '--', '1964', '12', '--')
     elif ofset == 15:
-      return ('1965', '01', '01', '1965', '12', '31')
+      return ('1965', '01', '--', '1965', '12', '--')
     elif ofset == 16:
       return ('1966', '01', '04', '1966', '03', '08')
     elif ofset == 17:
       return ('1969', '10', '30', '1969', '11', '25')
     elif ofset == 18:
-      return ('1970', '01', '01', '1970', '06', '30')
+      return ('1970', '01', '--', '1970', '06', '--')
     elif ofset == 19:
       return ('1970', '07', '05', '1970', '12', '27')
     elif ofset == 20:
@@ -1524,6 +1528,139 @@ class Il_Mondo(Newspaper):
       return ('1974', '09', '05', '1975', '12', '26')
     elif ofset == 29:
       return ('1975', '01', '09', '1975', '02', '27')
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
+                                # invert_fill_hole=True,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
+
+class Le_Grandi_Firme(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Mondo', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (11000, 8000, 500, 500)
+  def divide(self, img):
+    imgs = []
+    height, width = img.shape
+    parameters = self.get_crop_parameters(1, width, height)
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right + 20]
+    parameters = self.get_crop_parameters(0, width, height)
+    img2 = img[parameters.top:parameters.bottom, parameters.left - 20:parameters.right]
+    imgs.append(img1)
+    imgs.append(img2)
+    return imgs
+
+  def get_start(self, ofset):
+    if ofset == 1:
+      return ('1924', '09', '16', '1924', '12', '--')
+    elif ofset == 2:
+      return ('1925', '01', '--', '1925', '12', '--')
+    elif ofset == 3:
+      return ('1926', '01', '--', '1926', '12', '--')
+    elif ofset == 4:
+      return ('1927', '01', '--', '1927', '12', '--')
+    elif ofset == 5:
+      return ('1928', '02', '--', '1928', '03', '--')
+    elif ofset == 6:
+      return ('1929', '01', '--', '1929', '12', '--')
+    elif ofset == 7:
+      return ('1930', '01', '--', '1930', '12', '--')
+    elif ofset == 8:
+      return ('1931', '01', '--', '1931', '12', '--')
+    elif ofset == 9:
+      return ('1932', '01', '--', '1932', '12', '--')
+    elif ofset == 10:
+      return ('1933', '11', '--', '1935', '12', '--')
+    elif ofset == 11:
+      return ('1937', '01', '--', '1937', '12', '--')
+    elif ofset == 12:
+      return ('1938', '01', '--', '1938', '10', '--')
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
+                                # invert_fill_hole=True,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
+
+
+class Il_Secolo_Illustrato(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Mondo', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (11000, 8000, 500, 500)
+  def divide(self, img):
+    imgs = []
+    height, width = img.shape
+    parameters = self.get_crop_parameters(1, width, height)
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right + 20]
+    parameters = self.get_crop_parameters(0, width, height)
+    img2 = img[parameters.top:parameters.bottom, parameters.left - 20:parameters.right]
+    imgs.append(img1)
+    imgs.append(img2)
+    return imgs
+
+  def get_start(self, ofset):
+    if ofset == 1:
+      return ('1889', '10', '--', '1891', '12', '--')
+    elif ofset == 2:
+      return ('1892', '01', '--', '1892', '12', '--')
+    elif ofset == 3:
+      return ('1893', '01', '--', '1893', '12', '--')
+    elif ofset == 4:
+      return ('1894', '01', '--', '1896', '12', '--')
+    elif ofset == 5:
+      return ('1897', '01', '--', '1897', '12', '--')
+    elif ofset == 6:
+      return ('1898', '01', '--', '1899', '12', '--')
+    elif ofset == 7:
+      return ('1900', '01', '--', '1901', '12', '--')
+    elif ofset == 8:
+      return ('1902', '01', '--', '1903', '12', '--')
+    elif ofset == 9:
+      return ('1904', '01', '--', '1905', '12', '--')
+    elif ofset == 10:
+      return ('1906', '11', '--', '1907', '12', '--')
+    elif ofset == 11:
+      return ('1908', '01', '--', '1937', '12', '--')
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,
