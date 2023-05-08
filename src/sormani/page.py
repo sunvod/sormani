@@ -47,17 +47,18 @@ class Page:
     if is_bobina:
       ofset = int(pdf_path.split('/')[-1])
       limiti = self.newspaper.get_start(ofset)
-      path_name = 'Da ' + \
-                  ((limiti[2] + ' ') if limiti[2] != '--' else '') +\
-                  MONTHS[int(limiti[1]) - 1] +\
-                  ' ' + limiti[0]
-      path_name += ' a ' +\
-                   ((limiti[5] + ' ') if limiti[2] != '--' else '') +\
-                   MONTHS[int(limiti[4]) - 1] +\
-                   ' ' + limiti[3]
-      pdf_path = os.path.join('/'.join(pdf_path.split('/')[:-1]), path_name)
-      jpg_path = os.path.join('/'.join(jpg_path.split('/')[:-1]), path_name)
-      txt_path = os.path.join('/'.join(txt_path.split('/')[:-1]), path_name)
+      if limiti is not None:
+        path_name = 'Da ' + \
+                    ((limiti[2] + ' ') if limiti[2] != '--' else '') +\
+                    MONTHS[int(limiti[1]) - 1] +\
+                    ' ' + limiti[0]
+        path_name += ' a ' +\
+                     ((limiti[5] + ' ') if limiti[2] != '--' else '') +\
+                     MONTHS[int(limiti[4]) - 1] +\
+                     ' ' + limiti[3]
+        pdf_path = os.path.join('/'.join(pdf_path.split('/')[:-1]), path_name)
+        jpg_path = os.path.join('/'.join(jpg_path.split('/')[:-1]), path_name)
+        txt_path = os.path.join('/'.join(txt_path.split('/')[:-1]), path_name)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -668,17 +669,10 @@ class Page:
                        + ' ; Anno iniziale:' + date[0]
                        + ' ; Mese iniziale:' + date[1]
                        + ' ; Giorno iniziale:' + date[2]
-                       + ' ; Anno iniziale:' + date[3]
-                       + ' ; Mese iniziale:' + date[4]
-                       + ' ; Giorno iniziale:' + date[5],
+                       + ' ; Anno finale:' + date[3]
+                       + ' ; Mese finale:' + date[4]
+                       + ' ; Giorno finale:' + date[5],
           '/Title': self.newspaper.name,
-          '/Nome_del_periodico': self.newspaper.name,
-          '/Anno iniziale': date[0],
-          '/Mese iniziale': date[1],
-          '/Giorno iniziale': date[2],
-          '/Anno finale': date[3],
-          '/Mese finale': date[4],
-          '/Giorno finale': date[5],
           '/Producer': 'osi-servizi-informatici@cloud - Milano'
         })
       else:

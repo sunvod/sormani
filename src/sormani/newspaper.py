@@ -1217,6 +1217,79 @@ class La_Domenica_del_Corriere(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Domenica del Corriere', file_path, date, year, number, init_page = 3)
     self.contrast = 50
+  def get_start(self, ofset):
+    if ofset == 1:
+      return ('1899','01','08','1900','09','23')
+    elif ofset == 2:
+      return ('1900', '09', '30', '1901', '12', '29')
+    elif ofset == 3:
+      return ('1902', '01', '05', '1903', '04', '29')
+    elif ofset == 4:
+      return ('1903', '05', '03', '1904', '09', '04')
+    elif ofset == 5:
+      return ('1904', '09', '11', '1906', '02', '11')
+    elif ofset == 6:
+      return ('1906', '02', '18', '1907', '07', '14')
+    elif ofset == 7:
+      return ('1907', '07', '21', '1908', '12', '27')
+    elif ofset == 8:
+      return ('1909', '01', '03', '1910', '06', '12')
+    elif ofset == 9:
+      return ('1910', '06', '19', '1911', '12', '10')
+    elif ofset == 10:
+      return ('1911', '12', '17', '1913', '06', '01')
+    elif ofset == 11:
+      return ('1913', '06', '15', '1915', '01', '03')
+    elif ofset == 12:
+      return ('1915', '01', '10', '1916', '05', '14')
+    elif ofset == 13:
+      return ('1916', '05', '21', '1917', '12', '23')
+    elif ofset == 14:
+      return ('1918', '01', '13', '1920', '07', '11')
+    elif ofset == 15:
+      return ('1920', '07', '18', '1922', '07', '30')
+    elif ofset == 16:
+      return ('1922', '08', '06', '1924', '01', '27')
+    elif ofset == 17:
+      return ('1924', '02', '03', '1925', '06', '28')
+    elif ofset == 18:
+      return ('1925', '07', '05', '1926', '12', '12')
+    elif ofset == 19:
+      return ('1926', '12', '19', '1928', '05', '20')
+    elif ofset == 20:
+      return ('1928', '05', '27', '1929', '11', '03')
+    elif ofset == 21:
+      return ('1929', '11', '10', '1931', '01', '11')
+    elif ofset == 22:
+      return ('1931', '01', '18', '1932', '03', '13')
+    elif ofset == 23:
+      return ('1932', '03', '13', '1933', '04', '23')
+    elif ofset == 24:
+      return ('1933', '04', '30', '1934', '06', '17')
+    elif ofset == 25:
+      return ('1934', '06', '24', '1935', '08', '11')
+    elif ofset == 26:
+      return ('1935', '08', '18', '1937', '01', '10')
+    elif ofset == 27:
+      return ('1937', '01', '17', '1938', '03', '20')
+    elif ofset == 28:
+      return ('1938', '03', '27', '1939', '05', '13')
+    elif ofset == 29:
+      return ('1939', '05', '20', '1940', '09', '01')
+    elif ofset == 30:
+      return ('1940', '09', '18', '1942', '02', '08')
+    elif ofset == 31:
+      return ('1942', '02', '15', '1943', '12', '26')
+    elif ofset == 32:
+      return ('1944', '01', '02', '1946', '08', '18')
+    elif ofset == 33:
+      return ('1944', '01', '02', '1948', '01', '25')
+    elif ofset == 34:
+      return ('1948', '02', '01', '1949', '04', '10')
+    elif ofset == 35:
+      return ('1949', '04', '17', '1950', '05', '14')
+    elif ofset == 36:
+      return ('1950', '05', '21', '1950', '12', '31')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = ((w + 100) // 2, 200 + 800, w - 800, 1700)
@@ -1391,6 +1464,66 @@ class Il_Mondo(Newspaper):
     imgs.append(img1)
     imgs.append(img2)
     return imgs
+
+  def get_start(self, ofset):
+    if ofset == 1:
+      return ('1949', '02', '19', '1949', '12', '31')
+    elif ofset == 2:
+      return ('1950', '01', '01', '1950', '12', '31')
+    elif ofset == 3:
+      return ('1951', '01', '01', '1952', '12', '31')
+    elif ofset == 4:
+      return ('1953', '01', '03', '1953', '12', '29')
+    elif ofset == 5:
+      return ('1954', '01', '05', '1954', '12', '28')
+    elif ofset == 6:
+      return ('1955', '01', '01', '1956', '12', '31')
+    elif ofset == 7:
+      return ('1957', '01', '01', '1957', '12', '31')
+    elif ofset == 8:
+      return ('1958', '01', '01', '1959', '12', '31')
+    elif ofset == 9:
+      return ('1960', '01', '01', '1961', '11', '10')
+    elif ofset == 10:
+      return ('1961', '11', '14', '1961', '12', '31')
+    elif ofset == 11:
+      return ('1962', '01', '02', '1962', '12', '25')
+    elif ofset == 12:
+      return ('1963', '01', '01', '1963', '06', '25')
+    elif ofset == 13:
+      return ('1963', '06', '11', '1963', '12', '31')
+    elif ofset == 14:
+      return ('1964', '01', '01', '1964', '12', '31')
+    elif ofset == 15:
+      return ('1965', '01', '01', '1965', '12', '31')
+    elif ofset == 16:
+      return ('1966', '01', '04', '1966', '03', '08')
+    elif ofset == 17:
+      return ('1969', '10', '30', '1969', '11', '25')
+    elif ofset == 18:
+      return ('1970', '01', '01', '1970', '06', '30')
+    elif ofset == 19:
+      return ('1970', '07', '05', '1970', '12', '27')
+    elif ofset == 20:
+      return ('1971', '01', '03', '1971', '11', '28')
+    elif ofset == 21:
+      return ('1971', '12', '05', '1971', '12', '26')
+    elif ofset == 22:
+      return ('1972', '09', '07', '1972', '12', '07')
+    elif ofset == 23:
+      return ('1972', '05', '05', '1972', '08', '31')
+    elif ofset == 24:
+      return ('1973', '05', '03', '1973', '12', '27')
+    elif ofset == 25:
+      return ('1973', '01', '11', '1973', '04', '26')
+    elif ofset == 26:
+      return ('1972', '01', '07', '1972', '04', '28')
+    elif ofset == 27:
+      return ('1974', '01', '10', '1974', '08', '29')
+    elif ofset == 28:
+      return ('1974', '09', '05', '1975', '12', '26')
+    elif ofset == 29:
+      return ('1975', '01', '09', '1975', '02', '27')
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale = 200,

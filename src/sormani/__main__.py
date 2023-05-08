@@ -17,16 +17,17 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
-  # sormani = Sormani('La Domenica del Corriere',
-  #                   is_frames=True,
-  #                   years=[x for x in range(1900, 1951)],
-  #                   months=None,
-  #                   # days=[x for x in range(1,6)],
-  #                   days=None,
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-  #                   ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-  #                   checkimages=False,
-  #                   force=True)
+  sormani = Sormani('La Domenica del Corriere',
+                    is_frames=True,
+                    years=[1899],
+                    months=None,
+                    # days=[x for x in range(1,6)],
+                    days=None,
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    checkimages=False,
+                    force=True,
+                    is_bobina=True)
 
   # sormani.create_all_images(convert=False)
   # sormani.add_pdf_metadata()
@@ -42,20 +43,20 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   checkimages=False)
 
-  sormani = Sormani('Scenario',
-                    is_frames=True,
-                    years=[1950],
-                    months=[1],
-                    # days=[x for x in range(2,13)],
-                    days=[1],
-                    # days=[10],
-                    # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
-                    # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    is_bobina=True)
+  # sormani = Sormani('Scenario',
+  #                   is_frames=True,
+  #                   years=[1950],
+  #                   months=[1],
+  #                   days=[x for x in range(1,13)],
+  #                   # days=[1],
+  #                   # days=[10],
+  #                   # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
+  #                   # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   is_bobina=True)
 
-  sormani.create_all_images()
+  sormani.create_all_images(ocr = False)
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
 
