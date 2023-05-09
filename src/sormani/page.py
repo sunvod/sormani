@@ -38,17 +38,18 @@ class Page:
     self.original_image = original_image
     self.original_path = str(Path(original_image).parent.resolve())
     self.date = date
-    self.year = date.year
-    self.month = date.month
-    self.month_text = MONTHS[self.month - 1]
-    self.day = date.day
+    self.year = date.year if date is not None else None
+    self.month = date.month if date is not None else None
+    self.month_text = MONTHS[self.month - 1] if date is not None else None
+    self.day = date.day if date is not None else None
     self.isins = isins
     self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
     if is_bobina:
-      ofset = int(pdf_path.split('/')[-1])
+      file = pdf_path.split('/')[-1]
+      ofset = int(file.split('-')[0])
       limiti = self.newspaper.get_start(ofset)
       if limiti is not None:
-        path_name = 'Da ' + \
+        path_name = ('00' + str(ofset))[-2:] + ' - Da ' + \
                     ((limiti[2] + ' ') if limiti[2] != '--' else '') +\
                     MONTHS[int(limiti[1]) - 1] +\
                     ' ' + limiti[0]
@@ -1011,10 +1012,9 @@ class Page:
       file_to_be_changing, end_flag, next_page, n_unkown = self.open_win_pages_files(image, file_to_be_changing, n_unkown, prediction = prediction)
     return file_to_be_changing, end_flag, next_page, n_unkown
   def convert_image(self, force):
-    image = Image.open(self.original_image)
-    for convert in self.conversions:
-      self.convert_image_single_conversion(convert, image, force)
-
+    with Image.open(self.original_image) as image:
+      for convert in self.conversions:
+        self.convert_image_single_conversion(convert, image, force)
   def convert_image_single_conversion(self, convert, image, force):
     path_image = os.path.join(self.jpg_path, convert.image_path)
     Path(path_image).mkdir(parents=True, exist_ok=True)
@@ -1023,13 +1023,12 @@ class Page:
       if image.size[0] < image.size[1]:
         wpercent = (convert.resolution / float(image.size[1]))
         xsize = int((float(image.size[0]) * float(wpercent)))
-        image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
+        _image = image.resize((xsize, convert.resolution), Image.Resampling.LANCZOS)
       else:
         wpercent = (convert.resolution / float(image.size[0]))
         ysize = int((float(image.size[1]) * float(wpercent)))
-        image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
-      image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
-
+        _image = image.resize((convert.resolution, ysize), Image.Resampling.LANCZOS)
+      _image.save(file, 'JPEG', dpi=(convert.dpi, convert.dpi), quality=convert.quality)
   def set_bobine_select_images(self):
     def _order(e):
       return e[0]

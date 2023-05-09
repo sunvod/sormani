@@ -19,35 +19,40 @@ warnings.filterwarnings("ignore")
 
 class Images_group():
 
-  def __init__(self,  newspaper_base, newspaper_name, filedir, files):
+  def __init__(self,  newspaper_base, newspaper_name, filedir, files, is_bobina):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
+    self.is_bobina = is_bobina
     # self.new_root = new_root
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
     i = -2
-    if not len(year):
-      year = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
-      month = ''.join(filter(str.isdigit, filedir.split('/')[-1]))
-      day = '01'
+    if not is_bobina:
       if not len(year):
-        error = 'Non esiste una directory per l\'anno.'
-        raise OSError(error)
-    else:
-      month = ''.join(filter(str.isdigit, filedir.split('/')[i]))
-      day_folder = filedir.split('/')[-1]
-      pos = re.search(r'[^0-9]', day_folder + 'a').start()
-      day = day_folder[ : pos]
-    if year.isdigit() and month.isdigit() and day.isdigit():
-      try:
-        self.date = datetime.date(int(year), int(month), int(day))
-      except:
+        year = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
+        month = ''.join(filter(str.isdigit, filedir.split('/')[-1]))
+        day = '01'
+        if not len(year):
+          error = 'Non esiste una directory per l\'anno.'
+          raise OSError(error)
+      else:
+        month = ''.join(filter(str.isdigit, filedir.split('/')[i]))
+        day_folder = filedir.split('/')[-1]
+        pos = re.search(r'[^0-9]', day_folder + 'a').start()
+        day = day_folder[ : pos]
+      if year.isdigit() and month.isdigit() and day.isdigit():
+        try:
+          self.date = datetime.date(int(year), int(month), int(day))
+        except:
+          error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
+          raise OSError(error)
+      else:
         error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
         raise OSError(error)
     else:
-      error = 'La directory \'' + year + '/' + month + '/' + day + '\' non rappresenta un giorno valido.'
-      raise OSError(error)
-    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month)
+      self.date = None
+      month = None
+    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month, is_bobina=is_bobina)
   def is_image(self, filedir, file):
     try:
       img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_UNCHANGED)

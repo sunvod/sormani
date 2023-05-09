@@ -195,8 +195,12 @@ class Page_pool(list):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
       print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        mp_pool.map(self.to_pdfa, self)
+      if MULTIPROCESSING:
+        with Pool(processes=N_PROCESSES) as mp_pool:
+          mp_pool.map(self.to_pdfa, self)
+      else:
+        for page in self:
+          self.to_pdfa(page)
       print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
@@ -216,7 +220,11 @@ class Page_pool(list):
         print(page.original_image)
     else:
       image = Image.open(page.original_image)
-      image.save(page.pdf_file_name, "PDF", resolution=50.0)
+      try:
+        image.save(page.pdf_file_name, "PDF", resolution=50.0)
+      except Exception as e:
+        print(e)
+        pass
       image.close()
     page.add_pdf_metadata(self.number)
   def change_contrast(self, contrast = 50, force = True, number = None, ocr = True):
@@ -555,8 +563,12 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
-      with Pool(processes=N_PROCESSES) as mp_pool:
-        mp_pool.map(self.convert_image, self)
+      if MULTIPROCESSING:
+        with Pool(processes=N_PROCESSES) as mp_pool:
+          mp_pool.map(self.convert_image, self)
+      else:
+        for page in self:
+          self.convert_image(page)
       print(f'Conversion of {len(self)} images of \'{self.newspaper_name}\' ({self.new_root}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to convert for \'{self.newspaper_name}\'.')

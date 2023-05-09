@@ -83,16 +83,17 @@ class Newspaper_crop_parameters():
     self.bottom = bottom
 class Newspaper():
   @staticmethod
-  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None):
-    if date is None and month is None:
+  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None, is_bobina=False):
+    if date is None and month is None and not is_bobina:
       file_name = Path(file_path).stem
-      year = ''.join(filter(str.isdigit, file_name.split('_')[-4]))
-      month = MONTHS.index(file_name.split('_')[-3]) + 1
-      day = file_path.split('_')[-2]
-      if year.isdigit() and day.isdigit():
-        date = datetime.date(int(year), int(month), int(day))
-      else:
-        raise NotADirectoryError('Le directory non indicano una data.')
+      year = ''.join(filter(str.isdigit, file_name.split('_')[-4])) if date is not None else None
+      month = MONTHS.index(file_name.split('_')[-3]) + 1 if date is not None else None
+      day = file_path.split('_')[-2] if date is not None else None
+      if date is not None:
+        if year.isdigit() and day.isdigit():
+          date = datetime.date(int(year), int(month), int(day))
+        else:
+          raise NotADirectoryError('Le directory non indicano una data.')
     if name == 'La Stampa':
       newspaper = La_stampa(newspaper_base, file_path, date, year, number)
     elif name == 'Il Giornale':
@@ -135,7 +136,7 @@ class Newspaper():
       newspaper = Il_Sole_24_Ore(newspaper_base, file_path, date, year, number)
     elif name == 'Le Grandi Firme':
       newspaper = Le_Grandi_Firme(newspaper_base, file_path, date, year, number)
-    elif name == 'Il Secolo Illustrato':
+    elif name == 'Il Secolo Illustrato Della Domenica':
       newspaper = Il_Secolo_Illustrato(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
@@ -144,6 +145,7 @@ class Newspaper():
     newspaper.n_page = None
     newspaper.use_ai = False
     newspaper._is_first_page = None
+    newspaper.is_bobina = is_bobina
     return newspaper
   def get_page_position(self):
     return ['top']
@@ -151,6 +153,21 @@ class Newspaper():
     return ['top']
   def get_limits_select_images(self):
     return (10000, 15000, 5000, 100000)
+  @staticmethod
+  def get_start_static(name, ofset):
+    if name == 'Scenario':
+      parameters = Scenario.get_start(ofset)
+    elif name == 'Il Mondo':
+      parameters = Il_Mondo.get_start(ofset)
+    elif name == 'Le Grandi Firme':
+      parameters = Le_Grandi_Firme.get_start(ofset)
+    elif name == 'La Domenica del Corriere':
+      parameters = La_Domenica_del_Corriere.get_start(ofset)
+    elif name == 'Il Secolo Illustrato Della Domenica':
+      parameters = Il_Secolo_Illustrato.get_start(ofset)
+    else:
+      parameters = None
+    return parameters
   @staticmethod
   def get_parameters(name):
     if name == 'La Stampa':
@@ -1138,7 +1155,8 @@ class Scenario(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
     self.contrast = 50
-  def get_start(self, ofset):
+  @staticmethod
+  def get_start(ofset):
     if ofset == 1:
       return ('1932','2','--','1932','10','--')
     elif ofset == 2:
@@ -1221,7 +1239,8 @@ class La_Domenica_del_Corriere(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'La Domenica del Corriere', file_path, date, year, number, init_page = 3)
     self.contrast = 50
-  def get_start(self, ofset):
+  @staticmethod
+  def get_start(ofset):
     if ofset == 1:
       return ('1899','01','08','1900','09','23')
     elif ofset == 2:
@@ -1468,8 +1487,8 @@ class Il_Mondo(Newspaper):
     imgs.append(img1)
     imgs.append(img2)
     return imgs
-
-  def get_start(self, ofset):
+  @staticmethod
+  def get_start(ofset):
     if ofset == 1:
       return ('1949', '02', '19', '1949', '12', '31')
     elif ofset == 2:
@@ -1569,8 +1588,8 @@ class Le_Grandi_Firme(Newspaper):
     imgs.append(img1)
     imgs.append(img2)
     return imgs
-
-  def get_start(self, ofset):
+  @staticmethod
+  def get_start(ofset):
     if ofset == 1:
       return ('1924', '09', '16', '1924', '12', '--')
     elif ofset == 2:
@@ -1616,7 +1635,7 @@ class Il_Secolo_Illustrato(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 17
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Il Mondo', file_path, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Il Secolo Illustrato Della Domenica', file_path, date, year, number, init_page = 3)
     self.contrast = 50
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
     l = n_pages
@@ -1637,8 +1656,12 @@ class Il_Secolo_Illustrato(Newspaper):
     imgs.append(img1)
     imgs.append(img2)
     return imgs
-
-  def get_start(self, ofset):
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
     if ofset == 1:
       return ('1889', '10', '--', '1891', '12', '--')
     elif ofset == 2:
