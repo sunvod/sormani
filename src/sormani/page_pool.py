@@ -99,6 +99,8 @@ class Page_pool(list):
   def _get_crop(self, page):
     return page.get_crop()
   def check_pages_numbers(self, model, save_images = False, print_images=True):
+    if self.date is None:
+      return
     errors = []
     countplusone = 0
     countminusone = 0
@@ -194,7 +196,11 @@ class Page_pool(list):
       self.ocr = ocr
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(
+          f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       if MULTIPROCESSING:
         with Pool(processes=N_PROCESSES) as mp_pool:
           mp_pool.map(self.to_pdfa, self)
@@ -233,7 +239,11 @@ class Page_pool(list):
       self.ocr = ocr
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start changing the contrast of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start changing the contrast of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(
+          f'Start changing the contrast of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.contrast = contrast
         page.force = force
@@ -251,7 +261,10 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start changing the threshold of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start changing the threshold of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(f'Start changing the threshold of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.limit = limit
         page.color = color
@@ -267,7 +280,10 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start changing the colors of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start changing the colors of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(f'Start changing the colors of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.limit = limit
         page.color = color
@@ -283,7 +299,10 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start improving images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start improving images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(f'Start improving images of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.limit = limit
         page.color = color
@@ -301,7 +320,10 @@ class Page_pool(list):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
-      print(f'Start cleaning images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Start cleaning images of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(f'Start cleaning images of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       for page in self:
         page.color = color
         page.threshold = threshold
@@ -562,7 +584,10 @@ class Page_pool(list):
       page.add_conversion(converts)
     if len(self):
       start_time = time.time()
-      print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      if self.date is not None:
+        print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(f'Starting converting images of of \'{self.newspaper_name}\' ({self.new_root}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
       if MULTIPROCESSING:
         with Pool(processes=N_PROCESSES) as mp_pool:
           mp_pool.map(self.convert_image, self)
@@ -706,7 +731,10 @@ class Page_pool(list):
       break
     if not Path(os.path.join(jpg_path, 'pdf')).is_dir():
       type = jpg_path.split('/')[-1]
-      print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il pdf.')
+      if self.date is not None:
+        print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il pdf.')
+      else:
+        print(f'{self.newspaper_name} di tipo \'{type}\' non ha il pdf.')
       return
     _, dirs, files = next(os.walk(os.path.join(jpg_path, 'pdf')))
     file_count = len(files)
@@ -717,7 +745,11 @@ class Page_pool(list):
           _, _, files = next(os.walk(os.path.join(jpg_path, convert.image_path)))
         if not exist or file_count != len(files):
           type = jpg_path.split('/')[-1]
-          print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
+          if self.date is not None:
+            print(f'{self.newspaper_name} del giorno {str(self.date.strftime("%d/%m/%Y"))} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
+          else:
+            print(
+              f'{self.newspaper_name} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
           if integrate:
             self.convert_images([convert])
   def set_bobine_merge_images(self):

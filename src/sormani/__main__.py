@@ -17,31 +17,31 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
-  # sormani = Sormani('Il Mondo',
-  #                   is_frames=True,
-  #                   years=[1950],
-  #                   # months=None,
-  #                   # days=[x for x in range(17,32)],
-  #                   days=[x for x in range(2,3)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-  #                   checkimages=False,
-  #                   # force=True,
-  #                   is_bobina=True)
-
-  sormani = Sormani('Il Secolo Illustrato Della Domenica',
+  sormani = Sormani('Il Mondo',
                     is_frames=True,
                     years=[1950],
                     # months=None,
                     # days=[x for x in range(17,32)],
-                    days=[3],
+                    days=[x for x in range(1,32)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,
                     # force=True,
                     is_bobina=True)
 
-  # sormani.create_all_images(convert=False)
+  # sormani = Sormani('Il Secolo Illustrato Della Domenica',
+  #                   is_frames=True,
+  #                   years=[1950],
+  #                   # months=None,
+  #                   # days=[x for x in range(17,32)],
+  #                   days=[3],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   # force=True,
+  #                   is_bobina=True)
+
+  sormani.create_all_images(ocr = False)
   # sormani.add_pdf_metadata()
 
   # sormani = Sormani('Il Mondo',

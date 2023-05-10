@@ -71,17 +71,17 @@ class Images_group():
     return True
   def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages, is_bobina=False):
     page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
-    page_pool.isins = not self.filedir.split('/')[-1].isdigit()
+    page_pool.isins = not self.filedir.split('/')[-1].isdigit() if not is_bobina else False
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
     dir_in_filedir = list(map(lambda x: x.replace(image_path, JPG_PDF_PATH), dir_in_filedir))
-    if is_bobina:
-      _dir_in_filedir = dir_in_filedir[-1]
-      dir_in_filedir = dir_in_filedir[:-3]
-      dir_in_filedir.append(_dir_in_filedir)
-      _txt_in_filedir = txt_in_filedir[-1]
-      txt_in_filedir = txt_in_filedir[:-3]
-      txt_in_filedir.append(_txt_in_filedir)
+    # if is_bobina:
+    #   _dir_in_filedir = dir_in_filedir[-1]
+    #   dir_in_filedir = dir_in_filedir[:-3]
+    #   dir_in_filedir.append(_dir_in_filedir)
+    #   _txt_in_filedir = txt_in_filedir[-1]
+    #   txt_in_filedir = txt_in_filedir[:-3]
+    #   txt_in_filedir.append(_txt_in_filedir)
     dir_path = '/'.join(dir_in_filedir)
     txt_path = '/'.join(txt_in_filedir)
     filedir = os.path.join(dir_path, path_exist)

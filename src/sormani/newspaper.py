@@ -1421,6 +1421,10 @@ class Il_Mondo(Newspaper):
     w, h = image.size
     whole = (0, 0, w, 700)
     return whole
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
     l = n_pages
     count_zero = 0
@@ -1576,6 +1580,10 @@ class Le_Grandi_Firme(Newspaper):
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       page.newspaper.n_page = n_page
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
   def get_limits(self):
     return (11000, 8000, 500, 500)
   def divide(self, img):
