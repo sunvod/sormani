@@ -47,7 +47,7 @@ class Sormani():
                exclude_ins=False,
                only_ins=False,
                valid_ins=[],
-               checkimages=True,
+               checkimages=False,
                thresholding=0,
                rename_folders=True,
                model_path=None,
@@ -474,19 +474,19 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No setting greyscale is needed for \'{self.newspaper_name}\'.')
-  def set_dpi(self):
+  def reset_dpi(self):
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Starting setting dpi of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting resetting dpi of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.set_dpi()
+      count = page_pool.reset_dpi()
     if count:
       print(
-        f'Setting dpi of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Resetting dpi of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       # self.set_elements()
     else:
-      print(f'No setting dpi is needed for \'{self.newspaper_name}\'.')
+      print(f'No resetting dpi is needed for \'{self.newspaper_name}\'.')
   def remove_frames(self, threshold=200, default_frame=(0,0,0,0)):
     if not len(self.elements):
       return

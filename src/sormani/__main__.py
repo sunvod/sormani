@@ -38,16 +38,18 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('Le Grandi Firme',
+  sormani = Sormani('Il Secolo Illustrato Della Domenica',
                     # days=[x for x in range(17,32)],
-                    days=[1],
+                    days=None,
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,
-                    force=True,
+                    force=False,
                     is_bobina=True)
 
-  sormani.clean_images(threshold=80, use_ai=False)
+  sormani.create_all_images(ocr = False)
+
+  # sormani.clean_images(threshold=80, use_ai=False)
   # sormani.remove_dark_border(threshold=220, limit=50, valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 100, 0], max=False, border=[False,False])
   # sormani.set_grayscale()

@@ -140,7 +140,7 @@ class Page:
         ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY_INV)
       else:
         ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
-      cv2.imwrite(self.original_image, img)
+      self.save_with_dpi(self.original_image, img)
       return 1
   def change_colors(self):
       img = cv2.imread(self.original_image)
@@ -148,7 +148,7 @@ class Page:
         img[img <= int(self.limit, 16)] = 255 - self.color
       else:
         img[img >= int(self.limit, 16)] = self.color
-      cv2.imwrite(self.original_image, img)
+      self.save_with_dpi(self.original_image, img)
       return 1
   def improve_images(self):
       count = 0
@@ -197,8 +197,8 @@ class Page:
       nimg[nimg >= int(self.threshold, 16)] = 255
       nimg[nimg < int(self.threshold, 16)] = 0
       nimg[white_nimg == 0] = img[white_nimg == 0]
-      if not self.debug:
-        cv2.imwrite(file, nimg)
+      if not DEBUG:
+        self.save_with_dpi(file, nimg)
       else:
         cv2.imwrite(file_img, nimg)
         cv2.imwrite(file_bing, bimg)
@@ -257,7 +257,7 @@ class Page:
       _contour = contours[i - 1]
       x, y, w, h = cv2.boundingRect(contour)
       _x, _y, _w, _h = cv2.boundingRect(_contour)
-      if self.debug:
+      if DEBUG:
         _roi = img[_y:_y + _h, _x:_x + _w]
         name = file_name + '_' + '00000' + str(i)[-5:]
         filedir = os.path.join(STORAGE_BASE, REPOSITORY)
@@ -286,7 +286,7 @@ class Page:
         points = [(x + w + 1, y), (x + _w, y), (x + _w, y + _h), (x + w, y + _h)]
         _contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
         _x = x + w + 1
-      if self.debug:
+      if DEBUG:
         if _x > x:
           _roi = img[_y:_y + _h, _x:_x + _w]
           name = file_name + '_' + '00000' + str(i)[-5:]
@@ -320,7 +320,7 @@ class Page:
           or x + w == width \
           or y + h == heigth:
         continue
-      if self.debug:
+      if DEBUG:
         _roi = img[y:y + h, x:x + w]
         name = file_name + '_' + '00000' + str(i)[-5:]
         filedir = os.path.join(STORAGE_BASE, REPOSITORY)
@@ -331,7 +331,7 @@ class Page:
       for j, __contours in enumerate([found_left, found_right]):
         for z, _contour in enumerate(__contours):
           _x, _y, _w, _h = cv2.boundingRect(_contour)
-          if self.debug:
+          if DEBUG:
             _roi = img[_y:_y + _h, _x:_x + _w]
             name = file_name + '_' + '00000' + str(i)[-5:]
             filedir = os.path.join(STORAGE_BASE, REPOSITORY)
@@ -394,7 +394,7 @@ class Page:
         min_h = None
         # calcola il più piccolo w e h fra i probabili valori numerici
         for i, _contour in enumerate(valid_contours):
-          if self.debug:
+          if DEBUG:
             _x, _y, _w, _h = cv2.boundingRect(_contour)
             _roi = img[_y:_y + _h, _x:_x + _w]
             name = file_name + '_' + '00000' + str(i)[-5:]
@@ -1089,7 +1089,7 @@ class Page:
       _, _, weight, _ = cv2.boundingRect(img)
       if x != 0 and x + w != weight:
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 5)
-    if self.debug:
+    if DEBUG:
       n = '00' + str(count_n) if count_n < 10 else '0' + str(count_n) if count_n < 100 else str(count_n)
       file_bimg = os.path.join(self.filedir, 'fotogrammi_bing_' + page_n + '_' + n + '.tif')
       file_thresh = os.path.join(self.filedir, 'fotogrammi_thresh_' + page_n + '_' + n + '.tif')
@@ -1107,7 +1107,7 @@ class Page:
       _, _, weight, _ = cv2.boundingRect(img)
       if x != 0 and x + w != weight:
         roi = img[y:y + h, x:x + w]
-        cv2.imwrite(file2, roi)
+        self.save_with_dpi(file2, roi)
         global_file_list.append((file2, x, y, w, h))
         count_n += 1
         count += 1
@@ -1129,7 +1129,7 @@ class Page:
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     if self.angle is not None:
       img = rotate_image(img, self.angle)
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
       return 1
     if self.threshold is not None:
       ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
@@ -1187,7 +1187,7 @@ class Page:
         cv2.imwrite(file_bing, bimg)
         cv2.imwrite(file_thresh, thresh)
       else:
-        cv2.imwrite(file, img)
+        self.save_with_dpi(file, img)
     return count
   def divide_image(self):
     file_name_no_ext = Path(self.original_image).stem
@@ -1201,7 +1201,7 @@ class Page:
     for i, _img in enumerate(imgs):
       h, w = _img.shape
       if _img is not None and h > 0 and w > 0:
-        cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
+        self.save_with_dpi(file_path_no_ext + '_' + str(i + 1) + ext, _img)
     os.remove(self.original_image)
     self.isdivided = True
     return 1
@@ -1531,7 +1531,7 @@ class Page:
       cv2.imwrite(file_nimg, img)
       cv2.imwrite(file_thresh, thresh)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
   def remove_horizontal_lines(self, thresh, x_size=1, y_size=10):
     horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (x_size, y_size))
@@ -1652,7 +1652,7 @@ class Page:
       cv2.imwrite(file_bimg, img)
       cv2.imwrite(file_thresh, _thresh)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
   def remove_single_frames(self):
     file = self.original_image
@@ -1767,7 +1767,7 @@ class Page:
       cv2.imwrite(file_bimg, img)
       cv2.imwrite(file_thresh, _thresh)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return count
   def remove_last_single_frames(self):
     file = self.original_image
@@ -1821,7 +1821,7 @@ class Page:
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_bimg, img)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
 
   def fill_black_holes(self, thresh, fill_hole=6, iteration=16):
@@ -1926,7 +1926,7 @@ class Page:
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_bimg, img)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
   def rotate_final_frames(self):
     def rotate_image(image, angle):
@@ -1945,7 +1945,7 @@ class Page:
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     if self.angle is not None:
       img = rotate_image(img, self.angle)
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
       return 1
     ret, thresh = cv2.threshold(img, 32, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
@@ -1996,7 +1996,7 @@ class Page:
         cv2.imwrite(file_bing, bimg)
         cv2.imwrite(file_thresh, thresh)
       else:
-        cv2.imwrite(file, img)
+        self.save_with_dpi(file, img)
     return count
   def remove_last_single_frames_2(self):
     self.color = 248
@@ -2048,53 +2048,8 @@ class Page:
       cv2.imwrite(file_nimg, theash)
       cv2.imwrite(file_bimg, img)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
-
-  # def delete_gray_on_borders(self):
-  #   self.color = 248
-  #   file = self.original_image
-  #   file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
-  #   file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
-  #   img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-  #   oh, ow = img.shape
-  #   lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
-  #   if oh < ly - y_ofset // 2:
-  #     return
-  #   bimg = img.copy()
-  #   bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-  #
-  #   # for i, df in enumerate(self.default_frame):
-  #   #   if df == 0:
-  #   #     continue
-  #   #   if i == 0 :
-  #   #     roi = img[0:df, 0:ow]
-  #   #     roi[roi >= self.threshold] = 255
-  #   #     img[0:df, 0:ow] = roi
-  #
-  #   for i, df in enumerate(self.default_frame):
-  #     if df == 0:
-  #       continue
-  #     if i == 0 :
-  #       roi = img[0:df, 0:ow]
-  #       _, thresh = cv2.threshold(roi, 220, 255, cv2.THRESH_BINARY)
-  #       contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-  #       for contour in contours:
-  #         x, y, w, h = cv2.boundingRect(contour)
-  #         if w > 3000:
-  #           if DEBUG:
-  #             cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
-  #           cv2.rectangle(thresh, (x, y), (x + w, y + h), self.color, -1)  # Questo elimina i punti > 20
-  #           # cv2.drawContours(roi, contour, -1, (255, 255, 255), -1)
-  #       img[0:df, 0:ow] = thresh
-  #
-  #   if DEBUG:
-  #     cv2.imwrite(file_bimg, bimg)
-  #     cv2.imwrite(file_nimg, img)
-  #   else:
-  #     cv2.imwrite(file, img)
-  #   return 1
-
   def delete_gray_on_borders(self):
     # self.default_frame = (1000,1000,1000,1000)
     file = self.original_image
@@ -2167,7 +2122,7 @@ class Page:
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_bimg, img)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
   def remove_dark_border(self):
     file = self.original_image
@@ -2228,7 +2183,7 @@ class Page:
       cv2.imwrite(file_bimg, img)
       cv2.imwrite(file_thresh, thresh)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return count
   def remove_fix_border(self):
     file = self.original_image
@@ -2265,9 +2220,9 @@ class Page:
     if DEBUG:
       cv2.imwrite(file_bimg, img)
     else:
-      cv2.imwrite(file, img)
+      self.save_with_dpi(file, img)
     return 1
-  def set_dpi(self):
+  def reset_dpi(self):
     try:
       with Image.open(self.original_image) as img:
         img.save(self.original_image, dpi=(400, 400))

@@ -909,12 +909,12 @@ class Page_pool(list):
       return page.set_fotogrammi_folders()
     except:
       return 0
-  def set_dpi(self,):
+  def reset_dpi(self, ):
     with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._set_dpi, self)
+      result = mp_pool.map(self._reset_dpi, self)
     return sum(result)
-  def _set_dpi(self, page):
-    return page.set_dpi()
+  def _reset_dpi(self, page):
+    return page.reset_dpi()
 
 
 

@@ -918,20 +918,6 @@ def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/', so
       _n2 = n2
       _file_name_no_ext = file_name_no_ext
 
-# def convert_pdf(root):
-#   for filedir, dirs, files in os.walk(root):
-#     files.sort()
-#     count = 1
-#     for file in files:
-#       if file.split('.')[-1] != 'pdf':
-#         continue
-#       pages = convert_from_path(os.path.join(filedir, file))
-#       # new_file = Path(os.path.join(filedir, file)).stem + '.jpg'
-#       for page in pages:
-#         page.save(os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".tif"), "TIFF")
-#         count += 1
-#       os.remove(os.path.join(filedir, file))
-
 def divide_pdf(root):
   for filedir, dirs, files in os.walk(root):
     count = 1
@@ -954,7 +940,25 @@ def divide_pdf(root):
         count += 1
       os.remove(os.path.join(filedir, file))
 
-divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
+def rename_files_with_name_folders(root):
+  for filedir, dirs, files in os.walk(root):
+    files.sort()
+    for i, file in enumerate(files):
+      parts = filedir.split('/')
+      name = parts[-2]
+      period = parts[-1].split('-')[1][1:]
+      new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period
+      os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+
+
+
+# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
+# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/La Domenica Del Corriere')
+# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Mondo')
+# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Scenario')
+# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica')
+
+# divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
 
 # cover_missing_pages(source='29')
 
