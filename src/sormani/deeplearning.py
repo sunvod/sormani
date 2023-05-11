@@ -940,23 +940,29 @@ def divide_pdf(root):
         count += 1
       os.remove(os.path.join(filedir, file))
 
-def rename_files_with_name_folders(root):
-  for filedir, dirs, files in os.walk(root):
-    files.sort()
-    for i, file in enumerate(files):
-      parts = filedir.split('/')
-      name = parts[-2]
-      period = parts[-1].split('-')[1][1:]
-      new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period
-      os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+def rename_files_with_name_folders(name):
+  for j, root in enumerate([IMAGE_PATH, JPG_PDF_PATH]):
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, root, name)):
+      files.sort()
+      for i, file in enumerate(files):
+        parts = filedir.split('/')
+        if j == 0:
+          name = parts[-2]
+          period = parts[-1].split('-')[1][1:]
+        else:
+          name = parts[-3]
+          period = parts[-2].split('-')[1][1:]
+        ext = file.split('.')[-1]
+        new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period + '.' + ext
+        os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
 
 
-# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
-# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/La Domenica Del Corriere')
-# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Mondo')
-rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Scenario')
-# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica')
+# rename_files_with_name_folders('Le Grandi Firme')
+# rename_files_with_name_folders('La Domenica Del Corriere')
+# rename_files_with_name_folders('Il Mondo')
+rename_files_with_name_folders('Scenario')
+# rename_files_with_name_folders('Il Secolo Illustrato Della Domenica')
 
 divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
 
