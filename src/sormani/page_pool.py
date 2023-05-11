@@ -424,12 +424,6 @@ class Page_pool(list):
     return sum(result)
   def _set_greyscale(self, page):
     return page.set_greyscale()
-  def set_dpi(self,):
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._set_dpi, self)
-    return sum(result)
-  def _set_dpi(self, page):
-    return page.set_dpi()
   def remove_frames(self, limit = 5000, threshold=180, default_frame=(0,0,0,0)):
     for page in self:
       page.limit = limit
@@ -915,7 +909,12 @@ class Page_pool(list):
       return page.set_fotogrammi_folders()
     except:
       return 0
-
+  def set_dpi(self,):
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._set_dpi, self)
+    return sum(result)
+  def _set_dpi(self, page):
+    return page.set_dpi()
 
 
 
