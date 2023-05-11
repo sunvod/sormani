@@ -955,7 +955,7 @@ def rename_files_with_name_folders(root):
 # rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
 # rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/La Domenica Del Corriere')
 # rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Mondo')
-# rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Scenario')
+rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Scenario')
 # rename_files_with_name_folders(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica')
 
 divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
