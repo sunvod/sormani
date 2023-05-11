@@ -17,46 +17,55 @@ if __name__ == '__main__':
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
-  sormani = Sormani('Il Mondo',
-                    is_frames=True,
-                    years=[1950],
-                    # months=None,
-                    # days=[x for x in range(17,32)],
-                    days=[x for x in range(1,32)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    # force=True,
-                    is_bobina=True)
-
-  # sormani = Sormani('Il Secolo Illustrato Della Domenica',
-  #                   is_frames=True,
-  #                   years=[1950],
+  # sormani = Sormani('La Domenica Del Corriere',
   #                   # months=None,
   #                   # days=[x for x in range(17,32)],
-  #                   days=[3],
+  #                   days=[x for x in range(1,40)],
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   checkimages=False,
   #                   # force=True,
   #                   is_bobina=True)
 
-  sormani.create_all_images(ocr = False)
+  # sormani = Sormani('Scenario',
+  #                   # days=[x for x in range(17,32)],
+  #                   days=None,
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   force=True,
+  #                   is_bobina=True)
+  #
+  # sormani.set_grayscale()
+
+  sormani = Sormani('Le Grandi Firme',
+                    # days=[x for x in range(17,32)],
+                    days=[1],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    checkimages=False,
+                    force=True,
+                    is_bobina=True)
+
+  sormani.clean_images(threshold=80, use_ai=False)
+  # sormani.remove_dark_border(threshold=220, limit=50, valid=[True,True,True,True])
+  # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 100, 0], max=False, border=[False,False])
+  # sormani.set_grayscale()
+
+  # sormani = Sormani('Il Secolo Illustrato Della Domenica',
+  #                   # months=None,
+  #                   # days=[x for x in range(17,32)],
+  #                   days=[2],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   # force=True,
+  #                   is_bobina=True)
+
+  # sormani.create_all_images(ocr = False)
   # sormani.add_pdf_metadata()
 
-  # sormani = Sormani('Il Mondo',
-  #                   is_frames=True,
-  #                   years=[1950],
-  #                   months=[1],
-  #                   # days=[x for x in range(1,7)],
-  #                   days=[16],
-  #                   # days=[6,7,8,9,10,13,14,15,16,18,19,20,21,22,23,24,25,26,27,28,29],
-  #                   ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-  #                   checkimages=False)
-
   # sormani = Sormani('Scenario',
-  #                   is_frames=True,
   #                   years=[1950],
   #                   months=[1],
   #                   days=[x for x in range(1,13)],
@@ -88,7 +97,7 @@ if __name__ == '__main__':
   # sormani.rotate_frames()
   # sormani.remove_borders()
   # sormani.bobine_delete_copies()
-  # sormani.clean_images(use_ai=True)
+  # sormani.clean_images(use_ai=False)
   # sormani.center_block(use_ai=True)
   # sormani.center_block()
   # sormani.divide_image()

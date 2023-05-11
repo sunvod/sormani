@@ -1205,11 +1205,13 @@ class Page:
     os.remove(self.original_image)
     self.isdivided = True
     return 1
-  def set_grayscale(self):
-    file = self.original_image
-    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    cv2.imwrite(file, img)
-    return 1
+  def set_greyscale(self):
+    try:
+      with Image.open(self.original_image).convert('L') as img:
+        img.save(self.original_image, dpi=(400, 400))
+      return 1
+    except:
+      return 0
   def drawline(self, img, pt1, pt2, color, thickness=1, style='dotted', gap=20):
     dist = ((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2) ** .5
     pts = []
@@ -1443,7 +1445,7 @@ class Page:
       # if DEBUG:
       #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
     if not DEBUG:
-      cv2.imwrite(file, dimg)
+      self.save_with_dpi(file, dimg)
     else:
       cv2.imwrite(file_bimg, bimg)
       cv2.imwrite(file_nimg, nimg)
@@ -2187,7 +2189,7 @@ class Page:
     count = 0
     if self.valid[0]:
       for y in range(10, max_y):
-        mean = thresh[y:y + 1, 0:w].mean()
+        mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
           img = img[y:h, 0:w]
           thresh = thresh[y:h, 0:w]
@@ -2196,7 +2198,7 @@ class Page:
           break
     if self.valid[1]:
       for y in range(h - 11, h - max_y, -1):
-        mean = thresh[y:y + 1, 0:w].mean()
+        mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
           img = img[0:y, 0:w]
           thresh = thresh[0:y, 0:w]
@@ -2239,13 +2241,13 @@ class Page:
     if self.check[0] is not None and oh < self.check[0]:
       limit[0] = 0
       limit[1] = 0
-    elif max:
+    elif self.max:
       limit[0] = 0
       limit[1] = 0
     if self.check[1] is not None and ow < self.check[1]:
       limit[2] = 0
       limit[3] = 0
-    elif max:
+    elif self.max:
       if limit[2] == 0 and limit[3] == 0:
         pass
       elif limit[3] == 0:
@@ -2265,3 +2267,13 @@ class Page:
     else:
       cv2.imwrite(file, img)
     return 1
+  def set_dpi(self):
+    try:
+      with Image.open(self.original_image) as img:
+        img.save(self.original_image, dpi=(400, 400))
+      return 1
+    except:
+      return 0
+  def save_with_dpi(self, file, img):
+    PILimage = Image.fromarray(img)
+    PILimage.save(file, dpi=(400, 400))

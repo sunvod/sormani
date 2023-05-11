@@ -128,7 +128,7 @@ class Newspaper():
       newspaper = La_Gazzetta(newspaper_base, file_path, date, year, number)
     elif name == 'Scenario':
       newspaper = Scenario(newspaper_base, file_path, date, year, number)
-    elif name == 'La Domenica del Corriere':
+    elif name == 'La Domenica Del Corriere':
       newspaper = La_Domenica_del_Corriere(newspaper_base, file_path, date, year, number)
     elif name == 'Il Mondo':
       newspaper = Il_Mondo(newspaper_base, file_path, date, year, number)
@@ -161,7 +161,7 @@ class Newspaper():
       parameters = Il_Mondo.get_start(ofset)
     elif name == 'Le Grandi Firme':
       parameters = Le_Grandi_Firme.get_start(ofset)
-    elif name == 'La Domenica del Corriere':
+    elif name == 'La Domenica Del Corriere':
       parameters = La_Domenica_del_Corriere.get_start(ofset)
     elif name == 'Il Secolo Illustrato Della Domenica':
       parameters = Il_Secolo_Illustrato.get_start(ofset)
@@ -1155,6 +1155,10 @@ class Scenario(Newspaper):
     self.year_change = None
     Newspaper.__init__(self, newspaper_base, 'Scenario', file_path, date, year, number, init_page = 3)
     self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
@@ -1237,7 +1241,7 @@ class La_Domenica_del_Corriere(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 1
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'La Domenica del Corriere', file_path, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'La Domenica Del Corriere', file_path, date, year, number, init_page = 3)
     self.contrast = 50
   @staticmethod
   def get_start(ofset):
@@ -1317,6 +1321,10 @@ class La_Domenica_del_Corriere(Newspaper):
     w, h = image.size
     whole = ((w + 100) // 2, 200 + 800, w - 800, 1700)
     return whole
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
   def set_n_pages(self, page_pool, n_pages, use_ai=False):
     for n_page, page in enumerate(page_pool):
       # try:

@@ -51,7 +51,6 @@ class Sormani():
                thresholding=0,
                rename_folders=True,
                model_path=None,
-               is_frames=False,
                ais=[],
                is_bobina=False):
     if years is not None and isinstance(years, list) and not len(years):
@@ -107,7 +106,6 @@ class Sormani():
                        checkimages,
                        rename_folders,
                        model_path,
-                       is_frames,
                        ais,
                        is_bobina)
     if ais is not None:
@@ -133,7 +131,6 @@ class Sormani():
             checkimages,
             rename_folders,
             model_path,
-            is_frames,
             ais,
             is_bobina):
     self.newspaper_name = newspaper_name
@@ -147,6 +144,7 @@ class Sormani():
       print(f'{newspaper_name} non esiste in memoria.')
       return self.elements
     if is_bobina:
+      self.complete_root = new_root
       if day is not None:
         filedir, dirs, files = next(os.walk(new_root))
         dirs.sort()
@@ -185,7 +183,6 @@ class Sormani():
     self.checkimages = checkimages
     self.roots.append(self.new_root)
     self.model_path = model_path
-    self.is_frames = is_frames
     self.is_bobina = is_bobina
   def __len__(self):
     return len(self.elements)
@@ -464,19 +461,32 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing borders is needed for \'{self.newspaper_name}\'.')
-  def set_grayscale(self):
+  def set_greyscale(self):
     if not len(self.elements):
       return
     start_time = time.time()
-    print(f'Starting setting grayscale of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting setting greyscale of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.set_grayscale()
+      count = page_pool.set_greyscale()
     if count:
       print(
-        f'Removing setting grayscale of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Setting greyscale of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       # self.set_elements()
     else:
-      print(f'No setting grayscale is needed for \'{self.newspaper_name}\'.')
+      print(f'No setting greyscale is needed for \'{self.newspaper_name}\'.')
+  def set_dpi(self):
+    if not len(self.elements):
+      return
+    start_time = time.time()
+    print(f'Starting setting dpi of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.set_dpi()
+    if count:
+      print(
+        f'Setting dpi of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      # self.set_elements()
+    else:
+      print(f'No setting dpi is needed for \'{self.newspaper_name}\'.')
   def remove_frames(self, threshold=200, default_frame=(0,0,0,0)):
     if not len(self.elements):
       return

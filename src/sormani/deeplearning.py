@@ -10,6 +10,8 @@ import csv
 from datetime import datetime as dt
 from PyPDF2 import PdfWriter, PdfReader
 import aspose.words as aw
+from PyPDF2 import PdfWriter, PdfReader
+from pdf2image import convert_from_path
 
 from src.sormani.newspaper import Newspaper
 
@@ -916,17 +918,43 @@ def cover_missing_pages(root='/mnt/storage01/sormani/TIFF/Il Mondo/1950/01/', so
       _n2 = n2
       _file_name_no_ext = file_name_no_ext
 
-def divide_pdf(root, file_name):
+# def convert_pdf(root):
+#   for filedir, dirs, files in os.walk(root):
+#     files.sort()
+#     count = 1
+#     for file in files:
+#       if file.split('.')[-1] != 'pdf':
+#         continue
+#       pages = convert_from_path(os.path.join(filedir, file))
+#       # new_file = Path(os.path.join(filedir, file)).stem + '.jpg'
+#       for page in pages:
+#         page.save(os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".tif"), "TIFF")
+#         count += 1
+#       os.remove(os.path.join(filedir, file))
+
+def divide_pdf(root):
   for filedir, dirs, files in os.walk(root):
+    count = 1
     files.sort()
     for file in files:
-      new_file = file.split('.')[0] + '.tif'
-      doc = aw.Document(os.path.join(root, file))
-      doc.save(os.path.join(root, new_file))
-      # os.remove(os.path.join(root, file))
+      if file.split('.')[-1] != 'pdf':
+        continue
+      inputpdf = PdfReader(open(os.path.join(filedir, file), "rb"))
+      for i in range(len(inputpdf.pages)):
+        output = PdfWriter()
+        output.add_page(inputpdf.pages[i])
+        new_file = os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".pdf")
+        with open(new_file, "wb") as outputStream:
+          output.write(outputStream)
+        pages = convert_from_path(os.path.join(filedir, new_file))
+        pages[0].save(os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".tif"), "TIFF")
+        im = Image.open(os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".tif")).convert('L')
+        im.save(os.path.join(filedir, "Scan_" + ('0000' + str(count))[-4:] + ".tif"), dpi=(400, 400))
+        os.remove(os.path.join(filedir, new_file))
+        count += 1
+      os.remove(os.path.join(filedir, file))
 
-
-divide_pdf(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica/02', file_name='002 ok.pdf')
+divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
 
 # cover_missing_pages(source='29')
 
@@ -978,4 +1006,4 @@ divide_pdf(root='/mnt/storage01/sormani/TIFF/Il Secolo Illustrato Della Domenica
 #
 # rotate_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
 #
-# show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
+# show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')x

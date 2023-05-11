@@ -418,12 +418,18 @@ class Page_pool(list):
     return sum(result)
   def _remove_borders(self, page):
     return page.remove_borders()
-  def set_grayscale(self,):
+  def set_greyscale(self,):
     with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._set_grayscale, self)
+      result = mp_pool.map(self._set_greyscale, self)
     return sum(result)
-  def _set_grayscale(self, page):
-    return page.set_grayscale()
+  def _set_greyscale(self, page):
+    return page.set_greyscale()
+  def set_dpi(self,):
+    with Pool(processes=N_PROCESSES) as mp_pool:
+      result = mp_pool.map(self._set_dpi, self)
+    return sum(result)
+  def _set_dpi(self, page):
+    return page.set_dpi()
   def remove_frames(self, limit = 5000, threshold=180, default_frame=(0,0,0,0)):
     for page in self:
       page.limit = limit
