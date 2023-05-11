@@ -9,7 +9,6 @@ import shutil
 import csv
 from datetime import datetime as dt
 from PyPDF2 import PdfWriter, PdfReader
-import aspose.words as aw
 from PyPDF2 import PdfWriter, PdfReader
 from pdf2image import convert_from_path
 
@@ -949,10 +948,11 @@ def rename_files_with_name_folders(name):
         if j == 0:
           name = parts[-2]
           period = parts[-1].split('-')[1][1:]
+          ext = 'tif'
         else:
           name = parts[-3]
           period = parts[-2].split('-')[1][1:]
-        ext = file.split('.')[-1]
+          ext = 'jpg'
         new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period + '.' + ext
         os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
@@ -961,7 +961,7 @@ def rename_files_with_name_folders(name):
 # rename_files_with_name_folders('Le Grandi Firme')
 # rename_files_with_name_folders('La Domenica Del Corriere')
 # rename_files_with_name_folders('Il Mondo')
-# rename_files_with_name_folders('Scenario')
+rename_files_with_name_folders('Scenario')
 # rename_files_with_name_folders('Il Secolo Illustrato Della Domenica')
 
 divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
