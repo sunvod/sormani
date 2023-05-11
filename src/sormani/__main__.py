@@ -38,7 +38,7 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('Il Secolo Illustrato Della Domenica',
+  sormani = Sormani('Le Grandi Firme',
                     # days=[x for x in range(17,32)],
                     days=None,
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
@@ -46,6 +46,8 @@ if __name__ == '__main__':
                     checkimages=False,
                     force=False,
                     is_bobina=True)
+
+  # sormani.set_all_images_names()
 
   sormani.create_all_images(ocr = False)
 

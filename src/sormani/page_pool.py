@@ -577,6 +577,17 @@ class Page_pool(list):
           page.file_name = new_file_name
           page.newspaper.file_path = new_file_name
       n_page += 1
+  def set_bobine_image_file_name(self, name, period):
+    n_page = 1
+    for page in self:
+      page.newspaper.n_page = 1
+      new_file = ('00000' + str(n_page))[-4:] + ' - ' + name + ' - ' + period + '.tif'
+      if page.original_file_name != new_file:
+        if Path(page.original_image).is_file():
+          os.rename(os.path.join(page.original_path, page.original_image), os.path.join(page.original_path, new_file))
+          page.file_name = new_file
+          page.newspaper.file_path = new_file
+      n_page += 1
   def convert_images(self, converts):
     if converts is None:
       return

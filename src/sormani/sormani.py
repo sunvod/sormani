@@ -350,6 +350,11 @@ class Sormani():
     for page_pool in self:
       if not len(page_pool):
         continue
+      if self.is_bobina:
+        parts = page_pool.filedir.split('/')
+        name = parts[-2]
+        period = parts[-1].split('-')[1][1:]
+        page_pool.set_bobine_image_file_name(name, period)
       else:
         if not page_pool.isAlreadySeen():
           page_pool.set_image_file_name()

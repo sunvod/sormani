@@ -643,7 +643,10 @@ class Page:
   def isAlreadySeen(self):
     l = len(self.newspaper.name)
     f = self.file_name
-    return f[: l] == self.newspaper.name.replace(' ', '_') and \
+    if self.is_bobina:
+      return f[:4].isdigit()
+    else:
+      return f[: l] == self.newspaper.name.replace(' ', '_') and \
         f[l] == '_' and\
         f[l + 1: l + 5].isdigit() and \
         f[l + 5] == '_' and\
