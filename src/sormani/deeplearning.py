@@ -952,7 +952,10 @@ def rename_files_with_name_folders(name):
         else:
           name = parts[-3]
           period = parts[-2].split('-')[1][1:]
-          ext = 'jpg'
+          if filedir.split('/')[-1] == 'pdf':
+            ext = 'pdf'
+          else:
+            ext = 'jpg'
         new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period + '.' + ext
         os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
