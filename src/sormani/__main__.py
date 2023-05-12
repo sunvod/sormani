@@ -38,18 +38,18 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('Le Grandi Firme',
+  sormani = Sormani('Scenario',
                     # days=[x for x in range(17,32)],
-                    days=None,
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    force=False,
+                    force=True,
                     is_bobina=True)
 
-  # sormani.set_all_images_names()
+  sormani.create_all_images(convert=False)
 
-  sormani.create_all_images(ocr = False)
+  # sormani.set_all_images_names()
+  # sormani.remove_dark_border()
+  # sormani.create_all_images(ocr = False)
 
   # sormani.clean_images(threshold=80, use_ai=False)
   # sormani.remove_dark_border(threshold=220, limit=50, valid=[True,True,True,True])

@@ -355,6 +355,7 @@ class Sormani():
         name = parts[-2]
         period = parts[-1].split('-')[1][1:]
         page_pool.set_bobine_image_file_name(name, period)
+        self.pages_pool[self.pages_pool.index(page_pool)] = None
       else:
         if not page_pool.isAlreadySeen():
           page_pool.set_image_file_name()

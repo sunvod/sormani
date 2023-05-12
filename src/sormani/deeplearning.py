@@ -964,7 +964,7 @@ def rename_files_with_name_folders(name):
 # rename_files_with_name_folders('Scenario')
 # rename_files_with_name_folders('Il Secolo Illustrato Della Domenica')
 
-divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
+# divide_pdf(root='/mnt/storage01/sormani/TIFF/Le Grandi Firme')
 
 # cover_missing_pages(source='29')
 
