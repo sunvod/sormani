@@ -38,14 +38,15 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('Scenario',
+  sormani = Sormani('La Domenica',
                     # days=[x for x in range(17,32)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    days=[1],
                     force=True,
                     is_bobina=True)
 
-  sormani.create_all_images(convert=False)
+  # sormani.create_all_images(convert=False)
 
   # sormani.set_all_images_names()
   # sormani.remove_dark_border()
@@ -88,10 +89,6 @@ if __name__ == '__main__':
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
 
-  # sormani.bobine_delete_copies()
-
-  # sormani.bobine_delete_copies()
-
   # sormani.rotate_frames(threshold=50)
   # sormani.remove_borders()
   # sormani.bobine_delete_copies()
@@ -100,6 +97,13 @@ if __name__ == '__main__':
 
   # sormani.rotate_frames()
   # sormani.remove_borders()
+  # sormani.remove_gradient_border(limit=10)
+  # sormani.remove_gradient_border(limit=10)
+  # sormani.remove_gradient_border(limit=5)
+  # sormani.clean_images(use_ai=False)
+  sormani.center_block()
+
+
   # sormani.bobine_delete_copies()
   # sormani.clean_images(use_ai=False)
   # sormani.center_block(use_ai=True)

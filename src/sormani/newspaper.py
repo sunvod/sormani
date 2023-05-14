@@ -130,6 +130,8 @@ class Newspaper():
       newspaper = Scenario(newspaper_base, file_path, date, year, number)
     elif name == 'La Domenica Del Corriere':
       newspaper = La_Domenica_del_Corriere(newspaper_base, file_path, date, year, number)
+    elif name == 'La Domenica':
+      newspaper = La_Domenica(newspaper_base, file_path, date, year, number)
     elif name == 'Il Mondo':
       newspaper = Il_Mondo(newspaper_base, file_path, date, year, number)
     elif name == 'Il Sole 24 Ore':
@@ -163,6 +165,8 @@ class Newspaper():
       parameters = Le_Grandi_Firme.get_start(ofset)
     elif name == 'La Domenica Del Corriere':
       parameters = La_Domenica_del_Corriere.get_start(ofset)
+    elif name == 'La Domenica':
+      parameters = La_Domenica.get_start(ofset)
     elif name == 'Il Secolo Illustrato Della Domenica':
       parameters = Il_Secolo_Illustrato.get_start(ofset)
     else:
@@ -1717,3 +1721,184 @@ class Il_Secolo_Illustrato(Newspaper):
                                 can_be_internal=True)
 
 
+class La_Domenica(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 1
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'La Domenica', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1899','01','08','1900','09','23')
+    elif ofset == 2:
+      return ('1900', '09', '30', '1901', '12', '29')
+    elif ofset == 3:
+      return ('1902', '01', '05', '1903', '04', '29')
+    elif ofset == 4:
+      return ('1903', '05', '03', '1904', '09', '04')
+    elif ofset == 5:
+      return ('1904', '09', '11', '1906', '02', '11')
+    elif ofset == 6:
+      return ('1906', '02', '18', '1907', '07', '14')
+    elif ofset == 7:
+      return ('1907', '07', '21', '1908', '12', '27')
+    elif ofset == 8:
+      return ('1909', '01', '03', '1910', '06', '12')
+    elif ofset == 9:
+      return ('1910', '06', '19', '1911', '12', '10')
+    elif ofset == 10:
+      return ('1911', '12', '17', '1913', '06', '01')
+    elif ofset == 11:
+      return ('1913', '06', '15', '1915', '01', '03')
+    elif ofset == 12:
+      return ('1915', '01', '10', '1916', '05', '14')
+    elif ofset == 13:
+      return ('1916', '05', '21', '1917', '12', '23')
+    elif ofset == 14:
+      return ('1918', '01', '13', '1920', '07', '11')
+    elif ofset == 15:
+      return ('1920', '07', '18', '1922', '07', '30')
+    elif ofset == 16:
+      return ('1922', '08', '06', '1924', '01', '27')
+    elif ofset == 17:
+      return ('1924', '02', '03', '1925', '06', '28')
+    elif ofset == 18:
+      return ('1925', '07', '05', '1926', '12', '12')
+    elif ofset == 19:
+      return ('1926', '12', '19', '1928', '05', '20')
+    elif ofset == 20:
+      return ('1928', '05', '27', '1929', '11', '03')
+    elif ofset == 21:
+      return ('1929', '11', '10', '1931', '01', '11')
+    elif ofset == 22:
+      return ('1931', '01', '18', '1932', '03', '13')
+    elif ofset == 23:
+      return ('1932', '03', '13', '1933', '04', '23')
+    elif ofset == 24:
+      return ('1933', '04', '30', '1934', '06', '17')
+    elif ofset == 25:
+      return ('1934', '06', '24', '1935', '08', '11')
+    elif ofset == 26:
+      return ('1935', '08', '18', '1937', '01', '10')
+    elif ofset == 27:
+      return ('1937', '01', '17', '1938', '03', '20')
+    elif ofset == 28:
+      return ('1938', '03', '27', '1939', '05', '13')
+    elif ofset == 29:
+      return ('1939', '05', '20', '1940', '09', '01')
+    elif ofset == 30:
+      return ('1940', '09', '18', '1942', '02', '08')
+    elif ofset == 31:
+      return ('1942', '02', '15', '1943', '12', '26')
+    elif ofset == 32:
+      return ('1944', '01', '02', '1946', '08', '18')
+    elif ofset == 33:
+      return ('1944', '01', '02', '1948', '01', '25')
+    elif ofset == 34:
+      return ('1948', '02', '01', '1949', '04', '10')
+    elif ofset == 35:
+      return ('1949', '04', '17', '1950', '05', '14')
+    elif ofset == 36:
+      return ('1950', '05', '21', '1950', '12', '31')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = ((w + 100) // 2, 200 + 800, w - 800, 1700)
+    return whole
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    for n_page, page in enumerate(page_pool):
+      # try:
+      #   page.newspaper.n_page
+      #   continue
+      # except:
+      #   pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page + 1
+  def get_start_year(self):
+    return 1899
+  def get_remove_borders_parameters(self, i, width, height):
+    left = 950
+    top = 800
+    right = width - 800
+    bottom = height - 900
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom)
+  def get_crop_parameters(self, i, width, height):
+    if i == 0:
+      left = width // 2 - 50
+      top = 0
+      right = width
+      bottom = height
+    elif i == 1:
+      left = 0
+      top = 0
+      right = width // 2 + 50
+      bottom = height
+    return Newspaper_crop_parameters(left,
+                                     right,
+                                     top,
+                                     bottom)
+  def is_first_page(self, img=None, model=None, get_crop=False):
+    if self._is_first_page  is not None and not get_crop:
+      return self._is_first_page
+    if img is None or model is None and not get_crop:
+      return None
+    oh, ow, _ = img.shape
+    if ow > oh:
+      crop = img[0:1200, ow // 2:, :]
+    else:
+      crop = img[0:1200, :, :]
+    crop = cv2.resize(crop, (224, 224), Image.Resampling.LANCZOS)
+    cv2.imwrite(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'), crop, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    crop = Image.open(os.path.join(STORAGE_BASE, 'img_jpg' + '.jpg'))
+    if self._is_first_page  is not None and get_crop:
+      return self._is_first_page, np.array(crop)
+    dataset = []
+    crop = tf.image.convert_image_dtype(crop, dtype=tf.float32)
+    dataset.append(crop)
+    try:
+      predictions = list(np.argmax(model.predict(np.array(dataset), verbose=0), axis=-1))
+    except Exception as e:
+      predictions[0] = 1
+    self._is_first_page = predictions[0] == 0
+    if get_crop:
+      return self._is_first_page, np.array(crop)
+    return self._is_first_page
+  def get_ofset(self):
+    return 0, -200, 0, 200
+  def get_dimension(self, img=None):
+    return 5600, 7400
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def divide(self, img):
+    imgs = []
+    height, width, _ = img.shape
+    parameters = self.get_crop_parameters(1, width, height)
+    img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+    parameters = self.get_crop_parameters(0, width, height)
+    img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+    imgs.append(img1)
+    imgs.append(img2)
+    return imgs
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 10,
+                                max_w = 120,
+                                min_h = 90,
+                                max_h = 150,
+                                ts = 240,
+                                min_mean = 0,
+                                max_mean = 500,
+                                # fill_hole=4,
+                                # invert_fill_hole=True,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)

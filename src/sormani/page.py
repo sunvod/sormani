@@ -2235,3 +2235,81 @@ class Page:
   def save_with_dpi(self, file, img):
     PILimage = Image.fromarray(img)
     PILimage.save(file, dpi=(400, 400))
+  def remove_gradient_border(self):
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
+    #   return
+    _img = img.copy()
+    thresh = img.copy()
+    # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
+    _thresh = thresh.copy()
+    h, w = thresh.shape
+    max_x = 1000
+    max_y = 1000
+    count = 0
+    if self.valid[0]:
+      _mean = None
+      for y in range(10, max_y, 10):
+        mean = thresh[y: y + 50, 0: w].mean()
+        if _mean is None:
+          _mean = mean
+          continue
+        if mean - _mean >= self.limit and mean > self.threshold:
+          img = img[y:h, 0:w]
+          thresh = thresh[y:h, 0:w]
+          h, w = thresh.shape
+          count = 1
+          break
+        _mean = mean
+    if self.valid[1]:
+      _mean = None
+      if _mean is None:
+        _mean = mean
+      for y in range(h - 11, h - max_y, -10):
+        mean = thresh[y: y + 50, 0: w].mean()
+        if _mean is None:
+          _mean = mean
+          continue
+        if mean - _mean >= self.limit and mean > self.threshold:
+          img = img[0:y, 0:w]
+          thresh = thresh[0:y, 0:w]
+          h, w = thresh.shape
+          count = 1
+          break
+        _mean = mean
+    if self.valid[2]:
+      _mean = None
+      for x in range(10, max_x, 10):
+        mean = thresh[0:h, x:x + 50].mean()
+        if _mean is None:
+          _mean = mean
+        if mean - _mean >= self.limit and mean > self.threshold:
+          img = img[0: h, x: w]
+          thresh = thresh[0: h, x: w]
+          h, w = thresh.shape
+          count = 1
+          break
+        _mean = mean
+    if self.valid[3]:
+      for x in range(w - 11, w - max_x, -10):
+        mean = thresh[0:h, x:x + 50].mean()
+        if _mean is None:
+          _mean = mean
+        if mean - _mean >= self.limit and mean > self.threshold:
+          img = img[0:h, 0:x]
+          thresh = thresh[0:h, 0:x]
+          h, w = thresh.shape
+          count = 1
+          break
+        _mean = mean
+    # img[0:6, 0] = [3, 202, 2, 61, 4, 6]
+    if DEBUG:
+      cv2.imwrite(file_bimg, img)
+      cv2.imwrite(file_thresh, thresh)
+    else:
+      self.save_with_dpi(file, img)
+    return count
