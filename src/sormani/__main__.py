@@ -42,7 +42,7 @@ if __name__ == '__main__':
                     # days=[x for x in range(17,32)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    days=[1],
+                    days=[40],
                     force=True,
                     is_bobina=True)
 
@@ -101,7 +101,8 @@ if __name__ == '__main__':
   # sormani.remove_gradient_border(limit=10)
   # sormani.remove_gradient_border(limit=5)
   # sormani.clean_images(use_ai=False)
-  sormani.center_block()
+  # sormani.center_block(threshold=247, borders=False)
+  sormani.set_border_dark(threshold=247)
 
 
   # sormani.bobine_delete_copies()

@@ -568,7 +568,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing gray is needed for \'{self.newspaper_name}\'.')
-  def center_block(self, threshold=200, color=248, use_ai=False, only_x=False):
+  def center_block(self, threshold=200, color=248, use_ai=False, only_x=False, borders=True):
     if not len(self.elements):
       return
     global global_count
@@ -576,7 +576,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting center block of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.center_block(threshold=threshold, color=color, use_ai=use_ai, only_x=only_x,)
+      count = page_pool.center_block(threshold=threshold, color=color, use_ai=use_ai, only_x=only_x, borders=borders)
     if count:
       print(
         f'Centering block of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -944,6 +944,21 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing dark frames is needed for \'{self.newspaper_name}\'.')
+  def set_border_dark(self, threshold=120):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting settimg dark frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.set_border_dark(threshold=threshold,)
+    if count:
+      print(
+        f'Setting dark frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      # self.set_elements()
+    else:
+      print(f'No setting dark frames is needed for \'{self.newspaper_name}\'.')
   def remove_gradient_border(self, threshold=230, limit=10, valid=[True,True,True,True]):
     if not len(self.elements):
       return

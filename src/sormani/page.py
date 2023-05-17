@@ -1845,7 +1845,7 @@ class Page:
     else:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=iteration)
     if invert_fill_hole:
       thresh = 255 - thresh
     return thresh
@@ -1857,10 +1857,80 @@ class Page:
       if w > lower_limit and h > lower_limit and w < upper_limit and h < upper_limit:
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 255, 255), -1)
     return img
+  def checkIntersection(self, boxA, boxB):
+    x = max(boxA[0], boxB[0])
+    y = max(boxA[1], boxB[1])
+    w = min(boxA[0] + boxA[2], boxB[0] + boxB[2]) - x
+    h = min(boxA[1] + boxA[3], boxB[1] + boxB[3]) - y
+    foundIntersect = True
+    if w < 0 or h < 0:
+      foundIntersect = False
+    return foundIntersect
+  def union(self, contours, img, always_merge=False, ofset=[0,0,0,0], x_limit=100000, y_limit=100000):
+    j = 0
+    _contours = []
+    oh, ow = img.shape
+    if sum(ofset):
+      for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        if (y + h < y_limit or y > oh - y_limit) and x > y:
+          x = x - ofset[0] if x - ofset[0] > 0 else 0
+          w = w + ofset[0] * 2
+          # if x + w > ow:
+          #   w = ow - x
+          y = y - ofset[1] if y - ofset[1] > 0 else 0
+          h = h + ofset[1] * 2
+          # if y + h > oh:
+          #   h = oh - x
+        elif (x + w < x_limit or x > ow - x_limit):
+          x = x - ofset[2] if x - ofset[2] > 0 else 0
+          w += ofset[2] * 2
+          # if x + w > ow:
+          #   w = ow - x
+          y = y - ofset[3] if y - ofset[3] > 0 else 0
+          h += ofset[3] * 2
+          # if y + h > oh:
+          #   h = oh - x
+        points = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
+        _contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
+        _contours.append(_contour)
+      contours = _contours
+    while j < len(contours) - 1:
+      contour = contours[j]
+      x, y, w, h = cv2.boundingRect(contour)
+      flag = False
+      for i, _contour in enumerate(contours):
+        if i == j:
+          continue
+        _x, _y, _w, _h = cv2.boundingRect(_contour)
+        if _x >= x and _y >= y and _x + _w <= x + w and _y + _h <= y + h:
+          del contours[i]
+          flag = True
+          break
+        if always_merge:
+          merge = True
+        else:
+          merge = self.checkIntersection((x, y, w, h), (_x, _y, _w, _h))
+        if merge:
+          points = np.vstack([contour, _contour])
+          ctr = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
+          ctr = cv2.convexHull(ctr)
+          x, y, w, h = cv2.boundingRect(ctr)
+          contour = np.array([(x, y), (x + w - 1, y), (x + w - 1, y + h - 1), (x, y + h - 1)]).reshape((-1, 1, 2)).astype(np.int32)
+          contours = np.array(contours)
+          contours[j] = contour
+          contours = list(contours)
+          del contours[i]
+          flag = True
+          break
+      if not flag:
+        j += 1
+    return contours
   def center_block(self):
     self.default_frame = (1500,1000,1000,1000)
     file = self.original_image
-    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bimg.' + file.split('.')[-1]
+    file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
@@ -1909,25 +1979,22 @@ class Page:
     if y1 > y_ofset // 3 * 2:
       y1 = 0
       upper_edge = 200
-      # y1 = y_ofset // 2
-      # upper_edge = 200
     if oh - y2 > y_ofset // 3 * 2:
       y2 = oh
       lower_edge = 0
-      # y2 = oh - y_ofset // 2
-      # lower_edge = 200
     if not self.only_x  or oh > ly:
       img = img[y1:y2, :]
-      img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+      if self.borders:
+        img = cv2.copyMakeBorder(img, upper_edge, lower_edge, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
     if x2 - x1 > lx - x_ofset:
       img = img[ :, x1:x2]
-      img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
-    # img = img[y1:y2, x1:x2]
-    # img = cv2.copyMakeBorder(img, 200, 200, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
+      if self.borders:
+        img = cv2.copyMakeBorder(img, 0, 0, 200, 200, cv2.BORDER_CONSTANT, value=self.color)
     if DEBUG:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
-      cv2.imwrite(file_bimg, img)
+      cv2.imwrite(file_img, img)
+      cv2.imwrite(file_thresh, thresh)
     else:
       self.save_with_dpi(file, img)
     return 1
@@ -2124,6 +2191,62 @@ class Page:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_bimg, img)
+    else:
+      self.save_with_dpi(file, img)
+    return 1
+  def set_border_dark(self):
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
+    #   return
+    _img = img.copy()
+    thresh = img.copy()
+    # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
+    _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
+    _thresh = thresh.copy()
+    h, w = thresh.shape
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    bimg = thresh.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    _contours = []
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if (w > 100 or h > 100) and w < 5000 and h < 5000:
+        _contours.append(contour)
+    contours = self.union(_contours, thresh)
+    _contours = []
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if w > 3000 and h > 3000:
+        cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)
+      else:
+        _contours.append(contour)
+        cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        # if DEBUG:
+        #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 0, 255), 3)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    _contours = []
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if (w > 50 or h > 50) and w < 1000 and h < 1000:
+        _contours.append(contour)
+    contours = self.union(_contours, thresh, ofset=[200, 50, 50, 200], x_limit=1000, y_limit=1000)
+    for contour in contours:
+      x, y, w, h = cv2.boundingRect(contour)
+      if (w > 10 or h > 10) and (w < 5000 or h < 5000):
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), -1)
+        if DEBUG:
+          cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
+    if DEBUG:
+      nimg = img.copy()
+      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_img, img)
+      cv2.imwrite(file_bimg, bimg)
+      cv2.imwrite(file_thresh, thresh)
     else:
       self.save_with_dpi(file, img)
     return 1

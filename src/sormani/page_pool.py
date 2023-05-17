@@ -488,6 +488,22 @@ class Page_pool(list):
       return count
   def _remove_dark_border(self, page):
     return page.remove_dark_border()
+  def set_border_dark(self, threshold):
+    for page in self:
+      page.threshold = threshold
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._set_border_dark, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+      return 0
+    else:
+      count = 0
+      for page in self:
+        count += self._set_border_dark(page)
+      return count
+  def _set_border_dark(self, page):
+    return page.set_border_dark()
   def remove_gradient_border(self, threshold, limit, valid):
     for page in self:
       page.limit = limit
@@ -559,12 +575,13 @@ class Page_pool(list):
     return 0
   def _delete_gray_on_borders(self, page):
     return page.delete_gray_on_borders()
-  def center_block(self, threshold, color, use_ai, only_x):
+  def center_block(self, threshold, color, use_ai, only_x, borders):
     for page in self:
       page.threshold = threshold
       page.color = color
       page.use_ai = use_ai
       page.only_x = only_x
+      page.borders = borders
     with Pool(processes=N_PROCESSES) as mp_pool:
       result = mp_pool.map(self._center_block, self)
       if result is not None and all(v is not None for v in result):
