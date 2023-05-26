@@ -944,7 +944,7 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing dark frames is needed for \'{self.newspaper_name}\'.')
-  def set_border_dark(self, threshold=120):
+  def set_border_dark(self, threshold=20, color=248, limit=4000):
     if not len(self.elements):
       return
     global global_count
@@ -952,7 +952,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting settimg dark frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.set_border_dark(threshold=threshold,)
+      count = page_pool.set_border_dark(threshold=threshold, color=color, limit=limit)
     if count:
       print(
         f'Setting dark frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')

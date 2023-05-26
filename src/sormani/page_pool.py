@@ -488,9 +488,11 @@ class Page_pool(list):
       return count
   def _remove_dark_border(self, page):
     return page.remove_dark_border()
-  def set_border_dark(self, threshold):
+  def set_border_dark(self, threshold, color, limit):
     for page in self:
       page.threshold = threshold
+      page.color = color
+      page.limit = limit
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:
         result = mp_pool.map(self._set_border_dark, self)

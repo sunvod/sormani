@@ -101,8 +101,10 @@ if __name__ == '__main__':
   # sormani.remove_gradient_border(limit=10)
   # sormani.remove_gradient_border(limit=5)
   # sormani.clean_images(use_ai=False)
-  # sormani.center_block(threshold=247, borders=False)
-  sormani.set_border_dark(threshold=247)
+  # sormani.center_block()
+  # sormani.set_border_dark(threshold=128)
+  # sormani.center_block(threshold=247)
+  sormani.set_border_dark()
 
 
   # sormani.bobine_delete_copies()

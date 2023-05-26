@@ -2026,9 +2026,9 @@ class Page:
     fill_hole = 16
     invert_fill_hole = False
     if invert_fill_hole:
-      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+      binaryImage, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     else:
-      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      binaryImage, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     kernel = np.ones((fill_hole, 8), np.uint8)
     thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
     if invert_fill_hole:
@@ -2194,6 +2194,17 @@ class Page:
     else:
       self.save_with_dpi(file, img)
     return 1
+  def fill_white_holes_xy(self, thresh, x_fill_hole=4, y_fill_hole=4, iteration=16):
+    invert_fill_hole = False
+    if invert_fill_hole:
+      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+    else:
+      _, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((x_fill_hole, y_fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_ERODE, kernel, iterations=iteration)
+    if invert_fill_hole:
+      thresh = 255 - thresh
+    return thresh
   def set_border_dark(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
@@ -2201,52 +2212,80 @@ class Page:
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
-    #   return
-    _img = img.copy()
-    thresh = img.copy()
-    # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
-    _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
-    _thresh = thresh.copy()
-    h, w = thresh.shape
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    bimg = thresh.copy()
+    bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    _contours = []
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if (w > 100 or h > 100) and w < 5000 and h < 5000:
-        _contours.append(contour)
-    contours = self.union(_contours, thresh)
-    _contours = []
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if w > 3000 and h > 3000:
-        cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)
-      else:
-        _contours.append(contour)
-        cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 0), -1)
-        # if DEBUG:
-        #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 0, 255), 3)
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    _contours = []
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if (w > 50 or h > 50) and w < 1000 and h < 1000:
-        _contours.append(contour)
-    contours = self.union(_contours, thresh, ofset=[200, 50, 50, 200], x_limit=1000, y_limit=1000)
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if (w > 10 or h > 10) and (w < 5000 or h < 5000):
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 0), -1)
-        if DEBUG:
-          cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
+    oh, ow = img.shape
+    img[img > 220] = 248
+    ofset = 150
+    x_ofset = 400
+    _val = None
+    for y in range(0, 1000, ofset):
+      _x1 = 1000
+      _w1 = ow // 2 - x_ofset - _x1
+      _y1 = y
+      _h1 = y + ofset - _y1
+      _x2 = ow // 2 + x_ofset
+      _w2 = ow-1000 - _x2
+      _y2 = y
+      _h2 = y + ofset - _y2
+      cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 0, 255), 3)
+      cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 255, 0), 3)
+      var = min(img[_x1:_x1 + _w1, _y1:_y1 + _h1].var(), img[_x2:_x2 + _w2, _y2:_y2 + _h2].var())
+      if var < 2500:
+        print(y, var, _var if _var is not None else '')
+        img = img[y:oh, 0:ow]
+        oh, ow = img.shape
+        count = 1
+        break
+      _var = var
+    _var = None
+    cv2.imwrite(file_img, img)
+    for y in range(oh-1, oh - 1000, -ofset):
+      _x1 = 1000
+      _w1 = ow // 2 - x_ofset - _x1
+      _y1 = y - ofset
+      _h1 = ofset
+      _x2 = ow // 2 + x_ofset
+      _w2 = ow-1000 - _x2
+      _y2 = y - ofset
+      _h2 = ofset
+      cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 0, 255), 3)
+      cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 255, 0), 3)
+      var = min(img[_x1:_x1 + _w1, _y1:_y1 + _h1].var(), img[_x2:_x2 + _w2, _y2:_y2 + _h2].var())
+      print(y,var)
+      if var < 2500:
+        print(y, var, _var if _var is not None else '')
+        img = img[:y, 0:ow]
+        oh, ow = img.shape
+        count = 1
+        break
+      _var = var
+    # img[img > 160] = 248
+    # img[img > 220] = 248
+    # img[img < 248] = 0
+    # _img = img.copy()
+    # thresh = img.copy()
+    # # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
+    # _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
+    # _thresh = thresh.copy()
+    # oh, ow = thresh.shape
+    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    # bimg = img.copy()
+    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    # for contour in contours:
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   if (w < 32 and h < 32):
+    #     cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 0), -1)
+    #     if DEBUG:
+    #       cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 255), 3)
+    #   elif (w < 100 and h < 100):
+    #     cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)
     if DEBUG:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_img, img)
       cv2.imwrite(file_bimg, bimg)
-      cv2.imwrite(file_thresh, thresh)
+      # cv2.imwrite(file_thresh, thresh)
     else:
       self.save_with_dpi(file, img)
     return 1
