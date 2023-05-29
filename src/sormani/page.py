@@ -2212,14 +2212,15 @@ class Page:
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    img[img > 200] = 248
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    oh, ow = img.shape
-    img[img > 220] = 248
-    ofset = 150
-    x_ofset = 400
+    ofset = 128
+    x_ofset = 500
     _val = None
-    for y in range(0, 1000, ofset):
+    prec_y = 0
+    for y in range(500, 1000, ofset):
       _x1 = 1000
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y
@@ -2230,17 +2231,18 @@ class Page:
       _h2 = y + ofset - _y2
       cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 0, 255), 3)
       cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 255, 0), 3)
-      var = min(img[_x1:_x1 + _w1, _y1:_y1 + _h1].var(), img[_x2:_x2 + _w2, _y2:_y2 + _h2].var())
-      if var < 2500:
-        print(y, var, _var if _var is not None else '')
+      var = max(img[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
+      mean = min(img[_y1:_y1 + _h1, _x1:_x1 + _w1].mean(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].mean())
+      if var < 5000 and mean > 220:
         img = img[y:oh, 0:ow]
+        prec_y = y
         oh, ow = img.shape
         count = 1
         break
       _var = var
     _var = None
     cv2.imwrite(file_img, img)
-    for y in range(oh-1, oh - 1000, -ofset):
+    for y in range(oh-500, oh - 1000, -ofset):
       _x1 = 1000
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
@@ -2249,12 +2251,14 @@ class Page:
       _w2 = ow-1000 - _x2
       _y2 = y - ofset
       _h2 = ofset
-      cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 0, 255), 3)
-      cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 255, 0), 3)
-      var = min(img[_x1:_x1 + _w1, _y1:_y1 + _h1].var(), img[_x2:_x2 + _w2, _y2:_y2 + _h2].var())
-      print(y,var)
-      if var < 2500:
-        print(y, var, _var if _var is not None else '')
+      cv2.rectangle(bimg, (_x1, _y1 + prec_y), (_x1 + _w1, _y1 + _h1 + prec_y), (0, 0, 255), 3)
+      cv2.rectangle(bimg, (_x2, _y2 + prec_y), (_x2 + _w2, _y2 + _h2 + prec_y), (0, 255, 0), 3)
+      var = max(img[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
+      mean = (img[_y1:_y1 + _h1, _x1:_x1 + _w1].mean() + img[_y2:_y2 + _h2, _x2:_x2 + _w2].mean()) / 2
+      # print(var, mean)
+      # cv2.imwrite(file_bimg + '.' + str(y) + '_1_.tif', img[_y2:_y2 + _h2, _x1:_x1 + _w1])
+      # cv2.imwrite(file_bimg + '.' + str(y) + '_2_.tif', img[_y2:_y2 + _h2, _x2:_x2 + _w2])
+      if var < 5000 and mean > 220:
         img = img[:y, 0:ow]
         oh, ow = img.shape
         count = 1
