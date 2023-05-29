@@ -2213,13 +2213,13 @@ class Page:
     file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     oh, ow = img.shape
-    img[img > 200] = 248
+    # img[img > 200] = 248
+    thresh = img.copy()
+    thresh[img > 140] = 248
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     ofset = 128
     x_ofset = 500
-    _val = None
-    prec_y = 0
     for y in range(500, 1000, ofset):
       _x1 = 1000
       _w1 = ow // 2 - x_ofset - _x1
@@ -2229,61 +2229,57 @@ class Page:
       _w2 = ow-1000 - _x2
       _y2 = y
       _h2 = y + ofset - _y2
-      cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 0, 255), 3)
-      cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 255, 0), 3)
-      var = max(img[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
-      mean = min(img[_y1:_y1 + _h1, _x1:_x1 + _w1].mean(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].mean())
+      var = max(thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
+      mean = min(thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].mean(), thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].mean())
       if var < 5000 and mean > 220:
         img = img[y:oh, 0:ow]
-        prec_y = y
+        thresh = thresh[y:oh, 0:ow]
         oh, ow = img.shape
         count = 1
         break
-      _var = var
-    _var = None
-    cv2.imwrite(file_img, img)
     for y in range(oh-500, oh - 1000, -ofset):
       _x1 = 1000
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
       _h1 = ofset
       _x2 = ow // 2 + x_ofset
-      _w2 = ow-1000 - _x2
+      _w2 = ow - 1000 - _x2
       _y2 = y - ofset
       _h2 = ofset
-      cv2.rectangle(bimg, (_x1, _y1 + prec_y), (_x1 + _w1, _y1 + _h1 + prec_y), (0, 0, 255), 3)
-      cv2.rectangle(bimg, (_x2, _y2 + prec_y), (_x2 + _w2, _y2 + _h2 + prec_y), (0, 255, 0), 3)
-      var = max(img[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), img[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
-      mean = (img[_y1:_y1 + _h1, _x1:_x1 + _w1].mean() + img[_y2:_y2 + _h2, _x2:_x2 + _w2].mean()) / 2
-      # print(var, mean)
-      # cv2.imwrite(file_bimg + '.' + str(y) + '_1_.tif', img[_y2:_y2 + _h2, _x1:_x1 + _w1])
-      # cv2.imwrite(file_bimg + '.' + str(y) + '_2_.tif', img[_y2:_y2 + _h2, _x2:_x2 + _w2])
+      var = max(thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var(), thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].var())
+      mean = (thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].mean() + thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].mean()) / 2
       if var < 5000 and mean > 220:
         img = img[:y, 0:ow]
+        thresh = thresh[:y, 0:ow]
         oh, ow = img.shape
         count = 1
         break
-      _var = var
-    # img[img > 160] = 248
-    # img[img > 220] = 248
-    # img[img < 248] = 0
-    # _img = img.copy()
-    # thresh = img.copy()
-    # # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
-    # _, thresh = cv2.threshold(thresh, self.threshold, 255, cv2.THRESH_BINARY)
-    # _thresh = thresh.copy()
-    # oh, ow = thresh.shape
-    # contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    # bimg = img.copy()
-    # bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    # for contour in contours:
-    #   x, y, w, h = cv2.boundingRect(contour)
-    #   if (w < 32 and h < 32):
-    #     cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 0), -1)
-    #     if DEBUG:
-    #       cv2.rectangle(thresh, (x, y), (x + w, y + h), (0, 0, 255), 3)
-    #   elif (w < 100 and h < 100):
-    #     cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)
+    for x in range(500, 1000, ofset):
+      _x = x
+      _w = ofset
+      _y = 1000
+      _h = oh - 1000 - _y
+      var = thresh[_y:_y + _h, _x:_x + _w].var()
+      mean = thresh[_y:_y + _h, _x:_x + _w].mean()
+      if var < 5000 and mean > 220:
+        img = img[0:oh, x:ow]
+        thresh = thresh[0:oh, x:ow]
+        oh, ow = img.shape
+        count = 1
+        break
+    for x in range(ow - 500, ow - 1000, -ofset):
+      _x = x - ofset
+      _w = ofset
+      _y = 1000
+      _h = oh - 1000 - _y
+      var = thresh[_y:_y + _h, _x:_x + _w].var()
+      mean = thresh[_y:_y + _h, _x:_x + _w].mean()
+      if var < 5000 and mean > 220:
+        img = img[0:oh, 0:x]
+        thresh = thresh[0:oh, 0:x]
+        oh, ow = img.shape
+        count = 1
+        break
     if DEBUG:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
@@ -2292,7 +2288,7 @@ class Page:
       # cv2.imwrite(file_thresh, thresh)
     else:
       self.save_with_dpi(file, img)
-    return 1
+    return count
   def remove_dark_border(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]

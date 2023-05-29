@@ -19,8 +19,8 @@ from ocrmypdf.cli import plugins_only_parser, get_parser
 
 warnings.filterwarnings("ignore")
 
-# DEBUG = False
-DEBUG = True
+DEBUG = False
+# DEBUG = True
 MULTIPROCESSING = True
 # MULTIPROCESSING = False
 ORIGINAL_DPI = 400
