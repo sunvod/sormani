@@ -104,7 +104,9 @@ if __name__ == '__main__':
   # sormani.center_block()
   # sormani.set_border_dark(threshold=128)
   # sormani.center_block(threshold=247)
-  sormani.set_border_dark()
+
+  # sormani.cut_at_white_part()
+  sormani.cut_at_written_part()
 
 
   # sormani.bobine_delete_copies()
@@ -137,7 +139,7 @@ if __name__ == '__main__':
   # sormani.clean_images()
 
   # ultimo tentativo di pulire il bordo superiore La DOmenica del Corriere
-  # sormani.remove_last_single_frames_2()
+  # sormani.cut_at_written_part()
   # sormani.center_block(use_ai=True)
   # sormani.remove_single_frames(valid=[True,False,False,False])
 

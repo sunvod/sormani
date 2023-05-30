@@ -538,21 +538,36 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def remove_last_single_frames_2(self, threshold=200, default_frame=(1200,0,0,0)):
+  def cut_at_white_part(self, threshold=20, color=248, limit=240, var_limit=50):
     if not len(self.elements):
       return
     global global_count
     global_count.value = 0
     start_time = time.time()
-    print(f'Starting removing last single frames 2 of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting white part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_last_single_frames_2(threshold=threshold, default_frame=default_frame)
+      count = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit)
     if count:
       print(
-        f'Removing last single frames 2 of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Setting white part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      # self.set_elements()
+    else:
+      print(f'No white part is needed for \'{self.newspaper_name}\'.')
+  def cut_at_written_part(self, threshold=20, color=248, limit=240, var_limit=50):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting removing written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit)
+    if count:
+      print(
+        f'Removing written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
-      print(f'No removing last single frames 2 is needed for \'{self.newspaper_name}\'.')
+      print(f'No removing written part is needed for \'{self.newspaper_name}\'.')
   def delete_gray_on_borders(self, threshold=50,  default_frame=(1200,0,0,0), color=248):
     if not len(self.elements):
       return
@@ -944,21 +959,6 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing dark frames is needed for \'{self.newspaper_name}\'.')
-  def set_border_dark(self, threshold=20, color=248, limit=4000):
-    if not len(self.elements):
-      return
-    global global_count
-    global_count.value = 0
-    start_time = time.time()
-    print(f'Starting settimg dark frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    for page_pool in self:
-      count = page_pool.set_border_dark(threshold=threshold, color=color, limit=limit)
-    if count:
-      print(
-        f'Setting dark frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-      # self.set_elements()
-    else:
-      print(f'No setting dark frames is needed for \'{self.newspaper_name}\'.')
   def remove_gradient_border(self, threshold=230, limit=10, valid=[True,True,True,True]):
     if not len(self.elements):
       return

@@ -461,15 +461,6 @@ class Page_pool(list):
     return 0
   def _remove_last_single_frames(self, page):
     return page.remove_last_single_frames()
-  def remove_last_single_frames_2(self, threshold, default_frame):
-    for page in self:
-      page.threshold = threshold
-      page.default_frame = default_frame
-    with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._remove_last_single_frames_2, self)
-    if result is not None and all(v is not None for v in result):
-      return sum(result)
-    return 0
   def remove_dark_border(self, threshold, limit, valid):
     for page in self:
       page.limit = limit
@@ -488,24 +479,44 @@ class Page_pool(list):
       return count
   def _remove_dark_border(self, page):
     return page.remove_dark_border()
-  def set_border_dark(self, threshold, color, limit):
+  def cut_at_white_part(self, threshold, color, limit, var_limit):
     for page in self:
       page.threshold = threshold
       page.color = color
       page.limit = limit
+      page.var_limit = var_limit
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:
-        result = mp_pool.map(self._set_border_dark, self)
+        result = mp_pool.map(self._cut_at_white_part, self)
       if result is not None and all(v is not None for v in result):
         return sum(result)
       return 0
     else:
       count = 0
       for page in self:
-        count += self._set_border_dark(page)
+        count += self._cut_at_white_part(page)
       return count
-  def _set_border_dark(self, page):
-    return page.set_border_dark()
+  def _cut_at_white_part(self, page):
+    return page.cut_at_white_part()
+  def cut_at_written_part(self, threshold, color, limit, var_limit):
+    for page in self:
+      page.threshold = threshold
+      page.color = color
+      page.limit = limit
+      page.var_limit = var_limit
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._cut_at_written_part, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+    else:
+      count = 0
+      for page in self:
+        count += self._cut_at_written_part(page)
+      return count
+    return 0
+  def _cut_at_written_part(self, page):
+    return page.cut_at_written_part()
   def remove_gradient_border(self, threshold, limit, valid):
     for page in self:
       page.limit = limit
@@ -544,27 +555,6 @@ class Page_pool(list):
       return count
   def _remove_fix_border(self, page):
     return page.remove_fix_border()
-  # def remove_last_single_frames_2(self, threshold, default_frame):
-  #   result = 0
-  #   for i, page in enumerate(self):
-  #     if not i:
-  #       ai = page.ais.get_model(ISFIRSTPAGE)
-  #       model = ai.model if ai is not None else None
-  #     page.threshold = threshold
-  #     page.default_frame = default_frame
-  #     page.model = model
-  #   if model is None:
-  #     with Pool(processes=N_PROCESSES) as mp_pool:
-  #       result = mp_pool.map(self._remove_last_single_frames_2, self)
-  #     if result is not None and all(v is not None for v in result):
-  #       return sum(result)
-  #     return 0
-  #   else:
-  #     for page in self:
-  #       result += self._remove_last_single_frames_2(page)
-  #     return result
-  def _remove_last_single_frames_2(self, page):
-    return page.remove_last_single_frames_2()
   def delete_gray_on_borders(self, threshold, default_frame, color):
     for page in self:
       page.threshold = threshold
