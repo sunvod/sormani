@@ -538,7 +538,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def cut_at_white_part(self, threshold=20, color=248, limit=240, var_limit=50):
+  def cut_at_white_part(self, threshold=20, color=248, limit=240, var_limit=50, x_ofset=50):
     if not len(self.elements):
       return
     global global_count
@@ -546,14 +546,14 @@ class Sormani():
     start_time = time.time()
     print(f'Starting white part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit)
+      count = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
     if count:
       print(
         f'Setting white part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       # self.set_elements()
     else:
       print(f'No white part is needed for \'{self.newspaper_name}\'.')
-  def cut_at_written_part(self, threshold=20, color=248, limit=240, var_limit=50):
+  def cut_at_written_part(self, threshold=20, color=248, limit=240, var_limit=50, x_ofset=600):
     if not len(self.elements):
       return
     global global_count
@@ -561,7 +561,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit)
+      count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
     if count:
       print(
         f'Removing written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')

@@ -2281,17 +2281,18 @@ class Page:
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     ofset = 48
-    x_ofset = 500
+    x_ofset = self.x_ofset
     count = 0
-    y_last = 0
+    y_last_up = 0
+    y_last_down = 0
     x_last = 0
     for y in range(1200, 0, -ofset):
-      _x1 = 800
+      _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
       _h1 = ofset
       _x2 = ow // 2 + x_ofset
-      _w2 = ow - 800 - _x2
+      _w2 = ow - self.x_ofset - _x2
       _y2 = y
       _h2 = ofset
       var1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var()
@@ -2310,15 +2311,15 @@ class Page:
         thresh = thresh[y:oh, 0:ow]
         oh, ow = img.shape
         count = 1
-        y_last = y
+        y_last_up = y
         break
     for y in range(oh - 1200, oh, ofset):
-      _x1 = 800
+      _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
       _h1 = ofset
       _x2 = ow // 2 + x_ofset
-      _w2 = ow - 800 - _x2
+      _w2 = ow - self.x_ofset - _x2
       _y2 = y - ofset
       _h2 = ofset
       var1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var()
@@ -2330,24 +2331,25 @@ class Page:
       if DEBUG:
         print('2a:', var1, mean1)
         print('2b:', var2, mean2)
-        cv2.rectangle(bimg, (_x1, _y1 + y_last), (_x1 + _w1, _y1 + y_last + _h1), (0, 255, 0), 5)
-        cv2.rectangle(bimg, (_x2, _y2 + y_last), (_x2 + _w2, _y2 + y_last + _h2), (0, 0, 255), 5)
+        cv2.rectangle(bimg, (_x1, _y1 + y_last_up), (_x1 + _w1, _y1 + y_last_up + _h1), (0, 255, 0), 5)
+        cv2.rectangle(bimg, (_x2, _y2 + y_last_up), (_x2 + _w2, _y2 + y_last_up + _h2), (0, 0, 255), 5)
       if var < self.var_limit:  # and mean > self.limit:
         img = img[:y, 0:ow]
         thresh = thresh[:y, 0:ow]
         oh, ow = img.shape
         count = 1
+        y_last_down = y
         break
     for x in range(1200, 0, -ofset):
       _x = x
       _w = ofset
-      _y = 800 - y_last
-      _h = oh - 800 - y_last - _y
+      _y = 0
+      _h = oh
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       mean = thresh[_y:_y + _h, _x:_x + _w].mean()
       if DEBUG:
         print('3:', var, mean)
-        cv2.rectangle(bimg, (_x, _y + y_last), (_x + _w, _y + y_last + _h), (0, 255, 0), 5)
+        cv2.rectangle(bimg, (_x, _y + y_last_up), (_x + _w, _y + y_last_up + _h), (0, 255, 0), 5)
       if var < self.var_limit:  # and mean > self.limit:
         img = img[0:oh, x:ow]
         thresh = thresh[0:oh, x:ow]
@@ -2358,13 +2360,13 @@ class Page:
     for x in range(ow - 1200, ow, ofset):
       _x = x - ofset
       _w = ofset
-      _y = 800
-      _h = oh - 800 - _y
+      _y = 0
+      _h = oh
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       mean = thresh[_y:_y + _h, _x:_x + _w].mean()
       if DEBUG:
         print('4:', var, mean)
-        cv2.rectangle(bimg, (_x + x_last, _y + y_last), (_x + x_last + _w, _y + y_last + _h), (0, 255, 0), 5)
+        cv2.rectangle(bimg, (_x + x_last, _y + y_last_up), (_x + x_last + _w, _y + y_last_up + _h), (0, 255, 0), 5)
       if var < self.var_limit:  # and mean > self.limit:
         img = img[0:oh, 0:x]
         thresh = thresh[0:oh, 0:x]
