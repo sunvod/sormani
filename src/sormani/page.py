@@ -2163,7 +2163,7 @@ class Page:
     oh, ow = img.shape
     # img[img > 200] = 248
     thresh = img.copy()
-    thresh[img > 100] = 248
+    thresh[img > self.threshold] = 248
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     ofset = 150
@@ -2277,7 +2277,7 @@ class Page:
     oh, ow = img.shape
     # img[img > 200] = 248
     thresh = img.copy()
-    thresh[img > 128] = 248
+    thresh[img > self.threshold] = 248
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     ofset = 48

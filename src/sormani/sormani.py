@@ -538,7 +538,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing last single frames is needed for \'{self.newspaper_name}\'.')
-  def cut_at_white_part(self, threshold=20, color=248, limit=240, var_limit=50, x_ofset=50):
+  def cut_at_white_part(self, threshold=50, color=248, limit=240, var_limit=50, x_ofset=50):
     if not len(self.elements):
       return
     global global_count
@@ -553,7 +553,7 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No white part is needed for \'{self.newspaper_name}\'.')
-  def cut_at_written_part(self, threshold=20, color=248, limit=240, var_limit=30, x_ofset=1200):
+  def cut_at_written_part(self, threshold=50, color=248, limit=240, var_limit=100, x_ofset=1200):
     if not len(self.elements):
       return
     global global_count
