@@ -519,6 +519,24 @@ class Page_pool(list):
     return 0
   def _cut_at_written_part(self, page):
     return page.cut_at_written_part()
+  def add_borders(self, x_borders, y_borders, color):
+    for page in self:
+      page.x_borders = x_borders
+      page.y_borders = y_borders
+      page.color = color
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._add_borders, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+    else:
+      count = 0
+      for page in self:
+        count += self._add_borders(page)
+      return count
+    return 0
+  def _add_borders(self, page):
+    return page.add_borders()
   def remove_gradient_border(self, threshold, limit, valid):
     for page in self:
       page.limit = limit

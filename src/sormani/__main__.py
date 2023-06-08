@@ -106,7 +106,8 @@ if __name__ == '__main__':
   # sormani.center_block(threshold=247)
 
   # sormani.cut_at_white_part()
-  sormani.cut_at_written_part()
+  # sormani.cut_at_written_part()
+  sormani.add_borders()
 
 
   # sormani.bobine_delete_copies()

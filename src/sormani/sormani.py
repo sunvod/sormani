@@ -559,15 +559,30 @@ class Sormani():
     global global_count
     global_count.value = 0
     start_time = time.time()
-    print(f'Starting removing written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    print(f'Starting removing at written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
       count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
     if count:
       print(
-        f'Removing written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Removing at written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
-      print(f'No removing written part is needed for \'{self.newspaper_name}\'.')
+      print(f'No removing at written part is needed for \'{self.newspaper_name}\'.')
+  def add_borders(self, x_borders=100, y_borders=100, color=248):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting adding borders of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.add_borders(x_borders=x_borders, y_borders=y_borders, color=color)
+    if count:
+      print(
+        f'Removing adding borders  of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No adding borders is needed for \'{self.newspaper_name}\'.')
   def delete_gray_on_borders(self, threshold=50,  default_frame=(1200,0,0,0), color=248):
     if not len(self.elements):
       return

@@ -2398,6 +2398,22 @@ class Page:
     else:
       self.save_with_dpi(file, img)
     return count
+  def add_borders(self):
+    file = self.original_image
+    file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    count = 0
+    if self.x_borders > 0:
+      img = cv2.copyMakeBorder(img, self.x_borders, self.x_borders, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
+    count = 1
+    if self.y_borders:
+      img = cv2.copyMakeBorder(img, 0, 0, self.y_borders, self.y_borders, cv2.BORDER_CONSTANT, value=self.color)
+      count = 1
+    if DEBUG:
+      cv2.imwrite(file_img, img)
+    else:
+      self.save_with_dpi(file, img)
+    return count
   def remove_dark_border(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
