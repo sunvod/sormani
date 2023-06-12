@@ -545,8 +545,13 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(f'Starting white part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
     for page_pool in self:
-      count = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
+      n = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
     if count:
       print(
         f'Setting white part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -568,7 +573,22 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No removing at written part is needed for \'{self.newspaper_name}\'.')
-  def add_borders(self, x_borders=100, y_borders=100, color=248):
+  def divide_at_written_part(self, threshold=50, color=248, limit=240, var_limit=100, x_ofset=1200):
+    if not len(self.elements):
+      return
+    global global_count
+    global_count.value = 0
+    start_time = time.time()
+    print(f'Starting dividing at written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    for page_pool in self:
+      count = page_pool.divide_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
+    if count:
+      print(
+        f'Dividing at written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+      self.set_elements()
+    else:
+      print(f'No dividing at written part is needed for \'{self.newspaper_name}\'.')
+  def add_borders(self, x_borders=250, y_borders=250, color=248):
     if not len(self.elements):
       return
     global global_count

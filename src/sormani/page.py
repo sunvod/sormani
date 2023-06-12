@@ -2297,13 +2297,10 @@ class Page:
       _h2 = ofset
       var1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var()
       var2 = thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].var()
-      mean1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].mean()
-      mean2 = thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].mean()
       var = max(var1, var2)
-      mean = (mean1 + mean2) / 2
       if DEBUG:
-        print('1a:', var1, mean1)
-        print('1b:', var2, mean2)
+        print('1a:', var1)
+        print('1b:', var2)
         cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 255, 0), 5)
         cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 0, 255), 5)
       if var < self.var_limit:  # and mean > self.limit:
@@ -2324,13 +2321,10 @@ class Page:
       _h2 = ofset
       var1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].var()
       var2 = thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].var()
-      mean1 = thresh[_y1:_y1 + _h1, _x1:_x1 + _w1].mean()
-      mean2 = thresh[_y2:_y2 + _h2, _x2:_x2 + _w2].mean()
       var = max(var1, var2)
-      mean = (mean1 + mean2) / 2
       if DEBUG:
-        print('2a:', var1, mean1)
-        print('2b:', var2, mean2)
+        print('2a:', var1)
+        print('2b:', var2)
         cv2.rectangle(bimg, (_x1, _y1 + y_last_up), (_x1 + _w1, _y1 + y_last_up + _h1), (0, 255, 0), 5)
         cv2.rectangle(bimg, (_x2, _y2 + y_last_up), (_x2 + _w2, _y2 + y_last_up + _h2), (0, 0, 255), 5)
       if var < self.var_limit:
@@ -2348,7 +2342,7 @@ class Page:
       _h = oh
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       if DEBUG:
-        print('3:', var, mean)
+        print('3:', var)
         cv2.rectangle(bimg, (_x, _y + y_last_up), (_x + _w, _y + y_last_up + _h), (0, 255, 0), 5)
       if flag < 2 and var < self.var_limit:
         flag = 1
@@ -2373,7 +2367,7 @@ class Page:
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       mean = thresh[_y:_y + _h, _x:_x + _w].mean()
       if DEBUG:
-        print('4:', var, mean)
+        print('4:', var)
         cv2.rectangle(bimg, (_x + x_last, _y + y_last_up), (_x + x_last + _w, _y + y_last_up + _h), (0, 255, 0), 5)
       if flag < 2 and var < self.var_limit:
         flag = 1
@@ -2397,6 +2391,92 @@ class Page:
       # cv2.imwrite(file_thresh, thresh)
     else:
       self.save_with_dpi(file, img)
+    return count
+  def divide_at_written_part(self):
+    file = self.original_image
+    file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
+    file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
+    file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
+    file_img_left = '.'.join(file.split('.')[:-1]) + '_1.' + file.split('.')[-1]
+    file_img_right = '.'.join(file.split('.')[:-1]) + '_2.' + file.split('.')[-1]
+    file_thresh_left = '.'.join(file.split('.')[:-1]) + '_thresh_1.' + file.split('.')[-1]
+    file_thresh_right = '.'.join(file.split('.')[:-1]) + '_thresh_2.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
+    # img[img > 200] = 248
+    thresh = img.copy()
+    thresh[img > self.threshold] = 248
+    bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    ofset = 48
+    x_ofset = 1000
+    count = 0
+    y_last_up = 0
+    y_last_down = 0
+    x_last = 0
+    flag = 0
+    img_left = None
+    img_right = None
+    thresh_left = None
+    thresh_right = None
+    for x in range(ow // 2 - x_ofset, ow // 2 + x_ofset, ofset):
+      _x = x
+      _w = ofset
+      _y = 0
+      _h = oh
+      var = thresh[_y:_y + _h, _x:_x + _w].var()
+      if DEBUG:
+        print('left:', var)
+        cv2.rectangle(bimg, (_x, _y + y_last_up), (_x + _w, _y + y_last_up + _h), (0, 255, 0), 5)
+      if flag < 2 and var < self.var_limit:
+        flag = 1
+        continue
+      if flag == 1:
+        _x += ofset
+        var = thresh[_y:_y + _h, _x:_x + _w].var()
+      flag = 2
+      if var < self.var_limit:
+        img_left = img[0:oh, 0:x]
+        thresh_right = thresh[0:oh, 0:x]
+        oh, ow = img.shape
+        x_last = x
+        count = 1
+        break
+    flag = 0
+    for x in range(ow // 2 + x_ofset, ow // 2 - x_ofset, -ofset):
+      _x = x - ofset
+      _w = ofset
+      _y = 0
+      _h = oh
+      var = thresh[_y:_y + _h, _x:_x + _w].var()
+      if DEBUG:
+        print('right:', var)
+        cv2.rectangle(bimg, (_x + x_last, _y + y_last_up), (_x + x_last + _w, _y + y_last_up + _h), (0, 255, 0), 5)
+      if flag < 2 and var < self.var_limit:
+        flag = 1
+        continue
+      if flag == 1:
+        _x -= ofset
+        var = thresh[_y:_y + _h, _x:_x + _w].var()
+      flag = 2
+      if var < self.var_limit:  # and mean > self.limit:
+        img_right = img[0:oh, x:ow]
+        thresh_right = thresh[0:oh, x:ow]
+        oh, ow = img.shape
+        count = 1
+        break
+    if DEBUG:
+      nimg = img.copy()
+      cv2.imwrite(file_nimg, nimg)
+      cv2.imwrite(file_img_left, img_left)
+      cv2.imwrite(file_img_right, img_right)
+      cv2.imwrite(file_bimg, bimg)
+      cv2.imwrite(file_thresh_left, thresh_left)
+      cv2.imwrite(file_thresh_right, thresh_right)
+    else:
+      self.save_with_dpi(file_img_left, img_left)
+      self.save_with_dpi(file_img_right, img_right)
+      os.remove(file)
     return count
   def add_borders(self):
     file = self.original_image

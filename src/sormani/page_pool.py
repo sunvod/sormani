@@ -519,6 +519,26 @@ class Page_pool(list):
     return 0
   def _cut_at_written_part(self, page):
     return page.cut_at_written_part()
+  def divide_at_written_part(self, threshold, color, limit, var_limit, x_ofset):
+    for page in self:
+      page.threshold = threshold
+      page.color = color
+      page.limit = limit
+      page.var_limit = var_limit
+      page.x_ofset = x_ofset
+    if MULTIPROCESSING:
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        result = mp_pool.map(self._divide_at_written_part, self)
+      if result is not None and all(v is not None for v in result):
+        return sum(result)
+    else:
+      count = 0
+      for page in self:
+        count += self._divide_at_written_part(page)
+      return count
+    return 0
+  def _divide_at_written_part(self, page):
+    return page.divide_at_written_part()
   def add_borders(self, x_borders, y_borders, color):
     for page in self:
       page.x_borders = x_borders
