@@ -545,13 +545,8 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(f'Starting white part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
-    count = 0
     for page_pool in self:
-      n = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
-      if n:
-        count += n
-        i = self.pages_pool.index(page_pool)
-        self.pages_pool[i] = None
+      count = page_pool.cut_at_white_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
     if count:
       print(
         f'Setting white part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -580,8 +575,13 @@ class Sormani():
     global_count.value = 0
     start_time = time.time()
     print(f'Starting dividing at written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
+    count = 0
     for page_pool in self:
-      count = page_pool.divide_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
+      n = page_pool.divide_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, x_ofset=x_ofset)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
     if count:
       print(
         f'Dividing at written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
