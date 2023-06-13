@@ -1999,6 +1999,32 @@ class Page:
       self.save_with_dpi(file, img)
     return 1
   def rotate_final_frames(self):
+    def union(contours):
+      j = 0
+      while j < len(contours) - 1:
+        contour = contours[j]
+        x, y, w, h = cv2.boundingRect(contour)
+        flag = False
+        for i, _contour in enumerate(contours):
+          if i == j:
+            continue
+          _x, _y, _w, _h = cv2.boundingRect(_contour)
+          if _x >= x and _y >= y and _x + _w <= x + w and _y + _h <= y + h:
+            del contours[i]
+            flag = True
+            break
+          points = np.vstack([contour, _contour])
+          ctr = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
+          ctr = cv2.convexHull(ctr)
+          # x, y, w, h = cv2.boundingRect(ctr)
+          # contour = np.array([(x, y), (x + w - 1, y), (x + w - 1, y + h - 1), (x, y + h - 1)]).reshape((-1, 1, 2)).astype(np.int32)
+          contours[j] = ctr
+          del contours[i]
+          flag = True
+          break
+        if not flag:
+          j += 1
+      return contours
     def rotate_image(image, angle):
       image_center = tuple(np.array(image.shape[1::-1]) / 2)
       rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
@@ -2010,63 +2036,45 @@ class Page:
     count = 0
     file = self.original_image
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
-    file_ning = '.'.join(file.split('.')[:-1]) + '_ning.' + file.split('.')[-1]
+    file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    bimg = img.copy()
+    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     if self.angle is not None:
       img = rotate_image(img, self.angle)
       self.save_with_dpi(file, img)
       return 1
     ret, thresh = cv2.threshold(img, 32, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    for contour in contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if w < 5 or h < 5:
-        cv2.rectangle(thresh, (x, y), (x + w, y + h), (255, 255, 255), -1)    # Questo elimina i punti < 3
-    fill_hole = 16
-    invert_fill_hole = False
-    if invert_fill_hole:
-      binaryImage, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    else:
-      binaryImage, thresh = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((fill_hole, 8), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=16)
-    if invert_fill_hole:
-      thresh = 255 - thresh
-    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    bimg = img.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
-    rect = None
     _contours = []
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
-      if (x > 0 or y > 0) and w > self.limit and h > self.limit:
+      if (x > 0 or y > 0):
         _contours.append(contour)
-    # points = [(x, y), (x + w - 1, y), (x + w - 1, y + h -1 ), (x, y + h - 1)]
-    # contour = np.array(points).reshape((-1, 1, 2)).astype(np.int32)
-    _contours.sort(key=_ordering_contours)
+    # _contours.sort(key=_ordering_contours)
     contours = _contours
-    if len(_contours):
-      contour = max(contours, key=cv2.contourArea)
+    contours = union(list(contours))
+    for contour in contours:
       rect = cv2.minAreaRect(contour)
-      if DEBUG:
-        box = np.int0(cv2.boxPoints(rect))
-        cv2.drawContours(bimg, [box], -1, (0, 0, 255), 3)
-    if rect is not None:
-      angle = rect[2]
-      if angle < 45:
-        angle = 90 + angle
-      if angle > 85 and (angle < 89.9 or angle > 90.1):
-        angle = angle - 90
-        if angle < 5.0:
-          img = rotate_image(img, angle)
-          count += 1
-      if DEBUG:
-        cv2.imwrite(file_ning, img)
-        cv2.imwrite(file_bing, bimg)
-        cv2.imwrite(file_thresh, thresh)
-      else:
-        self.save_with_dpi(file, img)
+      box = np.int0(cv2.boxPoints(rect))
+      cv2.drawContours(bimg, [box], -1, (0, 0, 255), 10)
+      if rect is not None:
+        angle = rect[2]
+        if angle < 45:
+          angle = 90 + angle
+        if angle > 85 and (angle < 89.9 or angle > 90.1):
+          angle = angle - 90
+          if angle < 5.0:
+            img = rotate_image(img, angle)
+            count += 1
+      break
+    if DEBUG:
+      cv2.imwrite(file_img, img)
+      cv2.imwrite(file_bing, bimg)
+      cv2.imwrite(file_thresh, thresh)
+    else:
+      self.save_with_dpi(file, img)
     return count
   def delete_gray_on_borders(self):
     # self.default_frame = (1000,1000,1000,1000)
@@ -2304,6 +2312,7 @@ class Page:
         cv2.rectangle(bimg, (_x1, _y1), (_x1 + _w1, _y1 + _h1), (0, 255, 0), 5)
         cv2.rectangle(bimg, (_x2, _y2), (_x2 + _w2, _y2 + _h2), (0, 0, 255), 5)
       if var < self.var_limit:  # and mean > self.limit:
+        y -= ofset
         img = img[y:oh, 0:ow]
         thresh = thresh[y:oh, 0:ow]
         oh, ow = img.shape
@@ -2328,6 +2337,7 @@ class Page:
         cv2.rectangle(bimg, (_x1, _y1 + y_last_up), (_x1 + _w1, _y1 + y_last_up + _h1), (0, 255, 0), 5)
         cv2.rectangle(bimg, (_x2, _y2 + y_last_up), (_x2 + _w2, _y2 + y_last_up + _h2), (0, 0, 255), 5)
       if var < self.var_limit:
+        y += ofset
         img = img[:y, 0:ow]
         thresh = thresh[:y, 0:ow]
         oh, ow = img.shape
@@ -2352,6 +2362,7 @@ class Page:
         var = thresh[_y:_y + _h, _x:_x + _w].var()
       flag = 2
       if var < self.var_limit:
+        x -= ofset
         img = img[0:oh, x:ow]
         thresh = thresh[0:oh, x:ow]
         oh, ow = img.shape
@@ -2377,6 +2388,7 @@ class Page:
         var = thresh[_y:_y + _h, _x:_x + _w].var()
       flag = 2
       if var < self.var_limit:  # and mean > self.limit:
+        x += ofset
         img = img[0:oh, 0:x]
         thresh = thresh[0:oh, 0:x]
         oh, ow = img.shape
