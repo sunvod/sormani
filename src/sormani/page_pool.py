@@ -957,12 +957,13 @@ class Page_pool(list):
     return count
   def _rotate_frames(self, page):
     return page.rotate_frames()
-  def rotate_final_frames(self, limit=4000, threshold=200, angle=None):
+  def rotate_final_frames(self, limit, threshold, angle, color):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.angle = angle
+      page.color = color
     with Pool(processes=N_PROCESSES) as mp_pool:
       counts = mp_pool.map(self._rotate_final_frames, self)
     for i in counts:

@@ -42,7 +42,7 @@ if __name__ == '__main__':
                     # days=[x for x in range(17,32)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    days=[70],
+                    days=[40],
                     force=True,
                     is_bobina=True)
 
@@ -107,10 +107,12 @@ if __name__ == '__main__':
 
   # sormani.cut_at_white_part()
 
-  # sormani.clean_images(threshold=120, use_ai=False)
-  # sormani.cut_at_written_part()
-  # sormani.divide_at_written_part()
-  # sormani.add_borders()
+  sormani.clean_images()
+  sormani.cut_at_written_part()
+  sormani.divide_at_written_part()
+  sormani.add_borders()
+  sormani.rotate_final_frames()
+
 
   # sormani.bobine_delete_copies()
   # sormani.clean_images(use_ai=False)
@@ -121,9 +123,6 @@ if __name__ == '__main__':
   # sormani.remove_single_frames()
   # sormani.center_block()
 
-  # sormani.rotate_final_frames()
-  sormani.cut_at_written_part()
-  sormani.add_borders()
 
   # tentativo di pulire il bordo superiore La Domenica del Corriere
   # sormani.delete_gray_on_borders()

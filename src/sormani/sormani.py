@@ -446,6 +446,7 @@ class Sormani():
         count += n
         i = self.pages_pool.index(page_pool)
         self.pages_pool[i] = None
+    self.set_elements()
     if count:
       print(
         f'Division of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -582,6 +583,7 @@ class Sormani():
         count += n
         i = self.pages_pool.index(page_pool)
         self.pages_pool[i] = None
+    self.set_elements()
     if count:
       print(
         f'Dividing at written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
@@ -1031,12 +1033,12 @@ class Sormani():
     for page_pool in self:
       count += page_pool.rotate_frames(limit, threshold, angle)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_final_frames(self, limit=100, threshold=210, angle=None):
+  def rotate_final_frames(self, limit=100, threshold=210, angle=None, color=248):
     start_time = time.time()
     print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_final_frames(limit, threshold, angle)
+      count += page_pool.rotate_final_frames(limit, threshold, angle, color)
     print(
       f'End rotate {count} final frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):
