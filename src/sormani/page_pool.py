@@ -499,12 +499,13 @@ class Page_pool(list):
       return count
   def _cut_at_white_part(self, page):
     return page.cut_at_white_part()
-  def cut_at_written_part(self, threshold, color, limit, var_limit, x_ofset):
+  def cut_at_written_part(self, threshold, color, limit, var_limit, ofset, x_ofset):
     for page in self:
       page.threshold = threshold
       page.color = color
       page.limit = limit
       page.var_limit = var_limit
+      page.ofset = ofset
       page.x_ofset = x_ofset
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:
@@ -519,12 +520,13 @@ class Page_pool(list):
     return 0
   def _cut_at_written_part(self, page):
     return page.cut_at_written_part()
-  def divide_at_written_part(self, threshold, color, limit, var_limit, x_ofset):
+  def divide_at_written_part(self, threshold, color, limit, var_limit, ofset, x_ofset):
     for page in self:
       page.threshold = threshold
       page.color = color
       page.limit = limit
       page.var_limit = var_limit
+      page.ofset = ofset
       page.x_ofset = x_ofset
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:

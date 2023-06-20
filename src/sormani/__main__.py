@@ -38,7 +38,7 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('La Domenica',
+  sormani = Sormani('Scenario',
                     # days=[x for x in range(17,32)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
@@ -95,21 +95,13 @@ if __name__ == '__main__':
 
   # sormani.improve_images(limit=200, threshold="b0")
 
-  # sormani.rotate_frames()
-  # sormani.remove_borders()
-  # sormani.remove_gradient_border(limit=10)
-  # sormani.remove_gradient_border(limit=10)
-  # sormani.remove_gradient_border(limit=5)
-  # sormani.clean_images(use_ai=False)
-  # sormani.center_block()
-  # sormani.set_border_dark(threshold=128)
-  # sormani.center_block(threshold=247)
-
   # sormani.cut_at_white_part()
 
+  # Scenario
   sormani.clean_images()
-  sormani.cut_at_written_part()
-  sormani.divide_at_written_part()
+  sormani.remove_dark_border()
+  sormani.cut_at_written_part(threshold=240)
+  sormani.divide_at_written_part(var_limit=50, ofset=48)
   sormani.add_borders()
   sormani.rotate_final_frames()
 
