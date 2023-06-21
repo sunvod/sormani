@@ -588,7 +588,7 @@ class Sormani():
       self.set_elements()
     else:
       print(f'No dividing at written part is needed for \'{self.newspaper_name}\'.')
-  def add_borders(self, x_borders=250, y_borders=250, color=248):
+  def add_borders(self, x_borders=250, y_borders=200, color=248):
     if not len(self.elements):
       return
     global global_count
@@ -599,7 +599,7 @@ class Sormani():
       count = page_pool.add_borders(x_borders=x_borders, y_borders=y_borders, color=color)
     if count:
       print(
-        f'Removing adding borders  of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+        f'Added borders  of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
       self.set_elements()
     else:
       print(f'No adding borders is needed for \'{self.newspaper_name}\'.')
@@ -1031,7 +1031,7 @@ class Sormani():
     for page_pool in self:
       count += page_pool.rotate_frames(limit, threshold, angle)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_final_frames(self, limit=100, threshold=210, angle=None, color=248):
+  def rotate_final_frames(self, limit=100, threshold=32, angle=None, color=248):
     start_time = time.time()
     print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0

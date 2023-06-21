@@ -2045,7 +2045,7 @@ class Page:
       img = rotate_image(img, self.angle)
       self.save_with_dpi(file, img)
       return 1
-    ret, thresh = cv2.threshold(img, 32, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     _contours = []
     for contour in contours:
@@ -2063,9 +2063,9 @@ class Page:
         angle = rect[2]
         if angle < 45:
           angle = 90 + angle
-        if angle > 85 and (angle < 89.9 or angle > 90.1):
+        if angle > 82 and (angle < 89.9 or angle > 90.1):
           angle = angle - 90
-          if angle < 5.0:
+          if angle < 8.0:
             img = rotate_image(img, angle, self.color)
             count += 1
       break
@@ -2294,7 +2294,7 @@ class Page:
     y_last_up = 0
     y_last_down = 0
     x_last = 0
-    for y in range(800, 0, -ofset):
+    for y in range(500, 0, -ofset):
       _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
@@ -2322,7 +2322,7 @@ class Page:
     # mean = img[0, 0:ow].mean()
     # if mean == 0:
     #   self.cut_at_written_part()
-    for y in range(oh - 800, oh, ofset):
+    for y in range(oh - 500, oh, ofset):
       _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y
@@ -2437,7 +2437,7 @@ class Page:
     thresh = img.copy()
     thresh[img > self.threshold] = self.color
     ofset = self.ofset
-    x_ofset = 1000
+    x_ofset = self.x_ofset
     count = 0
     y_last_up = 0
     y_last_down = 0
@@ -2495,11 +2495,17 @@ class Page:
       img_left = img[0:oh, 0:ow // 2 - 50]
     if img_right is None:
       img_right = img[0:oh, ow // 2 + 50:ow]
+    if img_left.mean() >= self.color - 2:
+      img_left = None
+    if img_right.mean() >= self.color - 2:
+      img_right = None
     if DEBUG:
       nimg = img.copy()
       cv2.imwrite(file_nimg, nimg)
-      cv2.imwrite(file_img_left, img_left)
-      cv2.imwrite(file_img_right, img_right)
+      if img_left is not None:
+        cv2.imwrite(file_img_left, img_left)
+      if img_right is not None:
+        cv2.imwrite(file_img_right, img_right)
       cv2.imwrite(file_bimg, bimg)
       if thresh_left is not None:
         cv2.imwrite(file_thresh_left, thresh_left)
@@ -2632,6 +2638,8 @@ class Page:
     except:
       return 0
   def save_with_dpi(self, file, img):
+    if img is None:
+      return
     try:
       PILimage = Image.fromarray(img)
     except Exception as e:

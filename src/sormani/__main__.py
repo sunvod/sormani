@@ -86,11 +86,10 @@ if __name__ == '__main__':
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
 
+  # Scenario merge
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
-
   # sormani.rotate_frames(threshold=50)
-  # sormani.remove_borders()
   # sormani.bobine_delete_copies()
 
   # sormani.improve_images(limit=200, threshold="b0")
@@ -98,12 +97,12 @@ if __name__ == '__main__':
   # sormani.cut_at_white_part()
 
   # Scenario
-  sormani.clean_images()
+  sormani.clean_images(threshold=200)
   sormani.remove_dark_border()
-  sormani.cut_at_written_part(threshold=240)
-  sormani.divide_at_written_part(var_limit=50, ofset=48)
+  sormani.cut_at_written_part(threshold=200)
+  sormani.divide_at_written_part(var_limit=50, ofset=128, x_ofset=750)
   sormani.add_borders()
-  sormani.rotate_final_frames()
+  sormani.rotate_final_frames(threshold=100)
 
 
   # sormani.bobine_delete_copies()
