@@ -86,57 +86,23 @@ if __name__ == '__main__':
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
 
-  # Scenario merge
+  # # Scenario merge
   # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
   # sormani.rotate_frames(threshold=50)
   # sormani.bobine_delete_copies()
-
-  # sormani.improve_images(limit=200, threshold="b0")
-
-  # sormani.cut_at_white_part()
-
-  # Scenario
+  #
+  # # Scenario
   sormani.clean_images(threshold=200)
   sormani.remove_dark_border()
   sormani.cut_at_written_part(threshold=200)
-  sormani.divide_at_written_part(var_limit=50, ofset=128, x_ofset=750)
+  sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
   sormani.add_borders()
   sormani.rotate_final_frames(threshold=100)
 
-
-  # sormani.bobine_delete_copies()
-  # sormani.clean_images(use_ai=False)
-  # sormani.center_block(use_ai=True)
-  # sormani.center_block()
-  # sormani.divide_image()
-  # sormani.center_block(use_ai=True)
-  # sormani.remove_single_frames()
-  # sormani.center_block()
-
-
-  # tentativo di pulire il bordo superiore La Domenica del Corriere
-  # sormani.delete_gray_on_borders()
-  # sormani.remove_single_frames()
-  # sormani.center_block()
-  # sormani.center_block()
-
-  # tentativo di pulire il bordo superiore Il Mondo
-  # sormani.rotate_frames()
-  # sormani.remove_dark_border(valid=[False,False,True,True])
-  # sormani.divide_image()
-  # sormani.bobine_delete_copies()
-  # sormani.remove_dark_border(valid=[True,True,False,False])
-  # sormani.clean_images(last_threshold=None)
-  # sormani.bobine_delete_copies()
-
-  # sormani.remove_fix_border(check=[None, 5450], limit=[0, 0, 0, 100], max=True, border=[False,False])
-  # sormani.clean_images()
-
-  # ultimo tentativo di pulire il bordo superiore La DOmenica del Corriere
-  # sormani.cut_at_written_part()
-  # sormani.center_block(use_ai=True)
-  # sormani.remove_single_frames(valid=[True,False,False,False])
+  # Scenario prepare images
+  # sormani.set_all_images_names()
+  # sormani.create_all_images(ocr = True)
 
   # sormani.set_all_images_names()
   # sormani.create_all_images(ocr = False)
@@ -152,17 +118,6 @@ if __name__ == '__main__':
   # sormani.center_block(color=248, model_path='best_model_DenseNet201', use_ai=False)                                                 # 10
   # sormani.create_all_images()
 
-  # sormani.remove_last_single_frames(default_frame=(300,300,300,300))            # 9
-
-  # sormani.change_colors(inversion = True, limit = "ba")
-
-  # sormani.change_colors(inversion=False, limit="c0")
-
-  # sormani.select_images(limit=200)
-
-  # sormani.set_fotogrammi_folders()
-
-  # sormani = Sormani('Il Mondo', year=1949, months=2, days=19)
 
   # sormani.get_pages_numbers()
   # sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])

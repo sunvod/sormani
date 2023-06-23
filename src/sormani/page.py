@@ -1372,10 +1372,6 @@ class Page:
         cnts.append(ctr)
     contours = list(cnts)
     contours.sort(key=_ordering_contours)
-    # for contour in contours:
-    #   x, y, w, h = cv2.boundingRect(contour)
-    #   if DEBUG:
-    #     cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
     # join all the overlapping contours
     contours = union(contours)
     # fill contours in black
@@ -1415,17 +1411,12 @@ class Page:
       dimg = cv2.convertScaleAbs(dimg, alpha=0.84, beta=0)
       dimg[dimg >= threshold] = self.color
     dimg[dimg < 24] = 12
-    _img = cv2.convertScaleAbs(_img, alpha=1.05, beta=0)
+    _img = cv2.convertScaleAbs(_img, alpha=1.10, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
-    # df_describe = pd.DataFrame(dimg[dimg > 64])
-    # threshold = df_describe.describe(percentiles=[0.2]).at['20%', 0]
-    # mean = dimg[dimg > 64].mean()
-    # print(mean, threshold)
-    # threshold = threshold if threshold <= 200 else 200
     threshold = 200
     if isfirst:
       threshold = 160
-    dimg[dimg >= threshold] = self.color
+    # dimg[dimg >= threshold] = self.color
     for contour in _contours:
       x, y, w, h = cv2.boundingRect(contour)
       if h > ly - y_ofset and y < y_ofset // 2:
@@ -2421,6 +2412,8 @@ class Page:
     file_thresh_right = '.'.join(file.split('.')[:-1]) + '_thresh_2.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     oh, ow = img.shape
+    if ow < oh:
+      return 0
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     thresh = cv2.copyMakeBorder(img, 1, 1, 0, 0, cv2.BORDER_CONSTANT, value=self.color)
@@ -2455,7 +2448,7 @@ class Page:
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       if DEBUG:
         print('left:', var)
-        # cv2.rectangle(bimg, (_x, _y + y_last_up), (_x + _w, _y + y_last_up + _h), (0, 255, 0), 5)
+        cv2.rectangle(bimg, (_x, _y + y_last_up), (_x + _w, _y + y_last_up + _h), (0, 255, 0), 5)
       if flag < 2 and var < self.var_limit:
         flag = 1
         continue
@@ -2478,7 +2471,7 @@ class Page:
       var = thresh[_y:_y + _h, _x:_x + _w].var()
       if DEBUG:
         print('right:', var)
-        # cv2.rectangle(bimg, (_x, _y), (_x + _w, _y + _h), (0, 0, 255), 5)
+        cv2.rectangle(bimg, (_x, _y), (_x + _w, _y + _h), (0, 0, 255), 5)
       if flag < 2 and var < self.var_limit:
         flag = 1
         continue
