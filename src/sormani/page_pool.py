@@ -316,7 +316,7 @@ class Page_pool(list):
       print(f'Warning: There is no files to improve images for \'{self.newspaper_name}\'.')
   def _improve_images(self, page):
     return page.improve_images()
-  def clean_images(self, color=248, threshold=230, final_threshold=200, last_threshold=160, use_ai=False):
+  def clean_images(self, color, threshold, final_threshold, last_threshold, use_ai, thresh_threshold, min_threshold):
     if len(self):
       start_time = time.time()
       dir_name = self.filedir.split('/')[-1]
@@ -331,6 +331,8 @@ class Page_pool(list):
         page.last_threshold = last_threshold
         page.valid = None
         page.use_ai = use_ai
+        page.thresh_threshold = thresh_threshold
+        page.min_threshold = min_threshold
       with Pool(processes=N_PROCESSES) as mp_pool:
         count = mp_pool.map(self._clean_images, self)
         count = sum(count)

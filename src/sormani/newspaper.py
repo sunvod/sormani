@@ -2007,7 +2007,9 @@ class La_Fornarina(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1946', '1', '--', '1946', '12', '--')
+      return ('1882', '5', '28', '1882', '12', '--')
+    elif ofset == 2:
+      return ('1883', '1', '--', '1883', '5', '20')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2040,13 +2042,7 @@ class Sfera(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1877', '2', '18', '1877', '12', '30')
-    elif ofset == 2:
-      return ('1878', '1', '--', '1878', '12', '--')
-    elif ofset == 3:
-      return ('1879', '1', '--', '1879', '12', '--')
-    elif ofset == 4:
-      return ('1882', '12', '24', '1883', '12', '--')
+      return ('1946', '11', '--', '1946', '12', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

@@ -422,13 +422,19 @@ class Sormani():
     for page_pool in self:
       page_pool.improve_images(limit=limit, color=color, inversion=inversion, threshold=threshold, debug=debug)
     self.force = selfforce
-  def clean_images(self, color=248, threshold=230, final_threshold=180, last_threshold=None, use_ai=False): #230
+  def clean_images(self, color=248, threshold=230, final_threshold=180, last_threshold=None, use_ai=False, thresh_threshold=120, min_threshold=160): #230
     if not len(self.elements):
       return
     selfforce = self.force
     self.force = True
     for page_pool in self:
-      page_pool.clean_images(color=color, threshold=threshold, final_threshold=final_threshold, last_threshold=last_threshold, use_ai=use_ai)
+      page_pool.clean_images(color=color,
+                             threshold=threshold,
+                             final_threshold=final_threshold,
+                             last_threshold=last_threshold,
+                             use_ai=use_ai,
+                             thresh_threshold=thresh_threshold,
+                             min_threshold=min_threshold)
     self.force = selfforce
   def divide_image(self, is_bobina = False):
     if not len(self.elements):

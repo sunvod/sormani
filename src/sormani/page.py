@@ -1330,7 +1330,7 @@ class Page:
     _img = img.copy()
     img = cv2.convertScaleAbs(img, alpha=1.01, beta=0)
     oh, ow = img.shape
-    ret, thresh = cv2.threshold(img, 120, self.color, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(img, self.thresh_threshold, self.color, cv2.THRESH_BINARY)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = []
     # fill contours with white
@@ -1379,8 +1379,11 @@ class Page:
     # fill contours in black
     nimg = _img.copy()
     white_nimg = 255 - np.zeros_like(img)
+    big_rect = False
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
+      if w > ow * 0.75 and h > oh * 0.75:
+        big_rect = True
       if DEBUG:
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 0, 255), 5)
         cv2.rectangle(thresh, (x, y), (x + w, y + h), 0, -1)
@@ -1401,12 +1404,10 @@ class Page:
     final_threshold = final_threshold if threshold >= 180 else final_threshold - (180 - threshold) // 2
     threshold = threshold if threshold > final_threshold else final_threshold
     threshold = threshold if threshold >= 160 else 160
+    if big_rect:
+      threshold = threshold if threshold < self.min_threshold else self.min_threshold
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = dimg[dimg < threshold] * 0.96
-    # dimg[(dimg < 150) & (dimg >= 50)] = dimg[(dimg < 150) & (dimg >= 50)] - 48
-    # dimg[(dimg < 180) & (dimg >= 150)] = dimg[(dimg < 180) & (dimg >= 150)] - 32
-    # dimg[(dimg < 200) & (dimg >= 180)] = dimg[(dimg < 200) & (dimg >= 180)] - 24
-    # dimg[(dimg < threshold) & (dimg >= 200)] = dimg[(dimg < threshold) & (dimg >= 200)] - 8
     if self.last_threshold is not None:
       dimg[dimg >= self.last_threshold] = self.color
     else:
@@ -1415,10 +1416,10 @@ class Page:
     dimg[dimg < 24] = 12
     _img = cv2.convertScaleAbs(_img, alpha=1.10, beta=0)
     dimg[white_nimg == 0] = _img[white_nimg == 0]
-    threshold = 200
-    if isfirst:
-      threshold = 160
-    # dimg[dimg >= threshold] = self.color
+    # threshold = 200
+    # if isfirst:
+    #   threshold = 160
+    # # dimg[dimg >= threshold] = self.color
     for contour in _contours:
       x, y, w, h = cv2.boundingRect(contour)
       if h > ly - y_ofset and y < y_ofset // 2:
@@ -2032,6 +2033,7 @@ class Page:
     file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    oh, ow = img.shape
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     if self.angle is not None:
@@ -2043,8 +2045,10 @@ class Page:
     _contours = []
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
-      if (x > 0 or y > 0):
+      if (x > 0 or y > 0) and (h > 8):
         _contours.append(contour)
+      if DEBUG:
+        cv2.drawContours(bimg, contour, -1, (0, 255, 0), 3)
     # _contours.sort(key=_ordering_contours)
     contours = _contours
     contours = union(list(contours))
