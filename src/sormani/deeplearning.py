@@ -45,7 +45,7 @@ import pytesseract
 
 from src.sormani.sormani import Sormani
 from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
-  NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE
+  NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE, BOBINE
 
 BATCH_SIZE = 32
 IMG_SIZE = (224, 224)
@@ -118,10 +118,25 @@ def move_to_class(name):
   # _move_to_class(os.path.join(STORAGE_DL, name, 'validation'), 'validation')
   # _move_to_class(os.path.join(STORAGE_DL, name, 'test'), 'test')
 
-def count_tiff():
+def count_giornali():
   count = 0
   tot = 0
   for newspaper in NEWSPAPERS:
+    count = 0
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+      count += len(files)
+      if not len(files):
+        pass
+    if count:
+      print(f'{newspaper}: {count}')
+      tot += count
+  print(f'Totale: {tot}')
+  return count
+
+def count_bobine():
+  count = 0
+  tot = 0
+  for newspaper in BOBINE:
     count = 0
     for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
       count += len(files)
@@ -993,7 +1008,7 @@ def rename_files_with_name_folders(name):
 #
 #
 
-# count_tiff()
+count_bobine()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 

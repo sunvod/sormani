@@ -38,13 +38,13 @@ if __name__ == '__main__':
   #
   # sormani.set_grayscale()
 
-  sormani = Sormani('Scenario',
-                    # days=[x for x in range(17,32)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    days=[40],
-                    force=True,
-                    is_bobina=True)
+  # sormani = Sormani('Scenario',
+  #                   # days=[x for x in range(17,32)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   days=[40],
+  #                   force=True,
+  #                   is_bobina=True)
 
   # sormani.create_all_images(convert=False)
 
@@ -93,19 +93,17 @@ if __name__ == '__main__':
   # sormani.bobine_delete_copies()
   #
   # # Scenario
-  sormani.clean_images(threshold=200)
-  sormani.remove_dark_border()
-  sormani.cut_at_written_part(threshold=200)
-  sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
-  sormani.add_borders()
-  sormani.rotate_final_frames(threshold=100)
+  # sormani.clean_images(threshold=200)
+  # sormani.remove_dark_border()
+  # sormani.cut_at_written_part(threshold=200)
+  # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
+  # sormani.add_borders()
+  # sormani.rotate_final_frames(threshold=100)
 
   # Scenario prepare images
   # sormani.set_all_images_names()
   # sormani.create_all_images(ocr = True)
 
-  # sormani.set_all_images_names()
-  # sormani.create_all_images(ocr = False)
 
   # sormani.rotate_fotogrammi()                                                   # 2
   # sormani.remove_borders()                                                      # 3
@@ -118,7 +116,6 @@ if __name__ == '__main__':
   # sormani.center_block(color=248, model_path='best_model_DenseNet201', use_ai=False)                                                 # 10
   # sormani.create_all_images()
 
-
   # sormani.get_pages_numbers()
   # sormani.create_jpg(converts=[Conversion('jpg_small_1500', 150, 60, 1500), Conversion('jpg_medium_1500', 300, 90, 1500)])
   # sormani.add_pdf_metadata()
@@ -129,5 +126,41 @@ if __name__ == '__main__':
   # sormani.change_contrast(contrast=100)
 
 
+  sormani = Sormani('Italia Artistica Illustrata',
+                    # days=[x for x in range(17,32)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    days=[1,2,3],
+                    force=True,
+                    is_bobina=True)
+# Riviste storiche
+  sormani.clean_images(threshold=180)
+# sormani.remove_dark_border()
+# sormani.cut_at_written_part(threshold=200)
+# sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
+# sormani.add_borders()
+# sormani.rotate_final_frames(threshold=100)
 
+# Riviste storiche prepare images
+# sormani.set_all_images_names()
+# sormani.create_all_images(ocr = True)
 
+#   sormani = Sormani('La Fornarina',
+#                     # days=[x for x in range(17,32)],
+#                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+#                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+#                     days=[1,2],
+#                     force=True,
+#                     is_bobina=True)
+# # Riviste storiche
+#   sormani.clean_images(threshold=180)
+#
+#   sormani = Sormani('Sfera',
+#                     # days=[x for x in range(17,32)],
+#                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+#                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+#                     days=[1],
+#                     force=True,
+#                     is_bobina=True)
+#   # Riviste storiche
+#   sormani.clean_images(threshold=180)

@@ -1349,6 +1349,8 @@ class Page:
       # if DEBUG:
       #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 3)
     lx, ly, x_ofset, y_ofset = self.newspaper.get_limits()
+    if lx is None:
+        lx, ly, x_ofset, y_ofset = ow, oh, 0, 0
     for i, contour in enumerate(contours):
       x, y, w, h = cv2.boundingRect(contour)
       # cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 3)

@@ -56,6 +56,11 @@ NEWSPAPERS = ['Alias',
               'Osservatore Romano',
               'Tutto Libri',
               'Unita']
+BOBINE = ['Il Mondo',
+          'Il Secolo Illustrato Della Domenica',
+          'Le Grandi Firme',
+          'Scenario',
+          'La Domenica Del Corriere']
 SCORECUTOFF = 0.6
 HASHCUTOFF = 2
 PAGE = 1
