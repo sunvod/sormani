@@ -1404,8 +1404,6 @@ class Page:
     final_threshold = final_threshold if threshold >= 180 else final_threshold - (180 - threshold) // 2
     threshold = threshold if threshold > final_threshold else final_threshold
     threshold = threshold if threshold >= 160 else 160
-    if big_rect:
-      threshold = threshold if threshold < self.min_threshold else self.min_threshold
     dimg[dimg >= threshold] = self.color
     dimg[dimg < threshold] = dimg[dimg < threshold] * 0.96
     if self.last_threshold is not None:
@@ -1439,6 +1437,8 @@ class Page:
           x = x if x > 0 else 0
           w = _w
         dimg = dimg[:, x:x+w]
+    if big_rect:
+      dimg[dimg >= self.min_threshold] = self.color
       # if DEBUG:
       #   cv2.rectangle(bimg, (x, y), (x + w, y + h), (255, 0, 0), 5)
     if not DEBUG:
@@ -2291,7 +2291,7 @@ class Page:
     y_last_up = 0
     y_last_down = 0
     x_last = 0
-    for y in range(500, 0, -ofset):
+    for y in range(self.y_range, 0, -ofset):
       _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y - ofset
@@ -2319,7 +2319,7 @@ class Page:
     # mean = img[0, 0:ow].mean()
     # if mean == 0:
     #   self.cut_at_written_part()
-    for y in range(oh - 500, oh, ofset):
+    for y in range(oh - self.y_range, oh, ofset):
       _x1 = self.x_ofset
       _w1 = ow // 2 - x_ofset - _x1
       _y1 = y
@@ -2345,7 +2345,7 @@ class Page:
         y_last_down = y
         break
     flag = 0
-    for x in range(1500, 0, -ofset):
+    for x in range(self.x_range, 0, -ofset):
       _x = x
       _w = ofset
       _y = 0
@@ -2371,7 +2371,7 @@ class Page:
         count = 1
         break
     flag = 0
-    for x in range(ow - 1500, ow, ofset):
+    for x in range(ow - self.x_range, ow, ofset):
       _x = x - ofset
       _w = ofset
       _y = 0

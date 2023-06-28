@@ -320,6 +320,7 @@ class Sormani():
                         converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
                         number = None,
                         thresholding=None,
+                        pdf=True,
                         convert=True):
     if not len(self.elements):
       return
@@ -328,7 +329,8 @@ class Sormani():
         continue
       if thresholding is not None:
         page_pool.thresholding = thresholding
-      page_pool.create_pdf(number, ocr = ocr)
+      if pdf:
+        page_pool.create_pdf(number, ocr = ocr)
       if convert:
         page_pool.convert_images(converts)
   def convert_all_images(self,
@@ -560,7 +562,7 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No white part is needed for \'{self.newspaper_name}\'.')
-  def cut_at_written_part(self, threshold=50, color=248, limit=240, var_limit=100, ofset=48, x_ofset=1200):
+  def cut_at_written_part(self, threshold=50, color=248, limit=240, var_limit=100, ofset=48, x_ofset=1200, x_range=1500, y_range=500):
     if not len(self.elements):
       return
     global global_count
@@ -568,7 +570,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting cutting at written part of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, ofset=ofset, x_ofset=x_ofset)
+      count = page_pool.cut_at_written_part(threshold=threshold, color=color, limit=limit, var_limit=var_limit, ofset=ofset, x_ofset=x_ofset, x_range=x_range, y_range=y_range)
     if count:
       print(
         f'Cutting at written part of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')

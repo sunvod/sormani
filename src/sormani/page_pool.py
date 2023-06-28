@@ -501,7 +501,7 @@ class Page_pool(list):
       return count
   def _cut_at_white_part(self, page):
     return page.cut_at_white_part()
-  def cut_at_written_part(self, threshold, color, limit, var_limit, ofset, x_ofset):
+  def cut_at_written_part(self, threshold, color, limit, var_limit, ofset, x_ofset, x_range, y_range):
     for page in self:
       page.threshold = threshold
       page.color = color
@@ -509,6 +509,8 @@ class Page_pool(list):
       page.var_limit = var_limit
       page.ofset = ofset
       page.x_ofset = x_ofset
+      page.x_range = x_range
+      page.y_range = y_range
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:
         result = mp_pool.map(self._cut_at_written_part, self)
