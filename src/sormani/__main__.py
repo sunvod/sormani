@@ -62,13 +62,13 @@ if __name__ == '__main__':
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 100, 0], max=False, border=[False,False])
   # sormani.set_grayscale()
 
-  sormani = Sormani('La Domenica Del Corriere',
-                    days=[60],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    # force=True,
-                    is_bobina=True)
+  # sormani = Sormani('La Domenica Del Corriere',
+  #                   days=[60],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+  #                   checkimages=False,
+  #                   # force=True,
+  #                   is_bobina=True)
 
   # sormani.create_all_images(ocr = False)
   # sormani.add_pdf_metadata()
@@ -108,11 +108,12 @@ if __name__ == '__main__':
   # sormani.create_all_images(ocr = True)
 
   # La Domenica Del Corriere
-  # sormani.clean_images(threshold=200)
-  # sormani.cut_at_written_part(threshold=200, var_limit=500, y_range=1000)
-  sormani.divide_at_written_part(var_limit=500)
-  sormani.add_borders()
-  sormani.rotate_final_frames(threshold=100)
+  # sormani.clean_images(threshold=180)
+  # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=150)
+  # sormani.cut_at_written_part(threshold=200, var_limit=200, y_range=1000)
+  # sormani.divide_at_written_part(var_limit=500)
+  # sormani.add_borders()
+  # sormani.rotate_final_frames(threshold=100)
 
 
   # sormani.rotate_fotogrammi()                                                   # 2
@@ -155,14 +156,19 @@ if __name__ == '__main__':
 # sormani.set_all_images_names()
 # sormani.create_all_images(ocr = True)
 
-  # sormani = Sormani('La Fornarina',
-  #                   # days=[x for x in range(17,32)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
-  #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-  #                   days=[1,2],
-  #                   force=True,
-  #                   is_bobina=True)
+  sormani = Sormani('Gazzetta Illustrata',
+                    # days=[x for x in range(17,32)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    days=[1,2],
+                    force=True,
+                    is_bobina=True)
 # # Riviste storiche
+#   sormani.remove_dark_border()
+sormani.set_all_images_names()
+sormani.create_all_images(ocr = False, pdf=True)
+
+
 #   sormani.clean_images(threshold=180)
 #
   # sormani = Sormani('Sfera',
