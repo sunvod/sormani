@@ -1412,31 +1412,30 @@ class Page:
       dimg = cv2.convertScaleAbs(dimg, alpha=0.84, beta=0)
       dimg[dimg >= threshold] = self.color
     dimg[dimg < 24] = 12
-    _img = cv2.convertScaleAbs(_img, alpha=1.10, beta=0)
-    dimg[white_nimg == 0] = _img[white_nimg == 0]
-    # threshold = 200
-    # if isfirst:
-    #   threshold = 160
-    # # dimg[dimg >= threshold] = self.color
-    for contour in _contours:
-      x, y, w, h = cv2.boundingRect(contour)
-      if h > ly - y_ofset and y < y_ofset // 2:
-        if ly > h:
-          _h = ly if ly < oh else oh
-          _h = _h if _h > h else h
-          y = y - (_h - h) // 2
-          y = y if y > 0 else 0
-          h = _h
-        dimg = dimg[y:y + h, :]
-      if w > lx - x_ofset and x < x_ofset // 2:
-        if lx > w:
-          _w = lx if lx < ow else ow
-          _w = _w if _w > w else w
-          x = x - (_w - w) // 2
-          x = x if x > 0 else 0
-          x = x if x > 0 else 0
-          w = _w
-        dimg = dimg[:, x:x+w]
+    # _img = cv2.convertScaleAbs(_img, alpha=1.10, beta=0)
+    dimg[white_nimg == 0] = _img[white_nimg == 0] # aggiungi le immagini
+    if DEBUG:
+      _white_nimg = 255 - np.zeros_like(_img)
+      _white_nimg[white_nimg == 0] = _img[white_nimg == 0]
+    # for contour in _contours:
+    #   x, y, w, h = cv2.boundingRect(contour)
+    #   if h > ly - y_ofset and y < y_ofset // 2:
+    #     if ly > h:
+    #       _h = ly if ly < oh else oh
+    #       _h = _h if _h > h else h
+    #       y = y - (_h - h) // 2
+    #       y = y if y > 0 else 0
+    #       h = _h
+    #     dimg = dimg[y:y + h, :]
+    #   if w > lx - x_ofset and x < x_ofset // 2:
+    #     if lx > w:
+    #       _w = lx if lx < ow else ow
+    #       _w = _w if _w > w else w
+    #       x = x - (_w - w) // 2
+    #       x = x if x > 0 else 0
+    #       x = x if x > 0 else 0
+    #       w = _w
+    #     dimg = dimg[:, x:x+w]
     if big_rect:
       dimg[dimg >= self.min_threshold] = self.color
       # if DEBUG:
@@ -1447,7 +1446,7 @@ class Page:
       cv2.imwrite(file_bimg, bimg)
       cv2.imwrite(file_nimg, nimg)
       cv2.imwrite(file_dimg, dimg)
-      cv2.imwrite(file_mem, white_nimg)
+      cv2.imwrite(file_mem, _white_nimg)
       cv2.imwrite(file_thresh, thresh)
       pass
     return 1
