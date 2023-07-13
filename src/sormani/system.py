@@ -31,8 +31,8 @@ N_PROCESSES_SHORT = 4
 MONTHS = ['GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC']
 JPG_PDF_PATH = 'JPG-PDF'
 IMAGE_PATH = 'TIFF'
-IMAGE_ROOT = '/mnt/storage01/sormani'
-# IMAGE_ROOT = '/home/sormani/giornali/'
+# IMAGE_ROOT = '/mnt/storage01/sormani'
+IMAGE_ROOT = '/home/sormani/2016/giornali/'
 STORAGE_BASE = '/home/sunvod/sormani_CNN/'
 STORAGE_DL = '/home/sunvod/sormani_CNN/giornali/'
 STORAGE_BOBINE = os.path.join(IMAGE_PATH, 'Bobine')
@@ -50,12 +50,14 @@ NEWSPAPERS = ['Alias',
               'Il Giorno',
               'Il Manifesto',
               'Italia Oggi',
+              'La Gazzetta dello Sport',
               'La Stampa',
               'Libero',
               'Milano Finanza',
               'Osservatore Romano',
               'Tutto Libri',
-              'Unita']
+              'Unita',
+              'Il Sole 24 Ore']
 BOBINE = ['Il Mondo',
           'Il Secolo Illustrato Della Domenica',
           'Le Grandi Firme',
@@ -125,6 +127,9 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   options.user_patterns = None
   options.user_words = None # '//mnt/storage01/sormani/number_dictionary.txt'
   options.verbose = -1
+  options.continue_on_soft_render_error = True
+  options.tesseract_downsample_above = False
+  options.tesseract_downsample_large_images = False
   with suppress(AttributeError, PermissionError):
     os.nice(5)
   verbosity = options.verbose

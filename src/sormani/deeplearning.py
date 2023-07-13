@@ -974,7 +974,40 @@ def rename_files_with_name_folders(name):
         new_file = ('00000' + str(i + 1))[-4:] + ' - ' + name + ' - ' + period + '.' + ext
         os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
 
+def copy_jpg(root='/home/sormani/2016/giornali/JPG-PDF'):
+  for filedir, dirs, files in os.walk(root):
+    ld = filedir.split('/')[-1]
+    if ld != 'jpg_small':
+      continue
+    ls = filedir.split('/')
+    if len(ls) <= 9:
+      shutil.copytree(filedir, os.path.join('/media/osi/Expansion/', ls[-4], ls[-3], ls[-2], ls[-1]))
+    else:
+      shutil.copytree(filedir, os.path.join('/media/osi/Expansion/', ls[-6], ls[-5], ls[-4], ls[-3], ls[-2], ls[-1]))
 
+def check_dirs(root=IMAGE_ROOT):
+  for filedir, dirs, files in os.walk(os.path.join(root, IMAGE_PATH)):
+    if len(files):
+      if(len(filedir.split('/')) > 9):
+        pdf_path_base = os.path.join(root, JPG_PDF_PATH, '/'.join(filedir.split('/')[-4:-1]))
+      else:
+        pdf_path_base = os.path.join(root, JPG_PDF_PATH, '/'.join(filedir.split('/')[-2:-1]))
+      last = filedir.split('/')[-1]
+      if len(last.split()) > 3 and last.split()[1] == 'INS':
+        pdf_path_base = os.path.join(pdf_path_base, ' '.join(last.split()[:3]))
+      else:
+        pdf_path_base = os.path.join(pdf_path_base, last)
+      pdf_path = os.path.join(pdf_path_base, 'pdf')
+      small_path = os.path.join(pdf_path_base, 'jpg_small')
+      medium_path = os.path.join(pdf_path_base, 'jpg_medium')
+      # _, _, n_pdf = next(os.walk(pdf_path))
+      # print(len(n_pdf))
+      # print(pdf_path)
+      if not os.path.isdir(pdf_path):
+        print(pdf_path_base)
+
+
+check_dirs()
 
 # rename_files_with_name_folders('Le Grandi Firme')
 # rename_files_with_name_folders('La Domenica Del Corriere')
@@ -1008,7 +1041,7 @@ def rename_files_with_name_folders(name):
 #
 #
 
-count_bobine()
+# count_bobine()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
