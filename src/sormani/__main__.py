@@ -13,7 +13,16 @@ if __name__ == '__main__':
   #                   valid_ins=1,
   #                   model_path='best_model_DenseNet201')
   # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
-  #
+
+
+  sormani = Sormani('Alias Domenica',
+                    years=2017,
+                    months=[x for x in range(1,13)],
+                    days=None,
+                    model_path='best_model_DenseNet201')
+  sormani.set_giornali_pipeline()
+
+
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)
   # sormani.check_page_numbers(save_images=True, print_images=False)
 
@@ -158,14 +167,14 @@ if __name__ == '__main__':
   # sormani.rotate_final_frames(threshold=100)
 
 
-  sormani = Sormani('Scenario',
-                    # months=None,
-                    # days=[x for x in range(17,32)],
-                    days=[1],
-                    force=True,
-                    is_bobina=True)
+  # sormani = Sormani('Scenario',
+  #                   # months=None,
+  #                   # days=[x for x in range(17,32)],
+  #                   days=[1],
+  #                   force=True,
+  #                   is_bobina=True)
   # Scenario
-  sormani.clean_images(threshold=200)
+  # sormani.clean_images(threshold=200)
   # sormani.cut_at_written_part(threshold=200)
   # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
   # sormani.add_borders()

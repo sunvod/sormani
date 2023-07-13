@@ -338,8 +338,9 @@ class Newspaper():
     count_zero = 0
     for n_page, page in enumerate(page_pool):
       try:
-        page.newspaper.n_page
-        continue
+        # page.newspaper.n_page
+        if page.newspaper.n_page is not None:
+          continue
       except:
         pass
       page.newspaper.n_pages = n_pages
@@ -409,7 +410,10 @@ class Newspaper():
     return None, None, None, None
   def divide(self, img):
     imgs = []
-    height, width, _ = img.shape
+    if img.ndim == 2:
+      height, width = img.shape
+    else:
+      height, width, _ = img.shape
     if os.path.dirname(self.file_path).split(' ')[-1][0:2] == 'OT':
       try:
         s = os.path.dirname(self.file_path).split(' ')[-1][2:]
@@ -718,6 +722,14 @@ class Alias(Newspaper):
     w, h = image.size
     whole = [0, 100, w, 400]
     return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=50,
+                                max_w=130,
+                                min_h=110,
+                                max_h=190,
+                                ts=1)
 
 class Alias_Domenica(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
@@ -727,6 +739,14 @@ class Alias_Domenica(Newspaper):
   def get_whole_page_location(self, image):
     whole = [0, 100, 4850, 400]
     return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=50,
+                                max_w=130,
+                                min_h=110,
+                                max_h=190,
+                                ts=1)
 
 class Avvenire(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
