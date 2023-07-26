@@ -44,7 +44,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT_2016, IMAGE_ROOT_2017, REPOSITORY, NEWSPAPERS_2016, NEWSPAPERS_2017, IMAGE_PATH, \
   NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE, BOBINE
 
 BATCH_SIZE = 32
@@ -118,12 +118,30 @@ def move_to_class(name):
   # _move_to_class(os.path.join(STORAGE_DL, name, 'validation'), 'validation')
   # _move_to_class(os.path.join(STORAGE_DL, name, 'test'), 'test')
 
-def count_giornali():
+def count_giornali(year=2017):
   count = 0
   tot = 0
-  for newspaper in NEWSPAPERS:
+  image_root = IMAGE_ROOT_2016 if year == 2016 else IMAGE_ROOT_2017
+  newspapers = NEWSPAPERS_2016 if year == 2016 else NEWSPAPERS_2017
+  for newspaper in newspapers:
     count = 0
-    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+    for filedir, dirs, files in os.walk(os.path.join(image_root, 'TIFF', newspaper)):
+      count += len(files)
+      if not len(files):
+        pass
+    if count:
+      print(f'{newspaper}: {count}')
+      tot += count
+  print(f'Totale: {tot}')
+  return count
+def count_giornali(year=2017):
+  count = 0
+  tot = 0
+  image_root = IMAGE_ROOT_2016 if year == 2016 else IMAGE_ROOT_2017
+  newspapers = NEWSPAPERS_2016 if year == 2016 else NEWSPAPERS_2017
+  for newspaper in newspapers:
+    count = 0
+    for filedir, dirs, files in os.walk(os.path.join(image_root, 'TIFF', newspaper)):
       count += len(files)
       if not len(files):
         pass
@@ -138,7 +156,7 @@ def count_bobine():
   tot = 0
   for newspaper in BOBINE:
     count = 0
-    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT_2016, 'TIFF', newspaper)):
       count += len(files)
       if not len(files):
         pass
@@ -291,7 +309,7 @@ def put_all():
     distribute_cnn(name)
     move_to_class(name)
 def change_newspaper_name(newspaper_name, oldname, newname):
-  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, IMAGE_PATH, newspaper_name)):
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT_2016, IMAGE_PATH, newspaper_name)):
     files.sort()
     for file in files:
       oldname = oldname.replace(' ', '_')
@@ -639,7 +657,7 @@ def transform_images(name):
       cv2.imwrite(os.path.join(STORAGE_BASE, 'tmp', file), gray)
 
 def change_ins_file_name():
-  for one_root in [os.path.join(IMAGE_ROOT, IMAGE_PATH), os.path.join(IMAGE_ROOT, JPG_PDF_PATH)]:
+  for one_root in [os.path.join(IMAGE_ROOT_2016, IMAGE_PATH), os.path.join(IMAGE_ROOT_2016, JPG_PDF_PATH)]:
     for filedir, dirs, files in os.walk(one_root):
       dirs.sort()
       for dir in dirs:
@@ -828,13 +846,13 @@ def reallocate_frame_la_domenica_Del_corriere(csv_file='list_first_pages.csv'):
         _n = int(_row[1])
       else:
         _n = n + 100
-      filedir = os.path.join(IMAGE_ROOT, IMAGE_PATH, 'La Domenica del Corriere', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
+      filedir = os.path.join(IMAGE_ROOT_2016, IMAGE_PATH, 'La Domenica del Corriere', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
       year = row[3].split('/')[2]
       if len(year) == 2 and year == '99':
         year = '1899'
       elif len(year) == 2:
         year = '19' + year
-      filedir_destination = os.path.join(IMAGE_ROOT, IMAGE_PATH, '_La Domenica del Corriere', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
+      filedir_destination = os.path.join(IMAGE_ROOT_2016, IMAGE_PATH, '_La Domenica del Corriere', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
       __n = int(row[1])
       for n in range(__n, _n):
         file_name = 'Scan_' + str(n) + '.tif'
@@ -857,11 +875,11 @@ def reallocate_frame_il_mondo(csv_file='first_pages_il_mondo.csv'):
         _n = int(_row[1])
       else:
         _n = n + 100
-      filedir = os.path.join(IMAGE_ROOT, IMAGE_PATH, 'Il Mondo', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
+      filedir = os.path.join(IMAGE_ROOT_2016, IMAGE_PATH, 'Il Mondo', row[0].split('-')[0], row[0].split('-')[1], row[0].split('-')[2])
       year = row[3].split('/')[2]
       if len(year) == 2:
         year = '19' + year
-      filedir_destination = os.path.join(IMAGE_ROOT, IMAGE_PATH, '_Il Mondo', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
+      filedir_destination = os.path.join(IMAGE_ROOT_2016, IMAGE_PATH, '_Il Mondo', year, ('0' + row[3].split('/')[1])[-2:], ('0' + row[3].split('/')[0])[-2:])
       __n = int(row[1])
       for n in range(__n, _n):
         file_name = 'Scan_' + str(n) + '.tif'
@@ -956,7 +974,7 @@ def divide_pdf(root):
 
 def rename_files_with_name_folders(name):
   for j, root in enumerate([IMAGE_PATH, JPG_PDF_PATH]):
-    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, root, name)):
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT_2016, root, name)):
       files.sort()
       for i, file in enumerate(files):
         parts = filedir.split('/')
@@ -985,7 +1003,7 @@ def copy_jpg(root='/home/sormani/2016/giornali/JPG-PDF'):
     else:
       shutil.copytree(filedir, os.path.join('/media/osi/Expansion/', ls[-6], ls[-5], ls[-4], ls[-3], ls[-2], ls[-1]))
 
-def check_dirs(root=IMAGE_ROOT):
+def check_dirs(root=IMAGE_ROOT_2016):
   for filedir, dirs, files in os.walk(os.path.join(root, IMAGE_PATH)):
     if len(files):
       if(len(filedir.split('/')) > 9):
@@ -1005,9 +1023,15 @@ def check_dirs(root=IMAGE_ROOT):
       # print(pdf_path)
       if not os.path.isdir(pdf_path):
         print(pdf_path_base)
+      else:
+        _, _, pdf = next(os.walk(pdf_path))
+        if len(files) != len(pdf):
+          print(pdf_path_base)
 
 
-check_dirs()
+
+
+# check_dirs()
 
 # rename_files_with_name_folders('Le Grandi Firme')
 # rename_files_with_name_folders('La Domenica Del Corriere')
@@ -1068,3 +1092,5 @@ check_dirs()
 # rotate_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
 #
 # show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')x
+
+count_giornali()

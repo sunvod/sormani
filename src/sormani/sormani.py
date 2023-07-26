@@ -35,7 +35,7 @@ class Conversion:
 class Sormani():
   def __init__(self,
                newspaper_names,
-               root = IMAGE_ROOT,
+               root = IMAGE_ROOT_2016,
                years = None,
                months = None,
                days = None,
@@ -69,7 +69,7 @@ class Sormani():
         newspaper_names = []
         newspaper_names.append(name)
       else:
-        newspaper_names = NEWSPAPERS
+        newspaper_names = NEWSPAPERS_2016
         rename_only = True
     if is_bobina:
       months = None
@@ -164,6 +164,7 @@ class Sormani():
         if day is not None:
           new_root = os.path.join(new_root, self.add_zero(day))
           self.complete_root = new_root
+    assert is_bobina or year is not None, "Year must be indicated"
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
     if rename_folders:
