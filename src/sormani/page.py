@@ -1196,14 +1196,22 @@ class Page:
     file_name_no_ext = Path(self.original_image).stem
     file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)
     ext = Path(self.original_image).suffix
-    img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
-    h, w = img.shape
+    # img = cv2.imread(self.original_image, cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(self.original_image)
+    if img.ndim > 2:
+      h, w, _ = img.shape
+    else:
+      h, w = img.shape
     if h == 0 or w == 0 or h > w:
       return 0
     imgs = self.newspaper.divide(img)
     for i, _img in enumerate(imgs):
-      h, w = _img.shape
+      if img.ndim > 2:
+        h, w, _ = img.shape
+      else:
+        h, w = _img.shape
       if _img is not None and h > 0 and w > 0:
+        # cv2.imwrite(file_path_no_ext + '_' + str(i + 1) + ext, _img)
         self.save_with_dpi(file_path_no_ext + '_' + str(i + 1) + ext, _img)
     os.remove(self.original_image)
     self.isdivided = True
@@ -2639,10 +2647,12 @@ class Page:
     if img is None:
       return
     try:
-      PILimage = Image.fromarray(img)
+      cv2.imwrite(file, img)
+      _img = Image.open(file)
+      # PILimage = Image.fromarray(img)
     except Exception as e:
       print(e, self.original_image)
-    PILimage.save(file, dpi=(400, 400))
+    _img.save(file, dpi=(400, 400))
   def remove_gradient_border(self):
     file = self.original_image
     file_bimg = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]

@@ -432,7 +432,7 @@ class Newspaper():
         parameters = self.get_crop_parameters(0, width, height)
         img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
         parameters = self.get_crop_parameters(1, width, height)
-        img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+        img2 = img[:, parameters.left:parameters.right]
         img1 = cv2.rotate(img1, cv2.ROTATE_90_CLOCKWISE)
         height, width, _ = img1.shape
         imgs.append(img1[0:height, 0:width // 2])
@@ -443,9 +443,9 @@ class Newspaper():
         imgs.append(img2[0:height, width // 2:width])
     else:
       parameters = self.get_crop_parameters(0, width, height)
-      img1 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+      img1 = img[:, parameters.left:parameters.right]
       parameters = self.get_crop_parameters(1, width, height)
-      img2 = img[parameters.top:parameters.bottom, parameters.left:parameters.right]
+      img2 = img[:, parameters.left:parameters.right]
       imgs.append(img1)
       imgs.append(img2)
     return imgs
@@ -845,6 +845,16 @@ class Tutto_Libri(Newspaper):
     w, h = image.size
     whole = [0, 100, w, 400]
     return whole
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale = 200,
+                                min_w = 39 - 20,
+                                max_w = 91 + 20,
+                                min_h = 125 - 20,
+                                max_h = 146 + 20,
+                                ts = 170,
+                                min_mean = 146.2 - 50,
+                                max_mean = 191.0 + 50)
 
 class Il_Giorno(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):

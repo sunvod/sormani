@@ -141,7 +141,7 @@ class Sormani():
     new_root = os.path.join(root, image_path, newspaper_name)
     self.add_zero_to_dir(new_root)
     if not os.path.exists(new_root):
-      print(f'{newspaper_name} non esiste in memoria.')
+      print(f'{newspaper_name} non esiste.')
       return self.elements
     if is_bobina:
       self.complete_root = new_root
