@@ -148,6 +148,8 @@ class Newspaper():
       newspaper = La_Fornarina(newspaper_base, file_path, date, year, number)
     elif name == 'Sfera':
       newspaper = Sfera(newspaper_base, file_path, date, year, number)
+    elif name == 'La Repubblica':
+      newspaper = La_Repubblica(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -224,6 +226,8 @@ class Newspaper():
       parameters = La_Gazzetta.get_parameters()
     elif name == 'Il Sole 24 Ore':
       parameters = Il_Sole_24_Ore.get_parameters()
+    elif name == 'La Repubblica':
+      parameters = La_Repubblica.get_parameters()
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -2091,3 +2095,63 @@ class Sfera(Newspaper):
   @staticmethod
   def get_parameters():
     return None
+
+class La_Repubblica(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 93
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'La Repubblica', file_path, date, year, number, init_page=5)
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, h - 700, w, h - 300)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    f = 1
+    l = n_pages
+    r = 2
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      try:
+        # page.newspaper.n_page
+        if page.newspaper.n_page is not None:
+          continue
+      except:
+        pass
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      n = Path(page.file_name).stem.split('_')[-1]
+      if n != '0':
+        count_zero = 0
+        if r == 2:
+          page.newspaper.n_page = f
+          f += 1
+          r = -1
+        elif r == -1:
+          page.newspaper.n_page = l
+          l -= 1
+          r = -2
+        elif r == -2:
+          page.newspaper.n_page = l
+          l -= 1
+          r = 1
+        elif r == 1:
+          page.newspaper.n_page = f
+          f += 1
+          r = 2
+      else:
+        page.newspaper.n_page = f
+        f += 1
+        r = 2
+        count_zero += 1
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=180,
+                                max_w=240,
+                                min_h=180,
+                                max_h=240,
+                                ts=100,
+                                min_mean=0,
+                                max_mean=500,
+                                invert = True,
+                                internal_box = (30, 100, 80, 120))

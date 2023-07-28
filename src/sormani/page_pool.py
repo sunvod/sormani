@@ -385,9 +385,11 @@ class Page_pool(list):
           img = cv2.imread(page.original_image)
           img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
           cv2.imwrite(page.original_image, img)
-        elif flag:
-          os.rename(page.original_image, file_path_no_ext + '_0' + ext)
-          page.original_image = file_path_no_ext + '_0' + ext
+        elif flag or not page.isAlreadySeen():
+          le = page.original_image.split('_')[-1]
+          if le != '0.tif' and le != '1.tif' and le != '2.tif':
+            os.rename(page.original_image, file_path_no_ext + '_0' + ext)
+            page.original_image = file_path_no_ext + '_0' + ext
           continue
         else:
           continue

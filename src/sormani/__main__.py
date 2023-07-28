@@ -14,19 +14,19 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
 
 
-  sormani = Sormani('Il Giorno',
-                    years=[2017],
-                    months=None,
-                    days=None,
-                    model_path='best_model_DenseNet201')
-  sormani.set_giornali_pipeline()
-
-  # sormani = Sormani('Italia Oggi',
-  #                   years=2014,
+  # sormani = Sormani('Il Manifesto',
+  #                   years=[2013,2014,2017],
   #                   months=None,
-  #                   days=None,
-  #                   model_path='best_model_DenseNet201')
+  #                   days=None)
+  # # sormani.set_giornali_pipeline(divide = True, rename = True, change_contrast = False, create_images=False, force_rename=False)
   # sormani.set_giornali_pipeline()
+
+  sormani = Sormani('La Repubblica',
+                    years=[2017],
+                    months=1,
+                    days=None)
+  # sormani.set_giornali_pipeline()
+  sormani.set_giornali_pipeline()
 
 
   # sormani.get_pages_numbers(filedir=os.path.join(STORAGE_BASE, REPOSITORY), pages = 23, no_resize = True, save_head = True, force=True, debug=False)

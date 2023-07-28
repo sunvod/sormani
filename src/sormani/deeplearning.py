@@ -1006,8 +1006,21 @@ def check_dirs(root=IMAGE_ROOT):
       if not os.path.isdir(pdf_path):
         print(pdf_path_base)
 
+def clean_underscore():
+  count = 0
+  tot = 0
+  newspaper = 'La Repubblica'
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+    if len(files):
+      for file in files:
+        # if '_' in file:
+        #   new_file = file.split('_')[-2] + '.tif'
+        #   os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+        if file == 'Thumbs.db':
+          os.remove(os.path.join(filedir, file))
+  return
 
-check_dirs()
+# check_dirs()
 
 # rename_files_with_name_folders('Le Grandi Firme')
 # rename_files_with_name_folders('La Domenica Del Corriere')
@@ -1041,7 +1054,7 @@ check_dirs()
 #
 #
 
-# count_bobine()
+count_giornali()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
@@ -1068,3 +1081,5 @@ check_dirs()
 # rotate_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')
 #
 # show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')x
+
+# clean_underscore()

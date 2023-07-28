@@ -46,7 +46,7 @@ class Sormani():
                force = False,
                exclude_ins=False,
                only_ins=False,
-               valid_ins=[],
+               valid_ins=None,
                checkimages=False,
                thresholding=0,
                rename_folders=True,
@@ -289,9 +289,9 @@ class Sormani():
               (self.exclude_ins and not dir.isdigit()) or \
               (self.only_ins and dir.isdigit()):
             continue
-          if isinstance(self.valid_ins, int):
-            self.valid_ins = [self.valid_ins]
-          if len(dir.split()) >= 2 and dir.split()[1] == 'INS':
+          if self.valid_ins is not None and len(dir.split()) >= 2 and dir.split()[1] == 'INS':
+            if isinstance(self.valid_ins, int):
+              self.valid_ins = [self.valid_ins]
             valid_ins = [str(x) for x in self.valid_ins]
             if not dir.split()[2] in valid_ins:
               continue
