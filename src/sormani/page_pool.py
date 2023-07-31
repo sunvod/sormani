@@ -34,6 +34,8 @@ class Page_pool(list):
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.need_rotation = filedir.split(' ')[-1][0:2] == 'OT' and len(filedir.split(' ')[-1].split('-')) > 1 and filedir.split(' ')[-1].split('-')[1].isdigit()
     self.ais = ais
+    self.isins = False
+    self.ins_n = None
 
   def _n_page_sort(self, page):
     n_page = str(page.newspaper.n_page)

@@ -32,7 +32,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, original_image, pdf_path, jpg_path, txt_path, ais, is_bobina):
+  def __init__(self, file_name, date, newspaper, isins, ins_n, original_image, pdf_path, jpg_path, txt_path, ais, is_bobina):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -43,6 +43,7 @@ class Page:
     self.month_text = MONTHS[self.month - 1] if date is not None else None
     self.day = date.day if date is not None else None
     self.isins = isins
+    self.ins_n = ins_n
     self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
     if is_bobina:
       file = pdf_path.split('/')[-1]

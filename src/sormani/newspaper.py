@@ -653,33 +653,40 @@ class Italia_Oggi(Newspaper):
     for n_page, page in enumerate(page_pool):
       try:
         page.newspaper.n_page
-        continue
+        if page.newspaper.n_page is not None:
+          continue
       except:
         pass
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
-      n = Path(page.file_name).stem.split('_')[-1]
-      if n != '0':
-        if r == 2:
-          page.newspaper.n_page = f
-          f += 1
-          r = -1
-        elif r == -1:
-          page.newspaper.n_page = l
-          l -= 1
-          r = -2
-        elif r == -2:
-          page.newspaper.n_page = l
-          l -= 1
-          r = 1
-        elif r == 1:
-          page.newspaper.n_page = f
-          f += 1
-          r = 2
+      if page.isins and page.ins_n == 2:
+        page.newspaper.n_page = n_page + 1
+      elif page.isins and page.ins_n == 3 and n_pages == 8:
+        pg = [1,8,3,6,5,4,7,2]
+        page.newspaper.n_page = pg[n_page]
       else:
-        page.newspaper.n_page = f
-        f += 1
-        r = 2
+        n = Path(page.file_name).stem.split('_')[-1]
+        if n != '0':
+          if r == 2:
+            page.newspaper.n_page = f
+            f += 1
+            r = -1
+          elif r == -1:
+            page.newspaper.n_page = l
+            l -= 1
+            r = -2
+          elif r == -2:
+            page.newspaper.n_page = l
+            l -= 1
+            r = 1
+          elif r == 1:
+            page.newspaper.n_page = f
+            f += 1
+            r = 2
+        else:
+          page.newspaper.n_page = f
+          f += 1
+          r = -2
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = [0, 100, w, 400]
@@ -2120,29 +2127,31 @@ class La_Repubblica(Newspaper):
       page.newspaper.n_pages = n_pages
       page.newspaper.n_real_pages = len(page_pool)
       n = Path(page.file_name).stem.split('_')[-1]
-      if n != '0':
-        count_zero = 0
-        if r == 2:
-          page.newspaper.n_page = f
-          f += 1
-          r = -1
-        elif r == -1:
-          page.newspaper.n_page = l
-          l -= 1
-          r = -2
-        elif r == -2:
-          page.newspaper.n_page = l
-          l -= 1
-          r = 1
-        elif r == 1:
-          page.newspaper.n_page = f
-          f += 1
-          r = 2
+      if page.isins:
+        page.newspaper.n_page = n_page + 1
       else:
-        page.newspaper.n_page = f
-        f += 1
-        r = 2
-        count_zero += 1
+        n = Path(page.file_name).stem.split('_')[-1]
+        if n != '0':
+          if r == 2:
+            page.newspaper.n_page = f
+            f += 1
+            r = -1
+          elif r == -1:
+            page.newspaper.n_page = l
+            l -= 1
+            r = -2
+          elif r == -2:
+            page.newspaper.n_page = l
+            l -= 1
+            r = 1
+          elif r == 1:
+            page.newspaper.n_page = f
+            f += 1
+            r = 2
+        else:
+          page.newspaper.n_page = f
+          f += 1
+          r = -2
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale=200,

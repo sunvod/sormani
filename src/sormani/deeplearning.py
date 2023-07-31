@@ -1009,16 +1009,43 @@ def check_dirs(root=IMAGE_ROOT):
 def clean_underscore():
   count = 0
   tot = 0
-  newspaper = 'La Repubblica'
+  newspaper = 'Italia Oggi'
   for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
     if len(files):
       for file in files:
-        # if '_' in file:
-        #   new_file = file.split('_')[-2] + '.tif'
-        #   os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+        if '_' in file:
+          # new_file = file.split('_')[-2] + '.tif'
+          new_file = file.replace("_", "")
+          os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
         if file == 'Thumbs.db':
           os.remove(os.path.join(filedir, file))
   return
+
+def invert_italia_oggi():
+  count = 0
+  tot = 0
+  newspaper = 'Italia Oggi'
+  for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+    if 'INS' in filedir.split('/')[-1]:
+      if len(files) == 4:
+        n = filedir.split(' ')[-1]
+        if n == '3':
+          n = len(files)
+          files.sort()
+          for i, file in enumerate(files):
+            if not 'fotogramma' in file:
+              if i == 0:
+                n = 1
+              elif i == 1:
+                n = 4
+              elif i == 2:
+                n = 3
+              else:
+                n = 2
+              new_file = 'fotogramma' + ('0' + str(n))[-2:] + '.tif'
+              os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
+
+
 
 # check_dirs()
 
