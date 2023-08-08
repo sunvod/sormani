@@ -14,12 +14,12 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
 
 
-  sormani = Sormani('La Repubblica',
+  sormani = Sormani('Italia Oggi',
                     years=[2017],
                     months=None,
                     days=None)
-  sormani.set_giornali_pipeline(divide = True, rename = True, change_contrast = False, create_images=False, force_rename=False)
   # sormani.set_giornali_pipeline()
+  sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=True, create_images=True)
 
   # sormani = Sormani('Italia Oggi',
   #                   years=[2017],

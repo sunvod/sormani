@@ -1009,13 +1009,14 @@ def check_dirs(root=IMAGE_ROOT):
 def clean_underscore():
   count = 0
   tot = 0
-  newspaper = 'Italia Oggi'
+  newspaper = 'La Repubblica'
   for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
     if len(files):
+      files.sort()
       for file in files:
         if '_' in file:
-          # new_file = file.split('_')[-2] + '.tif'
-          new_file = file.replace("_", "")
+          new_file = file.split('_')[-2] + '.tif'
+          # new_file = file.replace("_", "")
           os.rename(os.path.join(filedir, file), os.path.join(filedir, new_file))
         if file == 'Thumbs.db':
           os.remove(os.path.join(filedir, file))
@@ -1078,10 +1079,7 @@ def invert_italia_oggi():
 # prepare_title_domenica_corriere(root='/mnt/storage02/TIFF/La Domenica del Corriere/01/04')
 
 # rename_title_domenica_corriere()
-#
-#
 
-count_giornali()
 
 # change_newspaper_name('Osservatore Romano', 'Avvenire', 'Osservatore Romano')
 
@@ -1110,3 +1108,5 @@ count_giornali()
 # show_OT('/mnt/storage01/sormani/TIFF/Il Sole 24 Ore/2016')x
 
 # clean_underscore()
+
+count_giornali()

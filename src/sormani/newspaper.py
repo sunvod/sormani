@@ -2151,7 +2151,7 @@ class La_Repubblica(Newspaper):
         else:
           page.newspaper.n_page = f
           f += 1
-          r = -2
+          r = 2
   @staticmethod
   def get_parameters():
     return Newspaper_parameters(scale=200,
