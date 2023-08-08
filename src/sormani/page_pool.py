@@ -34,6 +34,8 @@ class Page_pool(list):
     self.isOT = filedir.split(' ')[-1][0:2] == 'OT'
     self.need_rotation = filedir.split(' ')[-1][0:2] == 'OT' and len(filedir.split(' ')[-1].split('-')) > 1 and filedir.split(' ')[-1].split('-')[1].isdigit()
     self.ais = ais
+    self.isins = False
+    self.ins_n = None
 
   def _n_page_sort(self, page):
     n_page = str(page.newspaper.n_page)
@@ -385,9 +387,11 @@ class Page_pool(list):
           img = cv2.imread(page.original_image)
           img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
           cv2.imwrite(page.original_image, img)
-        elif flag:
-          os.rename(page.original_image, file_path_no_ext + '_0' + ext)
-          page.original_image = file_path_no_ext + '_0' + ext
+        elif flag or not page.isAlreadySeen():
+          le = page.original_image.split('_')[-1]
+          if le != '0.tif' and le != '1.tif' and le != '2.tif':
+            os.rename(page.original_image, file_path_no_ext + '_0' + ext)
+            page.original_image = file_path_no_ext + '_0' + ext
           continue
         else:
           continue

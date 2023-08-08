@@ -72,6 +72,10 @@ class Images_group():
   def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages, is_bobina=False):
     page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
     page_pool.isins = not self.filedir.split('/')[-1].isdigit() if not is_bobina else False
+    if page_pool.isins:
+      n = (self.filedir.split('/')[-1]).split()[-1]
+      if n.isdigit():
+        page_pool.ins_n = int(n)
     dir_in_filedir = self.filedir.split('/')
     txt_in_filedir = list(map(lambda x: x.replace(image_path, 'txt'), dir_in_filedir))
     dir_in_filedir = list(map(lambda x: x.replace(image_path, JPG_PDF_PATH), dir_in_filedir))
@@ -98,7 +102,7 @@ class Images_group():
       if pathlib.Path(file).suffix == '.' + ext:
         if checkimages and not self.is_image(self.filedir, file):
           continue
-        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais, is_bobina)
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, page_pool.ins_n, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais, is_bobina)
         ai = ais.get_model(PAGE)
         model = ai.model if ai is not None else None
         use_ai = ai.use if ai is not None else False
