@@ -130,6 +130,8 @@ class Newspaper():
       newspaper = Scenario(newspaper_base, file_path, date, year, number)
     elif name == 'La Domenica Del Corriere':
       newspaper = La_Domenica_del_Corriere(newspaper_base, file_path, date, year, number)
+    elif name == 'Corriere della Sera':
+      newspaper = Corriere_della_Sera(newspaper_base, file_path, date, year, number)
     elif name == 'La Domenica':
       newspaper = La_Domenica(newspaper_base, file_path, date, year, number)
     elif name == 'Il Mondo':
@@ -175,6 +177,8 @@ class Newspaper():
       parameters = Le_Grandi_Firme.get_start(ofset)
     elif name == 'La Domenica Del Corriere':
       parameters = La_Domenica_del_Corriere.get_start(ofset)
+    elif name == 'Corriere della Sera':
+      parameters = Corriere_della_Sera.get_start(ofset)
     elif name == 'La Domenica':
       parameters = La_Domenica.get_start(ofset)
     elif name == 'Il Secolo Illustrato Della Domenica':
@@ -2164,3 +2168,31 @@ class La_Repubblica(Newspaper):
                                 max_mean=500,
                                 invert = True,
                                 internal_box = (30, 100, 80, 120))
+
+class Corriere_della_Sera(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 17
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Corriere della Sera', file_path, date, year, number, init_page=3)
+
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    if self.n_page % 2 == 0:
+      whole = [0, 150, 1000, 500]
+    else:
+      whole = [w - 1000, 150, w, 500]
+    return whole
+
+  @staticmethod
+  def get_parameters():
+    return Newspaper_parameters(scale=200,
+                                min_w=10,
+                                max_w=120,
+                                min_h=90,
+                                max_h=150,
+                                ts=240,
+                                min_mean=0,
+                                max_mean=500,
+                                invert=True,
+                                max_distance=10,
+                                can_be_internal=True)
