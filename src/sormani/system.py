@@ -76,7 +76,8 @@ NEWSPAPERS_2017 = ['Alias',
               'Osservatore Romano',
               'Tutto Libri',
               'Unita',
-              'Il Sole 24 Ore']
+              'Il Sole 24 Ore',
+              'Corriere della Sera']
 BOBINE = ['Il Mondo',
           'Il Secolo Illustrato Della Domenica',
           'Le Grandi Firme',
