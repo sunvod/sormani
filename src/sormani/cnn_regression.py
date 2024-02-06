@@ -29,7 +29,6 @@ from keras.applications.inception_resnet_v2 import *
 from keras.applications.convnext import *
 from keras.applications.nasnet import *
 from keras.applications.densenet import *
-from keras.applications.resnet import *;
 from numba import cuda
 
 
@@ -40,7 +39,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT_2016, REPOSITORY, NEWSPAPERS_2016, IMAGE_PATH, \
   NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE
 
 BATCH_SIZE = 32
@@ -88,8 +87,6 @@ class CNN:
       base_model = EfficientNetV2M(weights='imagenet', include_top=False)
     elif type == 'EfficientNetV2L':
       base_model = EfficientNetV2L(weights='imagenet', include_top=False)
-    elif type == 'ResNet101':
-      base_model = ResNet101(weights='imagenet', include_top=False)
     else:
       model = tf.keras.Sequential([
         data_augmentation,

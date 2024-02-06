@@ -44,7 +44,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT_2017, REPOSITORY, NEWSPAPERS_2017, IMAGE_PATH, \
   NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE, BOBINE
 
 BATCH_SIZE = 32
@@ -121,9 +121,9 @@ def move_to_class(name):
 def count_giornali():
   count = 0
   tot = 0
-  for newspaper in NEWSPAPERS:
+  for newspaper in NEWSPAPERS_2017:
     count = 0
-    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT, 'TIFF', newspaper)):
+    for filedir, dirs, files in os.walk(os.path.join(IMAGE_ROOT_2017, 'TIFF', newspaper)):
       count += len(files)
       if not len(files):
         pass
@@ -985,7 +985,7 @@ def copy_jpg(root='/home/sormani/2016/giornali/JPG-PDF'):
     else:
       shutil.copytree(filedir, os.path.join('/media/osi/Expansion/', ls[-6], ls[-5], ls[-4], ls[-3], ls[-2], ls[-1]))
 
-def check_dirs(root=IMAGE_ROOT):
+def check_dirs(root=IMAGE_ROOT_2017):
   for filedir, dirs, files in os.walk(os.path.join(root, IMAGE_PATH)):
     if len(files):
       if(len(filedir.split('/')) > 9):

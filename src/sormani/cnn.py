@@ -39,7 +39,7 @@ import pytesseract
 
 
 from src.sormani.sormani import Sormani
-from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT, REPOSITORY, NEWSPAPERS, IMAGE_PATH, \
+from src.sormani.system import STORAGE_DL, STORAGE_BASE, IMAGE_ROOT_2016, REPOSITORY, NEWSPAPERS_2016, IMAGE_PATH, \
   NUMBER_IMAGE_SIZE, JPG_PDF_PATH, STORAGE_BOBINE
 
 BATCH_SIZE = 32
