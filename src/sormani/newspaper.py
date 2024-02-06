@@ -156,6 +156,46 @@ class Newspaper():
       newspaper = Il_Verri(newspaper_base, file_path, date, year, number)
     elif name == 'Il 45':
       newspaper = Il_45(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Milione':
+      newspaper = Il_Milione(newspaper_base, file_path, date, year, number)
+    elif name == 'Campo Grafico':
+      newspaper = Campo_Grafico(newspaper_base, file_path, date, year, number)
+    elif name == 'Cinema Nuovo':
+      newspaper = Cinema_Nuovo(newspaper_base, file_path, date, year, number)
+    elif name == 'Fatto Quotidiano':
+      newspaper = Fatto_Quotidiano(newspaper_base, file_path, date, year, number)
+    elif name == 'Futurismo':
+      newspaper = Futurismo(newspaper_base, file_path, date, year, number)
+    elif name == 'Giornale Arte':
+      newspaper = Giornale_Arte(newspaper_base, file_path, date, year, number)
+    elif name == 'Italia Futurista':
+      newspaper = Italia_Futurista(newspaper_base, file_path, date, year, number)
+    elif name == 'La Lettura':
+      newspaper = La_Lettura(newspaper_base, file_path, date, year, number)
+    elif name == 'Lei':
+      newspaper = Lei(newspaper_base, file_path, date, year, number)
+    elif name == 'Officina':
+      newspaper = Officina(newspaper_base, file_path, date, year, number)
+    elif name == 'Pinocchio':
+      newspaper = Pinocchio(newspaper_base, file_path, date, year, number)
+    elif name == 'Poesia Dessy':
+      newspaper = Poesia_Dessy(newspaper_base, file_path, date, year, number)
+    elif name == 'Poesia Marinetti':
+      newspaper = Poesia_Marinetti(newspaper_base, file_path, date, year, number)
+    elif name == 'Poligono':
+      newspaper = Poligono(newspaper_base, file_path, date, year, number)
+    elif name == 'Politecnico':
+      newspaper = Politecnico(newspaper_base, file_path, date, year, number)
+    elif name == 'Prospettive':
+      newspaper = Prospettive(newspaper_base, file_path, date, year, number)
+    elif name == 'Pungolo della Domenica':
+      newspaper = Pungolo_della_Domenica(newspaper_base, file_path, date, year, number)
+    elif name == 'Questo e Altro':
+      newspaper = Questo_e_Altro(newspaper_base, file_path, date, year, number)
+    elif name == 'Santelia Artecrazia':
+      newspaper = Santelia_Artecrazia(newspaper_base, file_path, date, year, number)
+    elif name == 'Tesoretto':
+      newspaper = Tesoretto(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -199,6 +239,46 @@ class Newspaper():
       parameters = Il_Verri.get_start(ofset)
     if name == 'Il 45':
       parameters = Il_45.get_start(ofset)
+    if name == 'Il Milione':
+      parameters = Il_Milione.get_start(ofset)
+    if name == 'Campo Grafico':
+      parameters = Campo_Grafico.get_start(ofset)
+    if name == 'Cinema Nuovo':
+      parameters = Cinema_Nuovo.get_start(ofset)
+    if name == 'Fatto Quotidiano':
+      parameters = Fatto_Quotidiano.get_start(ofset)
+    if name == 'Futurismo':
+      parameters = Futurismo.get_start(ofset)
+    if name == 'Giornale Arte':
+      parameters = Giornale_Arte.get_start(ofset)
+    if name == 'Italia Futurista':
+      parameters = Italia_Futurista.get_start(ofset)
+    if name == 'La Lettura':
+      parameters = La_Lettura.get_start(ofset)
+    if name == 'Lei':
+      parameters = Lei.get_start(ofset)
+    if name == 'Officina':
+      parameters = Officina.get_start(ofset)
+    if name == 'Pinocchio':
+      parameters = Pinocchio.get_start(ofset)
+    if name == 'Poesia Dessy':
+      parameters = Poesia_Dessy.get_start(ofset)
+    if name == 'Poesia Marinetti':
+      parameters = Poesia_Marinetti.get_start(ofset)
+    if name == 'Poligono':
+      parameters = Poligono.get_start(ofset)
+    if name == 'Politecnico':
+      parameters = Politecnico.get_start(ofset)
+    elif name == 'Prospettive':
+      parameters = Prospettive.get_start(ofset)
+    elif name == 'Pungolo della Domenica':
+      parameters = Pungolo_della_Domenica.get_start(ofset)
+    elif name == 'Questo e Altro':
+      parameters = Questo_e_Altro.get_start(ofset)
+    elif name == 'Santelia Artecrazia':
+      parameters = Santelia_Artecrazia.get_start(ofset)
+    elif name == 'Tesoretto':
+      parameters = Tesoretto.get_start(ofset)
     else:
       parameters = None
     return parameters
@@ -2258,6 +2338,666 @@ class Il_45(Newspaper):
   def get_start(ofset):
     if ofset == 1:
       return ('1945','1','--','1946','12','--')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Il_Milione(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Milione', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Campo_Grafico(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Campo Grafico', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Cinema_Nuovo(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Cinema Nuovo', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Fatto_Quotidiano(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Futurismo(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Futurismo', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Giornale_Arte(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Giornale dell\'Arte', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Italia_Futurista(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Italia_Futurista', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class La_Lettura(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'La Lettura', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Lei(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Lei', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Officina(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Officina', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Pinocchio(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Pinocchio', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Poesia_Dessy(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Poesia Dessy', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Poesia_Marinetti(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Poesia Marinetti', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Poligono(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Poligono', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Politecnico(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Politecnico', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Prospettive(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Prospettive', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Pungolo_della_Domenica(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Pungolo della Domenica', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Questo_e_Altro(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Questo e Altro', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Santelia_Artecrazia(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Santelia Artecrazia', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Tesoretto(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Tesoretto', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1938','10','13','1938','10','13')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

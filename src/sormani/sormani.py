@@ -35,7 +35,7 @@ class Conversion:
 class Sormani():
   def __init__(self,
                newspaper_names,
-               root = IMAGE_ROOT_2016,
+               root = IMAGE_ROOT,
                years = None,
                months = None,
                days = None,
@@ -960,7 +960,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Merging {count} frames ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 48):
+  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 48, remove_border=True, delete_copies=True, rotate_images=True ):
     start_time = time.time()
     print(f'Extracting frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
@@ -973,9 +973,12 @@ class Sormani():
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # self.set_GPUs()
-    self.rotate_frames(threshold=threshold)
-    self.remove_borders()
-    self.bobine_delete_copies()
+    if rotate_images:
+      self.rotate_frames(threshold=threshold)
+    if remove_border:
+      self.remove_borders()
+    if delete_copies:
+      self.bobine_delete_copies()
   def bobine_delete_copies(self):
     start_time = time.time()
     print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')

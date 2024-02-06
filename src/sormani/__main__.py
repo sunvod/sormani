@@ -3,7 +3,7 @@ from src.sormani.AI import *
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Il 45',
+  sormani = Sormani('Il Milione',
                     # years=[1950],
                     # months=[1],
                     # days=[x for x in range(1,13)],
@@ -12,9 +12,9 @@ if __name__ == '__main__':
                     checkimages=False,
                     is_bobina=True)
 
-  sormani.set_bobine_merge_images(n_images=3)
-  sormani.set_bobine_select_images()
-  sormani.remove_dark_border(valid=[True,True,True,2500])
+  # sormani.set_bobine_merge_images(n_images=3)
+  sormani.set_bobine_select_images(remove_border=False)
+  # sormani.remove_dark_border(valid=[True,True,True,2500])
   # sormani.bobine_delete_copies()
 
   # sormani.create_all_images(ocr = False)
