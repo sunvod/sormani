@@ -66,7 +66,7 @@ BOBINE = ['Il Mondo',
           'Scenario',
           'La Domenica Del Corriere']
 SCORECUTOFF = 0.6
-HASHCUTOFF = 2
+HASHCUTOFF = 1
 PAGE = 1
 ISFIRSTPAGE = 2
 

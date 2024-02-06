@@ -3,6 +3,24 @@ from src.sormani.AI import *
 
 if __name__ == '__main__':
 
+  sormani = Sormani('Il 45',
+                    # years=[1950],
+                    # months=[1],
+                    # days=[x for x in range(1,13)],
+                    # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
+                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                    checkimages=False,
+                    is_bobina=True)
+
+  sormani.set_bobine_merge_images(n_images=3)
+  sormani.set_bobine_select_images()
+  sormani.remove_dark_border(valid=[True,True,True,2500])
+  # sormani.bobine_delete_copies()
+
+  # sormani.create_all_images(ocr = False)
+  # sormani.remove_dark_border(valid=[True,True,True,True])
+  # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
+
   # sormani = Sormani('Il Sole 24 Ore',
   #                   year=2016,
   #                   months=1,
@@ -14,12 +32,12 @@ if __name__ == '__main__':
   # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
 
 
-  sormani = Sormani('Corriere della Sera',
-                    years=[2017],
-                    months=None,
-                    days=None)
-  # sormani.set_giornali_pipeline()
-  sormani.set_giornali_pipeline( create_images=False)
+  # sormani = Sormani('Avvenire',
+  #                   years=[2017],
+  #                   months=[9],
+  #                   days=None)
+  # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
+  # sormani.set_giornali_pipeline( create_images=False)
 
   # sormani = Sormani('Italia Oggi',
   #                   years=[2017],

@@ -1079,7 +1079,7 @@ class Page:
     for contour in contours:
       x, y, w, h = cv2.boundingRect(contour)
       rect = cv2.minAreaRect(contour)
-      if self.debug:
+      if DEBUG:
         box = np.int0(cv2.boxPoints(rect))
         cv2.drawContours(bimg, [box], 0, (0, 255, 0), 3)
       if w > w1 and h > h1 and w < w2 and h < h2:
@@ -2545,8 +2545,6 @@ class Page:
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     file_nimg = '.'.join(file.split('.')[:-1]) + '_nimg.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-    # if (img[0:6, 0] == np.array([3,202,2,61,4,6])).all():
-    #   return
     _img = img.copy()
     thresh = img.copy()
     # thresh = cv2.convertScaleAbs(thresh, alpha=1.3, beta=0)
@@ -2558,6 +2556,7 @@ class Page:
     max_y = h // 2
     count = 0
     if self.valid[0]:
+      img_bk = img
       for y in range(10, max_y):
         mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
@@ -2566,7 +2565,10 @@ class Page:
           h, w = thresh.shape
           count = 1
           break
+      if img_bk.shape[0] - img.shape[0] > self.valid[0] and self.valid[0] > 1:
+        img = img_bk
     if self.valid[1]:
+      img_bk = img
       for y in range(h - 11, h - max_y, -1):
         mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
@@ -2575,7 +2577,10 @@ class Page:
           h, w = thresh.shape
           count = 1
           break
+      if img_bk.shape[0] - img.shape[0] > self.valid[1] and self.valid[1] > 1:
+        img = img_bk
     if self.valid[2]:
+      img_bk = img
       for x in range(10, max_x_l):
         mean = thresh[0:h, x:x + 1].mean()
         if mean >= self.limit:
@@ -2584,7 +2589,10 @@ class Page:
           h, w = thresh.shape
           count = 1
           break
+      if img_bk.shape[1] - img.shape[1] > self.valid[2] and self.valid[2] > 1:
+        img = img_bk
     if self.valid[3]:
+      img_bk = img
       for x in range(w - 11, w - max_x_r, -1):
         mean = thresh[0:h, x:x + 1].mean()
         if mean >= self.limit:
@@ -2593,7 +2601,8 @@ class Page:
           h, w = thresh.shape
           count = 1
           break
-    # img[0:6, 0] = [3, 202, 2, 61, 4, 6]
+      if img_bk.shape[1] - img.shape[1] > self.valid[3] and self.valid[3] > 1:
+        img = img_bk
     if DEBUG:
       cv2.imwrite(file_bimg, img)
       cv2.imwrite(file_thresh, thresh)

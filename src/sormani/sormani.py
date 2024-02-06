@@ -947,12 +947,12 @@ class Sormani():
     self.force = selfforce
     print(f'Checking pdf ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # print(f'Warning: There is no files to check for \'{self.newspaper_name}\'.')
-  def set_bobine_merge_images(self):
+  def set_bobine_merge_images(self, n_images=3):
     start_time = time.time()
     print(f'Starting merging images of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      n = page_pool.set_bobine_merge_images()
+      n = page_pool.set_bobine_merge_images(n_images)
       if n:
         count += n
         i = self.pages_pool.index(page_pool)
@@ -974,7 +974,7 @@ class Sormani():
     # self.set_GPUs()
     self.rotate_frames(threshold=threshold)
     self.remove_borders()
-    # self.bobine_delete_copies()
+    self.bobine_delete_copies()
   def bobine_delete_copies(self):
     start_time = time.time()
     print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
@@ -987,6 +987,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+  # valid = [x1, x2, h1, h2], every parameters False/True/value. If value is indicated it mean the max dimension of border that can be removed.
   def remove_dark_border(self, threshold=120, limit=150, valid=[True,True,True,True]):
     if not len(self.elements):
       return

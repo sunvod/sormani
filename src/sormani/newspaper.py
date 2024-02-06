@@ -152,6 +152,10 @@ class Newspaper():
       newspaper = Sfera(newspaper_base, file_path, date, year, number)
     elif name == 'La Repubblica':
       newspaper = La_Repubblica(newspaper_base, file_path, date, year, number)
+    elif name == 'Il Verri':
+      newspaper = Il_Verri(newspaper_base, file_path, date, year, number)
+    elif name == 'Il 45':
+      newspaper = Il_45(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -191,6 +195,10 @@ class Newspaper():
       parameters = La_Fornarina.get_start(ofset)
     elif name == 'Sfera':
       parameters = Sfera.get_start(ofset)
+    if name == 'Il Verri':
+      parameters = Il_Verri.get_start(ofset)
+    if name == 'Il 45':
+      parameters = Il_45.get_start(ofset)
     else:
       parameters = None
     return parameters
@@ -276,15 +284,8 @@ class Newspaper():
   def crop_png(self, image):
     dims = self.get_whole_page_location(image)
     if isinstance(dims[0], list):
-      # img = None
       imgs = []
       for dim in dims:
-      #   _img = np.asarray(image.crop(dim))
-      #   if img is None:
-      #     img = _img
-      #   else:
-      #     img = np.concatenate((img, _img), axis=1)
-      # image = Image.fromarray(img)
         imgs.append(image.crop(dim))
     else:
       imgs = image.crop(dims)
@@ -2196,3 +2197,82 @@ class Corriere_della_Sera(Newspaper):
                                 invert=True,
                                 max_distance=10,
                                 can_be_internal=True)
+
+class Il_Verri(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 59
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il Verri', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1956','10','--','1959','10','--')
+    elif ofset == 2:
+      return ('1959', '12', '--', '1961', '12', '--')
+    elif ofset == 3:
+      return ('1962', '1', '--', '1963', '12', '--')
+    elif ofset == 4:
+      return ('1964', '1', '--', '1966', '12', '--')
+    elif ofset == 5:
+      return ('1967', '1', '--', '1971', '12', '--')
+    elif ofset == 6:
+      return ('1972', '1', '--', '1974', '12', '--')
+    elif ofset == 7:
+      return ('1975', '1', '--', '1977', '12', '--')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (4000, 6000, 2000, 6000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+
+class Il_45(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Il 45', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1945','1','--','1946','12','--')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None

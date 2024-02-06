@@ -840,7 +840,7 @@ class Page_pool(list):
               f'{self.newspaper_name} di tipo \'{type}\' non ha il jpg di tipo {convert.image_path} con dpi={convert.dpi}')
           if integrate:
             self.convert_images([convert])
-  def set_bobine_merge_images(self):
+  def set_bobine_merge_images(self, n_images=3):
     groups_files = []
     file1 = None
     file2 = None
@@ -860,18 +860,31 @@ class Page_pool(list):
       file1 = file2
       file2 = file
     with Pool(processes=N_PROCESSES) as mp_pool:
-      result = mp_pool.map(self._set_bobine_merge_images, groups_files)
+      if n_images==3:
+        result = mp_pool.map(self._set_bobine_merge_3_images, groups_files)
+      else:
+        result = mp_pool.map(self._set_bobine_merge_2_images, groups_files)
     for file in files:
       os.remove(file)
     return len(files)
-  def _set_bobine_merge_images(self, couple_files):
+  def _set_bobine_merge_2_images(self, couple_files):
+    img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
+    if img1.shape[1] == img2.shape[1]:
+      vis = np.concatenate((img1, img2), axis=1)
+      n = (couple_files[0].split('_')[-1]).split('.')[0]
+      file = os.path.join(self.filedir, 'merge_' + n + '.tif')
+      cv2.imwrite(file, vis)
+    return 1
+  def _set_bobine_merge_3_images(self, couple_files):
     img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread(couple_files[1], cv2.IMREAD_GRAYSCALE)
     img3 = cv2.imread(couple_files[2], cv2.IMREAD_GRAYSCALE)
-    vis = np.concatenate((img1, img2, img3), axis=1)
-    n = (couple_files[0].split('_')[-1]).split('.')[0]
-    file = os.path.join(self.filedir, 'merge_' + n + '.tif')
-    cv2.imwrite(file, vis)
+    if img1.shape[1] == img2.shape[1] and img2.shape[1] == img3.shape[1]:
+      vis = np.concatenate((img1, img2, img3), axis=1)
+      n = (couple_files[0].split('_')[-1]).split('.')[0]
+      file = os.path.join(self.filedir, 'merge_' + n + '.tif')
+      cv2.imwrite(file, vis)
     return 1
   def set_bobine_select_images(self, remove_merge, debug, threshold=None):
     for page in self:
@@ -915,11 +928,7 @@ class Page_pool(list):
     for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      # img = cv2.convertScaleAbs(img, alpha=1.2, beta=0)
-      if img is None:
-        pass
       oh, ow = img.shape
-      # img = img[1000:h-2000,1000:w-2000]
       img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
       hash = imagehash.average_hash(Image.fromarray(img))
       if img3 is not None:
