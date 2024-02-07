@@ -2460,7 +2460,7 @@ class Fatto_Quotidiano(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 45
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Il Fatto Quotidiano', file_path, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Fatto Quotidiano', file_path, date, year, number, init_page = 3)
     self.contrast = 50
   def get_number(self):
     return None
@@ -2469,7 +2469,50 @@ class Fatto_Quotidiano(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('2009','09','--','2009','12','--')
+    elif ofset == 2:
+      return ('2010', '01', '--', '2010', '06', '--')
+    elif ofset == 3:
+      return ('2010', '07', '--', '2010', '12', '--')
+    elif ofset == 4:
+      return ('2011', '01', '--', '2011', '06', '--')
+    elif ofset == 5:
+      return ('2011', '06', '--', '2011', '12', '--')
+    elif ofset == 6:
+      return ('2012', '01', '--', '2012', '06', '--')
+    elif ofset == 7:
+      return ('2012', '06', '--', '2012', '12', '--')
+    elif ofset == 8:
+      return ('2013', '01', '--', '2013', '06', '--')
+    elif ofset == 9:
+      return ('2013', '06', '--', '2013', '12', '--')
+    elif ofset == 10:
+      return ('2014', '01', '--', '2014', '06', '--')
+    elif ofset == 11:
+      return ('2014', '06', '--', '2014', '12', '--')
+    elif ofset == 12:
+      return ('2015', '01', '01', '2015', '01', '31')
+    elif ofset == 13:
+      return ('2015', '02', '01', '2015', '02', '31')
+    elif ofset == 14:
+      return ('2015', '03', '01', '2015', '03', '31')
+    elif ofset == 15:
+      return ('2015', '04', '01', '2015', '05', '31')
+    elif ofset == 16:
+      return ('2015', '06', '01', '2015', '06', '31')
+    elif ofset == 17:
+      return ('2015', '07', '01', '2015', '07', '31')
+    elif ofset == 18:
+      return ('2015', '08', '01', '2015', '08', '31')
+    elif ofset == 19:
+      return ('2015', '09', '01', '2015', '09', '31')
+    elif ofset == 20:
+      return ('2015', '10', '01', '2015', '10', '31')
+    elif ofset == 21:
+      return ('2015', '11', '01', '2015', '11', '31')
+    elif ofset == 22:
+      return ('2015', '12', '01', '2015', '12', '31')
+
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
