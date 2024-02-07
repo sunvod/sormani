@@ -973,12 +973,12 @@ class Sormani():
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # self.set_GPUs()
+    if delete_copies:
+      self.bobine_delete_copies()
     if rotate_images:
       self.rotate_frames(threshold=threshold)
     if remove_border:
       self.remove_borders()
-    if delete_copies:
-      self.bobine_delete_copies()
   def bobine_delete_copies(self):
     start_time = time.time()
     print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
@@ -991,7 +991,18 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} copies of frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  # valid = [x1, x2, h1, h2], every parameters False/True/value. If value is indicated it mean the max dimension of border that can be removed.
+  def delete_not_valid(self, valid=[False,False]):
+    start_time = time.time()
+    print(f'Deleting not valid frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+    count = 0
+    for page_pool in self:
+      n = page_pool.delete_not_valid(valid)
+      if n:
+        count += n
+        i = self.pages_pool.index(page_pool)
+        self.pages_pool[i] = None
+    self.set_elements()
+    print(f'Deleted {count} not valid frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def remove_dark_border(self, threshold=120, limit=150, valid=[True,True,True,True]):
     if not len(self.elements):
       return

@@ -13,9 +13,16 @@ if __name__ == '__main__':
                     is_bobina=True)
 
   # sormani.set_bobine_merge_images(n_images=3)
-  sormani.set_bobine_select_images(remove_border=False)
+  # sormani.set_bobine_select_images(remove_border=False)
   # sormani.remove_dark_border(valid=[True,True,True,2500])
   # sormani.bobine_delete_copies()
+  # sormani.delete_not_valid(valid=(10000, 7000))
+  sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)
+  # sormani.remove_dark_border()
+  # sormani.cut_at_written_part(threshold=180)
+  # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
+  # sormani.add_borders()
+  # sormani.rotate_final_frames(threshold=100)
 
   # sormani.create_all_images(ocr = False)
   # sormani.remove_dark_border(valid=[True,True,True,True])

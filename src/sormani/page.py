@@ -1267,23 +1267,6 @@ class Page:
     img = self.remove_vertical_lines(img, 10, 100)
     return img
   def clean_images(self):
-    def union(a, b):
-      x = min(a[0], b[0])
-      y = min(a[1], b[1])
-      w = max(a[0] + a[2], b[0] + b[2]) - x
-      h = max(a[1] + a[3], b[1] + b[3]) - y
-      return (x, y, w, h)
-    def check_intersection(l1, r1, l2, r2):
-      # if rectangle has area 0, no overlap
-      if l1[0] == r1[0] or l1[1] == r1[1] or r2[0] == l2[0] or l2[1] == r2[1]:
-        return False
-      # If one rectangle is on left side of other
-      if l1[0] > r2[0] or l2[0] > r1[0]:
-        return False
-      # If one rectangle is above other
-      if r1[1] > l2[1] or r2[1] > l1[1]:
-        return False
-      return True
     def checkIntersection(boxA, boxB):
       x = max(boxA[0], boxB[0])
       y = max(boxA[1], boxB[1])
@@ -1347,7 +1330,6 @@ class Page:
       x, y, w, h = cv2.boundingRect(contour)
       if w < 100 or h < 100:
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 255, 255), -1)
-    # ret, thresh = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY)
     #get new contours, enlarge them and put in order
     bimg = _img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
@@ -1372,8 +1354,6 @@ class Page:
         w = w if x + w < ow else ow - x - 1
         h += ofset * 2
         h = h if y + h < oh else oh - y - 1
-        # if x < ow // 2 and x + w > ow // 2:
-        #   continue
         cv2.rectangle(bimg, (x, y), (x + w, y + h), (0, 255, 0), 16)
         p.append((x, y))
         p.append((x + w, y))
@@ -1426,25 +1406,6 @@ class Page:
     if DEBUG:
       _white_nimg = 255 - np.zeros_like(_img)
       _white_nimg[white_nimg == 0] = _img[white_nimg == 0]
-    # for contour in _contours:
-    #   x, y, w, h = cv2.boundingRect(contour)
-    #   if h > ly - y_ofset and y < y_ofset // 2:
-    #     if ly > h:
-    #       _h = ly if ly < oh else oh
-    #       _h = _h if _h > h else h
-    #       y = y - (_h - h) // 2
-    #       y = y if y > 0 else 0
-    #       h = _h
-    #     dimg = dimg[y:y + h, :]
-    #   if w > lx - x_ofset and x < x_ofset // 2:
-    #     if lx > w:
-    #       _w = lx if lx < ow else ow
-    #       _w = _w if _w > w else w
-    #       x = x - (_w - w) // 2
-    #       x = x if x > 0 else 0
-    #       x = x if x > 0 else 0
-    #       w = _w
-    #     dimg = dimg[:, x:x+w]
     if big_rect:
       dimg[dimg >= self.min_threshold] = self.color
       # if DEBUG:

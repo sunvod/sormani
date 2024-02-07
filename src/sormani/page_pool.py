@@ -963,6 +963,20 @@ class Page_pool(list):
       _ow = ow
       _oh = oh
     return count
+  def delete_not_valid(self, valid):
+    pages = []
+    count = 0
+    for page in self:
+      pages.append(page)
+    pages.sort(key=self._page_sort)
+    for page in pages:
+      file = page.original_image
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+      oh, ow = img.shape
+      if (valid[0] > 0 and ow < valid[0]) or (valid[1] > 0 and oh < valid[1]):
+        os.remove(file)
+        count += 1
+    return count
   def rotate_frames(self, limit=4000, threshold=200, angle=None):
     count = 0
     for page in self:
