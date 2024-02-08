@@ -235,39 +235,39 @@ class Newspaper():
       parameters = La_Fornarina.get_start(ofset)
     elif name == 'Sfera':
       parameters = Sfera.get_start(ofset)
-    if name == 'Il Verri':
+    elif name == 'Il Verri':
       parameters = Il_Verri.get_start(ofset)
-    if name == 'Il 45':
+    elif name == 'Il 45':
       parameters = Il_45.get_start(ofset)
-    if name == 'Il Milione':
+    elif name == 'Il Milione':
       parameters = Il_Milione.get_start(ofset)
-    if name == 'Campo Grafico':
+    elif name == 'Campo Grafico':
       parameters = Campo_Grafico.get_start(ofset)
-    if name == 'Cinema Nuovo':
+    elif name == 'Cinema Nuovo':
       parameters = Cinema_Nuovo.get_start(ofset)
-    if name == 'Fatto Quotidiano':
+    elif name == 'Fatto Quotidiano':
       parameters = Fatto_Quotidiano.get_start(ofset)
-    if name == 'Futurismo':
+    elif name == 'Futurismo':
       parameters = Futurismo.get_start(ofset)
-    if name == 'Giornale Arte':
+    elif name == 'Giornale Arte':
       parameters = Giornale_Arte.get_start(ofset)
-    if name == 'Italia Futurista':
+    elif name == 'Italia Futurista':
       parameters = Italia_Futurista.get_start(ofset)
-    if name == 'La Lettura':
+    elif name == 'La Lettura':
       parameters = La_Lettura.get_start(ofset)
-    if name == 'Lei':
+    elif name == 'Lei':
       parameters = Lei.get_start(ofset)
-    if name == 'Officina':
+    elif name == 'Officina':
       parameters = Officina.get_start(ofset)
-    if name == 'Pinocchio':
+    elif name == 'Pinocchio':
       parameters = Pinocchio.get_start(ofset)
-    if name == 'Poesia Dessy':
+    elif name == 'Poesia Dessy':
       parameters = Poesia_Dessy.get_start(ofset)
-    if name == 'Poesia Marinetti':
+    elif name == 'Poesia Marinetti':
       parameters = Poesia_Marinetti.get_start(ofset)
-    if name == 'Poligono':
+    elif name == 'Poligono':
       parameters = Poligono.get_start(ofset)
-    if name == 'Politecnico':
+    elif name == 'Politecnico':
       parameters = Politecnico.get_start(ofset)
     elif name == 'Prospettive':
       parameters = Prospettive.get_start(ofset)

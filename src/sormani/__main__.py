@@ -5,14 +5,14 @@ if __name__ == '__main__':
 
   sormani = Sormani('Fatto Quotidiano',
                     # years=[1950],
-                    # months=[1],
+                    days=[2,3,5,6,7,8,9,10,11],
                     # days=[x for x in range(1,13)],
                     # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,
                     is_bobina=True)
 
-  # sormani.set_bobine_merge_images(n_images=3)
+  sormani.set_bobine_merge_images(n_images=3)
   sormani.set_bobine_select_images()
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
