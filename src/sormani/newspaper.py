@@ -2403,7 +2403,9 @@ class Campo_Grafico(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1933','01','--','1936','11','--')
+    elif ofset == 2:
+      return ('1937', '01', '--', '1939', '09', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2436,7 +2438,21 @@ class Cinema_Nuovo(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1952','12','--','1953','16','--')
+    elif ofset == 2:
+      return ('1953', '07', '--', '1953', '12', '--')
+    elif ofset == 3:
+      return ('1954', '01', '--', '1954', '12', '--')
+    elif ofset == 4:
+      return ('1955', '01', '--', '1955', '06', '--')
+    elif ofset == 5:
+      return ('1955', '07', '--', '1955', '12', '--')
+    elif ofset == 6:
+      return ('1956', '01', '--', '1956', '12', '--')
+    elif ofset == 7:
+      return ('1957', '01', '--', '1957', '12', '--')
+    elif ofset == 8:
+      return ('1958', '01', '--', '1958', '06', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2527,7 +2543,7 @@ class Fatto_Quotidiano(Newspaper):
   def get_limits(self):
     return (8800, 6000, 1500, 1000)
   def get_limits_select_images(self):
-    return (5000, 100000, 3000, 100000)
+    return (3000, 100000, 5000, 100000)
   @staticmethod
   def get_parameters():
     return None
@@ -2545,7 +2561,7 @@ class Futurismo(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1932','01','--','1933','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2578,7 +2594,7 @@ class Giornale_Arte(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1929','01','--','1948','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2611,7 +2627,7 @@ class Italia_Futurista(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1916','01','01','1918','02','11')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2677,7 +2693,17 @@ class Lei(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1933','07','15','1934','12','25')
+    elif ofset == 2:
+      return ('1935', '01', '01', '1936', '12', '29')
+    elif ofset == 3:
+      return ('1937', '01', '05', '1938', '12', '27')
+    elif ofset == 4:
+      return ('1939', '01', '03', '1940', '12', '31')
+    elif ofset == 5:
+      return ('1941', '01', '07', '1942', '12', '29')
+    elif ofset == 6:
+      return ('1943', '01', '05', '1944', '07', '18')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2710,7 +2736,7 @@ class Officina(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1955','01','--','1959','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2776,7 +2802,7 @@ class Poesia_Dessy(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1920','01','--','1920','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2809,7 +2835,9 @@ class Poesia_Marinetti(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1905','01','--','1905','11','--')
+    elif ofset == 2:
+      return ('1906','01','--','1909','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2842,7 +2870,9 @@ class Poligono(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1927','10','--','1929','03','--')
+    elif ofset == 2:
+      return ('1929', '11', '--', '1931', '12', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2875,7 +2905,7 @@ class Politecnico(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1945','01','--','1947','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2908,7 +2938,11 @@ class Prospettive(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1936','01','--','1940','12','--')
+    elif ofset == 2:
+      return ('1941', '01', '--', '1941', '12', '--')
+    elif ofset == 3:
+      return ('1942', '12', '--', '1943', '12', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2941,7 +2975,9 @@ class Pungolo_della_Domenica(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1883','02','04','1984','12','21')
+    elif ofset == 2:
+      return ('1885', '01', '04', '1885', '12', '27')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2974,7 +3010,7 @@ class Questo_e_Altro(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1962','01','--','1964','08','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -3007,7 +3043,7 @@ class Santelia_Artecrazia(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1934','01','--','1934','12','--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -3040,7 +3076,11 @@ class Tesoretto(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1939','01','--','1940','12','--')
+    elif ofset == 2:
+      return ('1941', '01', '--', '1942', '12', '--')
+    elif ofset == 3:
+      return ('1945', '01', '--', '1945', '12', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

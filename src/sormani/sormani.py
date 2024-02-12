@@ -973,12 +973,12 @@ class Sormani():
     self.set_elements()
     print(f'Extracting {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     # self.set_GPUs()
-    if delete_copies:
-      self.bobine_delete_copies()
-    if rotate_images:
-      self.rotate_frames(threshold=threshold)
-    if remove_border:
-      self.remove_borders()
+    # if delete_copies:
+    #   self.bobine_delete_copies()
+    # if rotate_images:
+    #   self.rotate_frames(threshold=threshold)
+    # if remove_border:
+    #   self.remove_borders()
   def bobine_delete_copies(self):
     start_time = time.time()
     print(f'Deleting copies of frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')

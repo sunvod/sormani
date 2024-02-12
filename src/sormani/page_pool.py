@@ -912,15 +912,27 @@ class Page_pool(list):
   def _page_sort(self, page):
     return page.original_image
   def bobine_delete_copies(self):
-    _file = None
+    def check_and_delete(file, img, img2):
+      if img is None or img2 is None:
+        return 0
+      hash = imagehash.average_hash(Image.fromarray(img))
+      hash2 = imagehash.average_hash(Image.fromarray(img2))
+      score, _ = structural_similarity(img, img2, full=True)
+      if DEBUG:
+        print(score, abs(hash - hash2), os.path.basename(file3), os.path.basename(file))
+      if score > SCORECUTOFF or abs(hash - hash2) <= HASHCUTOFF:
+        if not DEBUG:
+          try:
+            os.remove(file)
+          except:
+            return 0
+        return 1
+      return 0
+    file2 = None
     file3 = None
-    _hash = None
-    hash3 = None
-    _img = None
+    img2 = None
     img3 = None
     count = 0
-    _ow = None
-    _oh = None
     pages = []
     for page in self:
       pages.append(page)
@@ -928,40 +940,13 @@ class Page_pool(list):
     for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      oh, ow = img.shape
       img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
-      hash = imagehash.average_hash(Image.fromarray(img))
-      if img3 is not None:
-        score, _ = structural_similarity(img, img3, full=True)
-        if DEBUG:
-          print(score, abs(hash - hash3), os.path.basename(file3), os.path.basename(file))
-        if score > SCORECUTOFF or abs(hash - hash3) <= HASHCUTOFF: # or (ow == ow3 and oh == oh3):
-          if not DEBUG:
-            try:
-              n1 = int(file3.split('_')[-2])
-              n2 = int(file.split('_')[-2])
-              if n2 - n1 <= 2:
-                os.remove(file3)
-            except:
-              continue
-          count += 1
-      if ow > oh:
-        file3 = file
-        hash3 = hash
-        img3 = img
-        ow3 = ow
-        oh3 = oh
-      else:
-        file3 = _file
-        hash3 = _hash
-        img3 = _img
-        ow3 = _ow
-        oh3 = _oh
-      _file = file
-      _hash = hash
-      _img = img
-      _ow = ow
-      _oh = oh
+      count += check_and_delete(file, img, img2)
+      count += check_and_delete(file, img, img3)
+      img3 = img2
+      file3 = file2
+      img2 = img
+      file2= file
     return count
   def delete_not_valid(self, valid):
     pages = []
