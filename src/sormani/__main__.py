@@ -1,24 +1,50 @@
 from src.sormani.sormani import *
 from src.sormani.AI import *
 
+
+newspapers = [
+  'Il Verri',
+  'Il 45',
+  'Il Milione',
+  'Campo Grafico',
+  'Cinema Nuovo',
+  'Fatto Quotidiano',
+  'Futurismo',
+  'Giornale Arte',
+  'Italia Futurista',
+  'La Lettura',
+  'Lei',
+  'Officina',
+  'Pinocchio',
+  'Poesia Dessy',
+  'Poesia Marinetti',
+  'Poligono',
+  'Politecnico',
+  'Prospettive',
+  'Pungolo della Domenica',
+  'Questo e Altro',
+  'Santelia Artecrazia',
+  'Tesoretto'
+]
+
 if __name__ == '__main__':
 
-  sormani = Sormani('Fatto Quotidiano',
+  sormani = Sormani('Cinema Nuovo',
                     # years=[1950],
-                    days=[4],
-                    # days=[x for x in range(2,12)],
+                    # days=[1],
+                    # days=[x for x in range(1,9)],
                     # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,
                     is_bobina=True)
 
   sormani.set_bobine_merge_images(n_images=3)
-  # sormani.set_bobine_select_images(remove_border=False)
+  # sormani.set_bobine_select_images(remove_border=False, threshold = 100)
+  # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
   # sormani.rotate_frames(threshold=48)
   # sormani.rotate_frames(threshold=threshold)
   # sormani.remove_borders()
-  # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
   # sormani.delete_not_valid(valid=(10000, 7000))
   # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)

@@ -2438,7 +2438,7 @@ class Cinema_Nuovo(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1952','12','--','1953','16','--')
+      return ('1952','12','--','1953','06','--')
     elif ofset == 2:
       return ('1953', '07', '--', '1953', '12', '--')
     elif ofset == 3:
@@ -2543,7 +2543,7 @@ class Fatto_Quotidiano(Newspaper):
   def get_limits(self):
     return (8800, 6000, 1500, 1000)
   def get_limits_select_images(self):
-    return (3000, 100000, 5000, 100000)
+    return (3000, 100000, 3000, 100000)
   @staticmethod
   def get_parameters():
     return None
@@ -2585,7 +2585,7 @@ class Giornale_Arte(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 45
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Giornale dell\'Arte', file_path, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Giornale Arte', file_path, date, year, number, init_page = 3)
     self.contrast = 50
   def get_number(self):
     return None
