@@ -866,6 +866,7 @@ class Page_pool(list):
         result = mp_pool.map(self._set_bobine_merge_2_images, groups_files)
     for file in files:
       os.remove(file)
+    print(f'Merged {len(files)} of ' + self.newspaper_name)
     return len(files)
   def _set_bobine_merge_2_images(self, couple_files):
     img1 = cv2.imread(couple_files[0], cv2.IMREAD_GRAYSCALE)
@@ -900,6 +901,7 @@ class Page_pool(list):
         if elements is None:
           continue
         count += elements[1]
+      print(f'Selected {count} images of ' + self.newspaper_name)
       return count
     except:
       return 0
@@ -940,13 +942,15 @@ class Page_pool(list):
     for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
-      count += check_and_delete(file, img, img2)
-      count += check_and_delete(file, img, img3)
-      img3 = img2
-      file3 = file2
-      img2 = img
-      file2= file
+      if img is not None:
+        img = cv2.resize(img, (128, 128), interpolation = cv2.INTER_AREA)
+        count += check_and_delete(file, img, img2)
+        count += check_and_delete(file, img, img3)
+        img3 = img2
+        file3 = file2
+        img2 = img
+        file2= file
+    print(f'Deleted {count} copies of ' + self.newspaper_name)
     return count
   def delete_not_valid(self, valid):
     pages = []
@@ -957,10 +961,11 @@ class Page_pool(list):
     for page in pages:
       file = page.original_image
       img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
-      oh, ow = img.shape
-      if (valid[0] > 0 and ow < valid[0]) or (valid[1] > 0 and oh < valid[1]):
-        os.remove(file)
-        count += 1
+      if img is not None:
+        oh, ow = img.shape
+        if (valid[0] > 0 and ow < valid[0]) or (valid[1] > 0 and oh < valid[1]):
+          os.remove(file)
+          count += 1
     return count
   def rotate_frames(self, limit=4000, threshold=200, angle=None):
     count = 0

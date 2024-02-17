@@ -2618,7 +2618,7 @@ class Italia_Futurista(Newspaper):
   def __init__(self, newspaper_base, file_path, date, year, number):
     self.init_year = 45
     self.year_change = None
-    Newspaper.__init__(self, newspaper_base, 'Italia_Futurista', file_path, date, year, number, init_page = 3)
+    Newspaper.__init__(self, newspaper_base, 'Italia Futurista', file_path, date, year, number, init_page = 3)
     self.contrast = 50
   def get_number(self):
     return None
@@ -2660,7 +2660,65 @@ class La_Lettura(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1938','10','13','1938','10','13')
+      return ('1901','01','--','1901','06','--')
+    elif ofset == 2:
+      return ('1901', '07', '--', '1903', '11', '--')
+    elif ofset == 3:
+      return ('1903', '12', '--', '1904', '12', '--')
+    elif ofset == 4:
+      return ('1905', '01', '--', '1905', '12', '--')
+    elif ofset == 5:
+      return ('1906', '01', '--', '1907', '04', '--')
+    elif ofset == 6:
+      return ('1907', '05', '--', '1908', '09', '--')
+    elif ofset == 7:
+      return ('1908', '10', '--', '1910', '04', '--')
+    elif ofset == 8:
+      return ('1910', '05', '--', '1911', '10', '--')
+    elif ofset == 9:
+      return ('1911', '11', '--', '1913', '06', '--')
+    elif ofset == 10:
+      return ('1913', '07', '--', '1914', '12', '--')
+    elif ofset == 11:
+      return ('1915', '01', '--', '1916', '06', '--')
+    elif ofset == 12:
+      return ('1916', '07', '--', '1917', '12', '--')
+    elif ofset == 13:
+      return ('1918', '01', '--', '1919', '06', '--')
+    elif ofset == 14:
+      return ('1919', '07', '--', '1920', '12', '--')
+    elif ofset == 15:
+      return ('1921', '01', '--', '1922', '09', '--')
+    elif ofset == 16:
+      return ('1922', '10', '--', '1924', '06', '--')
+    elif ofset == 17:
+      return ('1924', '07', '--', '1926', '03', '--')
+    elif ofset == 18:
+      return ('1926', '04', '--', '1927', '12', '--')
+    elif ofset == 19:
+      return ('1928', '01', '--', '1929', '08', '--')
+    elif ofset == 20:
+      return ('1929', '09', '--', '1930', '12', '--')
+    elif ofset == 21:
+      return ('1931', '01', '--', '1932', '06', '--')
+    elif ofset == 22:
+      return ('1932', '07', '--', '1933', '12', '--')
+    elif ofset == 23:
+      return ('1934', '01', '--', '1935', '06', '--')
+    elif ofset == 24:
+      return ('1935', '07', '--', '1936', '12', '--')
+    elif ofset == 25:
+      return ('1937', '01', '--', '1938', '05', '--')
+    elif ofset == 26:
+      return ('1938', '06', '--', '1939', '12', '--')
+    elif ofset == 27:
+      return ('1940', '01', '--', '1941', '05', '--')
+    elif ofset == 28:
+      return ('1941', '06', '--', '1942', '06', '--')
+    elif ofset == 29:
+      return ('1942', '07', '--', '1943', '12', '--')
+    elif ofset == 30:
+      return ('1944', '01', '--', '1952', '10', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
@@ -2718,7 +2776,7 @@ class Lei(Newspaper):
   def get_limits(self):
     return (8800, 6000, 1500, 1000)
   def get_limits_select_images(self):
-    return (5000, 100000, 3000, 100000)
+    return (12000, 100000, 8000, 100000)
   @staticmethod
   def get_parameters():
     return None
@@ -2817,7 +2875,7 @@ class Poesia_Dessy(Newspaper):
   def get_limits(self):
     return (8800, 6000, 1500, 1000)
   def get_limits_select_images(self):
-    return (5000, 100000, 3000, 100000)
+    return (12000, 100000, 4000, 100000)
   @staticmethod
   def get_parameters():
     return None

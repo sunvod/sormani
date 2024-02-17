@@ -29,24 +29,24 @@ newspapers = [
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Cinema Nuovo',
+  sormani = Sormani('Il 45',
                     # years=[1950],
                     # days=[1],
-                    # days=[x for x in range(1,9)],
+                    # days=[x for x in range(2,32)],
                     # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,
                     is_bobina=True)
 
-  sormani.set_bobine_merge_images(n_images=3)
-  # sormani.set_bobine_select_images(remove_border=False, threshold = 100)
+  # sormani.set_bobine_merge_images(n_images=3)
+  # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
   # sormani.rotate_frames(threshold=48)
   # sormani.rotate_frames(threshold=threshold)
   # sormani.remove_borders()
   # sormani.bobine_delete_copies()
-  # sormani.delete_not_valid(valid=(10000, 7000))
+  # sormani.delete_not_valid(valid=(12000, 8000))
   # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)
   # sormani.remove_dark_border()
   # sormani.cut_at_written_part(threshold=180)
@@ -54,7 +54,8 @@ if __name__ == '__main__':
   # sormani.add_borders()
   # sormani.rotate_final_frames(threshold=100)
 
-  # sormani.create_all_images(ocr = False)
+  sormani.create_all_images()
+
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
 
