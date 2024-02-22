@@ -29,10 +29,10 @@ newspapers = [
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Il 45',
+  sormani = Sormani('Cinema Nuovo',
                     # years=[1950],
-                    # days=[1],
-                    # days=[x for x in range(2,32)],
+                    # days=[11],
+                    # days=[x for x in range(3,31)],
                     # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                     # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                     checkimages=False,

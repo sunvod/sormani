@@ -1016,9 +1016,13 @@ class Page:
       file_to_be_changing, end_flag, next_page, n_unkown = self.open_win_pages_files(image, file_to_be_changing, n_unkown, prediction = prediction)
     return file_to_be_changing, end_flag, next_page, n_unkown
   def convert_image(self, force):
-    with Image.open(self.original_image) as image:
-      for convert in self.conversions:
-        self.convert_image_single_conversion(convert, image, force)
+    try:
+      image = Image.open(self.original_image)
+    except:
+      return
+    # with Image.open(self.original_image) as image:
+    for convert in self.conversions:
+      self.convert_image_single_conversion(convert, image, force)
   def convert_image_single_conversion(self, convert, image, force):
     path_image = os.path.join(self.jpg_path, convert.image_path)
     Path(path_image).mkdir(parents=True, exist_ok=True)
