@@ -658,13 +658,26 @@ class Page_pool(list):
     n_page = 1
     for page in self:
       page.newspaper.n_page = 1
-      new_file = ('00000' + str(n_page))[-4:] + ' - ' + name + ' - ' + period + '.tif'
-      if page.original_file_name != new_file:
-        if Path(page.original_image).is_file():
+      new_file_ne = ('00000' + str(n_page))[-4:] + ' - ' + name + ' - ' + period
+      new_file = new_file_ne + '.tif'
+      if Path(page.original_image).is_file():
+        if page.original_file_name != new_file_ne:
           os.rename(os.path.join(page.original_path, page.original_image), os.path.join(page.original_path, new_file))
-          page.file_name = new_file
-          page.newspaper.file_path = new_file
+        page.file_name = new_file
+        page.newspaper.file_path = new_file
+        for filedir, dirs, files in os.walk(page.pdf_path):
+          if len(files) > 0:
+            if len(self) == len(files):
+              files.sort()
+              fn = files[n_page - 1]
+              ext = fn.split('.')[-1]
+              if fn != new_file_ne + '.' + ext:
+                os.rename(os.path.join(filedir, fn), os.path.join(filedir, new_file_ne + '.' + ext))
+            else:
+              print('Warning: numers of file into ' + filedir + ' (' + str(len(files)) + ') shold be equal to number of file into ' + page.original_path + ' (' + str(len(self)) + ') but it is not !')
+              return False
       n_page += 1
+    return True
   def convert_images(self, converts):
     if converts is None:
       return

@@ -3,40 +3,46 @@ from src.sormani.AI import *
 
 
 newspapers = [
-  'Il Verri',
-  'Il 45',
-  'Il Milione',
-  'Campo Grafico',
-  'Cinema Nuovo',
+  # 'Il Verri',
+  # 'Il 45',
+  # 'Il Milione',
+  # 'Campo Grafico',
+  # 'Cinema Nuovo',
   'Fatto Quotidiano',
-  'Futurismo',
-  'Giornale Arte',
-  'Italia Futurista',
-  'La Lettura',
-  'Lei',
-  'Officina',
-  'Pinocchio',
-  'Poesia Dessy',
-  'Poesia Marinetti',
-  'Poligono',
-  'Politecnico',
-  'Prospettive',
-  'Pungolo della Domenica',
-  'Questo e Altro',
-  'Santelia Artecrazia',
-  'Tesoretto'
+  # 'Futurismo',
+  # 'Giornale Arte',
+  # 'Italia Futurista',
+  # 'La Lettura',
+  # 'Lei',
+  # 'Officina',
+  # 'Pinocchio',
+  # 'Poesia Dessy',
+  # 'Poesia Marinetti',
+  # 'Poligono',
+  # 'Politecnico',
+  # 'Prospettive',
+  # 'Pungolo della Domenica',
+  # 'Questo e Altro',
+  # 'Santelia Artecrazia',
+  # 'Tesoretto'
 ]
 
 if __name__ == '__main__':
 
-  sormani = Sormani('Santelia Artecrazia',
-                    # years=[1950],
-                    # days=[10,11],
-                    # days=[x for x in range(3,31)],
-                    # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
-                    # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
-                    checkimages=False,
-                    is_bobina=True)
+  for name in newspapers:
+    sormani = Sormani(name,
+                      # years=[1950],
+                      days=[10],
+                      # days=[x for x in range(3,31)],
+                      # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
+                      # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
+                      force=True,
+                      checkimages=False,
+                      is_bobina=True)
+
+    sormani.create_all_images()
+    # sormani.set_all_images_names(force_rename=True)
+
 
   # sormani.set_bobine_merge_images(n_images=3)
   # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
@@ -54,7 +60,8 @@ if __name__ == '__main__':
   # sormani.add_borders()
   # sormani.rotate_final_frames(threshold=100)
 
-  sormani.create_all_images()
+  # sormani.create_all_images()
+  # sormani.rename_pages_files(do_prediction=False)
 
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.remove_fix_border(check=[None, None], limit=[0, 0, 0, 0], max=True, border=[False,False])
@@ -67,6 +74,7 @@ if __name__ == '__main__':
   #                   only_ins=True,
   #                   valid_ins=1,
   #                   model_path='best_model_DenseNet201')
+
   # sormani.set_giornali_pipeline(divide=False, rename=False, change_contrast=False, create_images=True)
 
 

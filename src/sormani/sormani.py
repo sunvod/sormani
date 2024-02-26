@@ -357,7 +357,8 @@ class Sormani():
         parts = page_pool.filedir.split('/')
         name = parts[-2]
         period = parts[-1].split('-')[1][1:]
-        page_pool.set_bobine_image_file_name(name, period)
+        if page_pool.set_bobine_image_file_name(name, period):
+          print('Renaming of \'' + page_pool.newspaper_name + ' : ' + page_pool.name_complete + '\' completed !')
         self.pages_pool[self.pages_pool.index(page_pool)] = None
       else:
         if not page_pool.isAlreadySeen():
