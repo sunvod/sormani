@@ -668,7 +668,7 @@ class Page:
       pdf_merger = PdfFileMerger()
       pdf_merger.append(file_in)
       if self.is_bobina:
-        date = self.newspaper.get_start(self.day)
+        date = self.newspaper.get_start(self.ofset + 1)
         pdf_merger.addMetadata({
           '/Keywords': 'Nome del periodico:' + self.newspaper.name
                        + ' ; Anno iniziale:' + date[0]
@@ -678,7 +678,7 @@ class Page:
                        + ' ; Mese finale:' + date[4]
                        + ' ; Giorno finale:' + date[5],
           '/Title': self.newspaper.name,
-          '/Producer': 'osi-servizi-informatici@cloud - Milano'
+          '/Producer': 'osi-servizi-informatici - Milano'
         })
       else:
         pdf_merger.addMetadata({
@@ -697,7 +697,7 @@ class Page:
           '/Pagina:': str(self.newspaper.n_page),
           '/Numero_del_quotidiano': str(self.newspaper.number),
           '/Anno_del_quotidiano': str(self.newspaper.year),
-          '/Producer': 'osi-servizi-informatici@cloud - Milano'
+          '/Producer': 'osi-servizi-informatici - Milano'
         })
       file_out = open(self.pdf_file_name, 'wb')
       pdf_merger.write(file_out)
@@ -738,10 +738,10 @@ class Page:
         filedir, dirs, files = next(os.walk(self.pdf_path))
         for dir in dirs:
           if dir != 'pdf':
-            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.tif'))
+            image = Image.open(os.path.join(filedir, dir, self.original_file_name + '.jpg'))
             exif = self.get_jpg_metadata(image, first_number)
-            image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.tif'), exif=exif)
-            # image.save(os.path.join(filedir, dir, self.original_file_name + '.jpg'), exif=exif)
+            # image.save(os.path.join(STORAGE_BASE, 'tmp', self.original_file_name + '_' + dir + '.tif'), exif=exif)
+            image.save(os.path.join(filedir, dir, self.original_file_name + '.jpg'), exif=exif)
             pass
   def get_prediction(self, no_resize=False):
     images = self.get_images_list(no_resize = no_resize)

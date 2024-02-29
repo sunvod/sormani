@@ -192,7 +192,7 @@ class Page_pool(list):
     for page in self:
       images.append(page.get_head())
     return images
-  def create_pdf(self, number = None, ocr = True):
+  def create_pdf(self, number=None, ofset=None, ocr=True):
     if len(self):
       self.number = number
       self.ocr = ocr
@@ -203,6 +203,8 @@ class Page_pool(list):
       else:
         print(
           f'Start creating pdf/a of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.ofset = ofset
       if MULTIPROCESSING:
         with Pool(processes=N_PROCESSES) as mp_pool:
           mp_pool.map(self.to_pdfa, self)
@@ -212,7 +214,7 @@ class Page_pool(list):
       print(f'The creation of {len(self)} pdf/a files for of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to process for \'{self.newspaper_name}\'.')
-  def to_pdfa(self, page):
+  def to_pdfa(self, page, ofset=0):
     Path(os.path.join(page.pdf_path, 'pdf')).mkdir(parents=True, exist_ok=True)
     Path(page.txt_path).mkdir(parents=True, exist_ok=True)
     if self.ocr:
@@ -341,12 +343,13 @@ class Page_pool(list):
       print(f'The {count} cleaned images of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:
       print(f'Warning: There is no files to clean images for \'{self.newspaper_name}\'.')
-  def _clean_images(self, page):
+  def _clean_images(self, page, ofset=None):
     return page.clean_images()
-  def add_pdf_metadata(self, first_number = None):
+  def add_pdf_metadata(self, first_number = None, ofset=None):
     count = 0
     for page in self:
       page.first_number = first_number
+      page.ofset = ofset
     # for page in self:
     #   count += page.add_pdf_metadata()
     with Pool(processes=N_PROCESSES) as mp_pool:

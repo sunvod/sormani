@@ -325,19 +325,19 @@ class Sormani():
                         convert=True):
     if not len(self.elements):
       return
-    for page_pool in self:
+    for ofset, page_pool in enumerate(self):
       if not len(page_pool):
         continue
       if thresholding is not None:
         page_pool.thresholding = thresholding
       if pdf:
-        page_pool.create_pdf(number, ocr = ocr)
+        page_pool.create_pdf(number, ofset=ofset, ocr=ocr)
       if convert:
         page_pool.convert_images(converts)
   def convert_all_images(self,
-                        ocr = True,
-                        converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
-                        number = None):
+                         ocr = True,
+                         converts = [Conversion('jpg_small', 150, 60, 2000), Conversion('jpg_medium', 300, 90, 2000)],
+                         number = None):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -656,8 +656,8 @@ class Sormani():
     selfforce = self.force
     self.force = True
     self.first_number = first_number
-    for page_pool in self:
-      count = page_pool.add_pdf_metadata(first_number = first_number)
+    for ofset, page_pool in enumerate(self):
+      count = page_pool.add_pdf_metadata(first_number = first_number, ofset=ofset)
     if count:
       print(f'Redefinition Metadata of {sum(count)} pages ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
     else:

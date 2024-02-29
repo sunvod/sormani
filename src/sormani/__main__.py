@@ -3,28 +3,28 @@ from src.sormani.AI import *
 
 
 newspapers = [
-  # 'Il Verri',
-  # 'Il 45',
-  # 'Il Milione',
-  # 'Campo Grafico',
-  # 'Cinema Nuovo',
+  'Il Verri',
+  'Il 45',
+  'Il Milione',
+  'Campo Grafico',
+  'Cinema Nuovo',
   'Fatto Quotidiano',
-  # 'Futurismo',
-  # 'Giornale Arte',
-  # 'Italia Futurista',
-  # 'La Lettura',
-  # 'Lei',
-  # 'Officina',
-  # 'Pinocchio',
-  # 'Poesia Dessy',
-  # 'Poesia Marinetti',
-  # 'Poligono',
-  # 'Politecnico',
-  # 'Prospettive',
-  # 'Pungolo della Domenica',
-  # 'Questo e Altro',
-  # 'Santelia Artecrazia',
-  # 'Tesoretto'
+  'Futurismo',
+  'Giornale Arte',
+  'Italia Futurista',
+  'La Lettura',
+  'Lei',
+  'Officina',
+  'Pinocchio',
+  'Poesia Dessy',
+  'Poesia Marinetti',
+  'Poligono',
+  'Politecnico',
+  'Prospettive',
+  'Pungolo della Domenica',
+  'Questo e Altro',
+  'Santelia Artecrazia',
+  'Tesoretto'
 ]
 
 if __name__ == '__main__':
@@ -32,7 +32,7 @@ if __name__ == '__main__':
   for name in newspapers:
     sormani = Sormani(name,
                       # years=[1950],
-                      days=[10],
+                      # days=[1],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
@@ -40,8 +40,9 @@ if __name__ == '__main__':
                       checkimages=False,
                       is_bobina=True)
 
-    sormani.create_all_images()
+    # sormani.create_all_images()
     # sormani.set_all_images_names(force_rename=True)
+    sormani.add_pdf_metadata()
 
 
   # sormani.set_bobine_merge_images(n_images=3)
