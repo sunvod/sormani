@@ -3,28 +3,29 @@ from src.sormani.AI import *
 
 
 newspapers = [
-  'Il Verri',
-  'Il 45',
-  'Il Milione',
-  'Campo Grafico',
-  'Cinema Nuovo',
-  'Fatto Quotidiano',
-  'Futurismo',
-  'Giornale Arte',
-  'Italia Futurista',
-  'La Lettura',
-  'Lei',
-  'Officina',
-  'Pinocchio',
-  'Poesia Dessy',
-  'Poesia Marinetti',
-  'Poligono',
-  'Politecnico',
-  'Prospettive',
-  'Pungolo della Domenica',
-  'Questo e Altro',
-  'Santelia Artecrazia',
-  'Tesoretto'
+  # 'Il Verri',
+  # 'Il 45',
+  # 'Il Milione',
+  # 'Campo Grafico',
+  # 'Cinema Nuovo',
+  # 'Fatto Quotidiano',
+  # 'Futurismo',
+  # 'Giornale Arte',
+  # 'Italia Futurista',
+  # 'La Lettura',
+  # 'Lei',
+  # 'Officina',
+  # 'Pinocchio',
+  # 'Poesia Dessy',
+  # 'Poesia Marinetti',
+  # 'Poligono',
+  # 'Politecnico',
+  # 'Prospettive',
+  # 'Pungolo della Domenica',
+  # 'Questo e Altro',
+  # 'Santelia Artecrazia',
+  # 'Tesoretto',
+  'Fiches'
 ]
 
 if __name__ == '__main__':
@@ -32,7 +33,7 @@ if __name__ == '__main__':
   for name in newspapers:
     sormani = Sormani(name,
                       # years=[1950],
-                      # days=[1],
+                      days=[2],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
@@ -42,24 +43,28 @@ if __name__ == '__main__':
 
     # sormani.create_all_images()
     # sormani.set_all_images_names(force_rename=True)
-    sormani.add_pdf_metadata()
-
+    # sormani.add_pdf_metadata()
+    # sormani.rotate_frames()
 
   # sormani.set_bobine_merge_images(n_images=3)
   # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
-  # sormani.rotate_frames(threshold=48)
+  # sormani.rotate_frames(threshold=240)
   # sormani.rotate_frames(threshold=threshold)
   # sormani.remove_borders()
   # sormani.bobine_delete_copies()
   # sormani.delete_not_valid(valid=(12000, 8000))
-  # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)
-  # sormani.remove_dark_border()
+
+  sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=125)
+  sormani.rotate_final_frames(threshold=100)
+  sormani.remove_dark_border(exlude=[100,100,100,100])
+  sormani.rotate_final_frames(threshold=100)
+
   # sormani.cut_at_written_part(threshold=180)
   # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
   # sormani.add_borders()
-  # sormani.rotate_final_frames(threshold=100)
+  # sormani.rotate_final_frames(threshold=50)
 
   # sormani.create_all_images()
   # sormani.rename_pages_files(do_prediction=False)
@@ -104,7 +109,7 @@ if __name__ == '__main__':
   # # La Domenica Del Corriere
   # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)
   # # sormani.remove_dark_border()
-  # # sormani.cut_at_written_part(threshold=200)
+  # sormani.cut_at_written_part(threshold=200)
   # # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
   # # sormani.add_borders()
   # # sormani.rotate_final_frames(threshold=100)

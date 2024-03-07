@@ -470,11 +470,12 @@ class Page_pool(list):
     return 0
   def _remove_last_single_frames(self, page):
     return page.remove_last_single_frames()
-  def remove_dark_border(self, threshold, limit, valid):
+  def remove_dark_border(self, threshold, limit, valid, exlude):
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.valid=valid
+      page.exlude = exlude
     if MULTIPROCESSING:
       with Pool(processes=N_PROCESSES) as mp_pool:
         result = mp_pool.map(self._remove_dark_border, self)

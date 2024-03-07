@@ -196,6 +196,8 @@ class Newspaper():
       newspaper = Santelia_Artecrazia(newspaper_base, file_path, date, year, number)
     elif name == 'Tesoretto':
       newspaper = Tesoretto(newspaper_base, file_path, date, year, number)
+    elif name == 'Fiches':
+      newspaper = Fiches(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -279,6 +281,8 @@ class Newspaper():
       parameters = Santelia_Artecrazia.get_start(ofset)
     elif name == 'Tesoretto':
       parameters = Tesoretto.get_start(ofset)
+    elif name == 'Fiches':
+      parameters = Fiches.get_start(ofset)
     else:
       parameters = None
     return parameters
@@ -3139,6 +3143,77 @@ class Tesoretto(Newspaper):
       return ('1941', '01', '--', '1942', '12', '--')
     elif ofset == 3:
       return ('1945', '01', '--', '1945', '12', '--')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Fiches(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Fiches', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1901','01','--','1901','06','--')
+    elif ofset == 2:
+      return ('1901', '07', '--', '1903', '11', '--')
+    elif ofset == 3:
+      return ('1903', '12', '--', '1904', '12', '--')
+    elif ofset == 4:
+      return ('1905', '01', '--', '1905', '12', '--')
+    elif ofset == 5:
+      return ('1906', '01', '--', '1907', '04', '--')
+    elif ofset == 6:
+      return ('1907', '05', '--', '1908', '09', '--')
+    elif ofset == 7:
+      return ('1908', '10', '--', '1910', '04', '--')
+    elif ofset == 8:
+      return ('1910', '05', '--', '1911', '10', '--')
+    elif ofset == 9:
+      return ('1911', '11', '--', '1913', '06', '--')
+    elif ofset == 10:
+      return ('1913', '07', '--', '1914', '12', '--')
+    elif ofset == 11:
+      return ('1915', '01', '--', '1916', '06', '--')
+    elif ofset == 12:
+      return ('1916', '07', '--', '1917', '12', '--')
+    elif ofset == 13:
+      return ('1918', '01', '--', '1919', '06', '--')
+    elif ofset == 14:
+      return ('1919', '07', '--', '1920', '12', '--')
+    elif ofset == 15:
+      return ('1921', '01', '--', '1922', '09', '--')
+    elif ofset == 16:
+      return ('1922', '10', '--', '1924', '06', '--')
+    elif ofset == 17:
+      return ('1924', '07', '--', '1926', '03', '--')
+    elif ofset == 18:
+      return ('1926', '04', '--', '1927', '12', '--')
+    elif ofset == 19:
+      return ('1928', '01', '--', '1929', '08', '--')
+    elif ofset == 20:
+      return ('1929', '09', '--', '1930', '12', '--')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

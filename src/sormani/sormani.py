@@ -1004,7 +1004,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Deleted {count} not valid frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def remove_dark_border(self, threshold=120, limit=150, valid=[True,True,True,True]):
+  def remove_dark_border(self, threshold=120, limit=150, valid=[True,True,True,True], exlude=[10,10,10,10]):
     if not len(self.elements):
       return
     global global_count
@@ -1012,7 +1012,7 @@ class Sormani():
     start_time = time.time()
     print(f'Starting removing dark frames of \'{self.newspaper_name}\' in date {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))}')
     for page_pool in self:
-      count = page_pool.remove_dark_border(threshold=threshold, limit=limit, valid=valid)
+      count = page_pool.remove_dark_border(threshold=threshold, limit=limit, valid=valid, exlude=exlude)
     if count:
       print(
         f'Removing dark frames of {count} images ends at {str(datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')

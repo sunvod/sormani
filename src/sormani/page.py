@@ -24,6 +24,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+
 from PIL import Image, ImageChops, ImageDraw, ImageOps, ImageTk
 import tkinter as tk
 from tkinter import Label, Button, RAISED
@@ -1134,7 +1135,11 @@ class Page:
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     file_ning = '.'.join(file.split('.')[:-1]) + '_ning.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
-    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread(file, cv2.IMREAD_COLOR)
+    with open(file, 'rb') as f:
+      buffer = np.frombuffer(f.read(), dtype=np.uint8)
+    # Decodifica l'immagine dal buffer di memoria
+    img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
     if self.angle is not None:
       img = rotate_image(img, self.angle)
       self.save_with_dpi(file, img)
@@ -2522,7 +2527,7 @@ class Page:
     count = 0
     if self.valid[0]:
       img_bk = img
-      for y in range(10, max_y):
+      for y in range(self.exlude[0], max_y):
         mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
           img = img[y:h, 0:w]
@@ -2534,7 +2539,7 @@ class Page:
         img = img_bk
     if self.valid[1]:
       img_bk = img
-      for y in range(h - 11, h - max_y, -1):
+      for y in range(h - self.exlude[1] - 1, h - max_y, -1):
         mean = max(thresh[y : y + 1, 0 : w // 2].mean(), thresh[y : y + 1, w // 2 : w].mean())
         if mean >= self.limit:
           img = img[0:y, 0:w]
@@ -2546,7 +2551,7 @@ class Page:
         img = img_bk
     if self.valid[2]:
       img_bk = img
-      for x in range(10, max_x_l):
+      for x in range(self.exlude[2], max_x_l):
         mean = thresh[0:h, x:x + 1].mean()
         if mean >= self.limit:
           img = img[0: h, x: w]
@@ -2558,7 +2563,7 @@ class Page:
         img = img_bk
     if self.valid[3]:
       img_bk = img
-      for x in range(w - 11, w - max_x_r, -1):
+      for x in range(w - self.exlude[3] - 1, w - max_x_r, -1):
         mean = thresh[0:h, x:x + 1].mean()
         if mean >= self.limit:
           img = img[0:h, 0:x]
