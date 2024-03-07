@@ -144,6 +144,26 @@ class Page:
         ret, img = cv2.threshold(img, self.limit, self.color, cv2.THRESH_BINARY)
       self.save_with_dpi(self.original_image, img)
       return 1
+  def convert_ScaleAbs(self):
+      img = Image.open(self.original_image)
+      img = img.convert('L')
+      img = self._convert_ScaleAbs(img, alpha=self.alpha, beta=self.beta, limit=self.limit)
+      img.save(self.original_image)
+      img = cv2.imread(self.original_image)
+      self.save_with_dpi(self.original_image, img)
+      return 1
+  def _convert_ScaleAbs(self, img, alpha, beta, limit):
+    def contrast(c):
+      if limit >= 0 and c > limit:
+        r = c * alpha + beta
+        r = r if r <= 245 else 245
+      elif limit < 0 and c < -limit:
+        r = c * alpha - beta
+        r = r if r > 10 else 10
+      else:
+        r = c
+      return int(r)
+    return img.point(contrast)
   def change_colors(self):
       img = cv2.imread(self.original_image)
       if self.inversion:
@@ -1810,17 +1830,24 @@ class Page:
     if invert_fill_hole:
       thresh = 255 - thresh
     return thresh
-  def fill_white_holes(self, thresh, fill_hole=4, iteration=16):
+
+  def fill_holes(self):
+    file = self.original_image
+    # file_bimg = '.'.join(file.split('.')[:-1]) + '_bimg.' + file.split('.')[-1]
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    ret, thresh = cv2.threshold(img, self.threshold, 255, cv2.THRESH_BINARY)
     invert_fill_hole = False
     if invert_fill_hole:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     else:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((fill_hole, fill_hole), np.uint8)
-    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=iteration)
+    kernel = np.ones((self.fill_hole, self.fill_hole), np.uint8)
+    thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=self.iteration)
     if invert_fill_hole:
       thresh = 255 - thresh
-    return thresh
+    cv2.imwrite(file, thresh)
+    return 1
+
   def fill_countours_white(self, img, lower_limit=10, upper_limit=400):
     contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # fill contours with white
@@ -2005,12 +2032,20 @@ class Page:
     def _ordering_contours(c):
       x, y, w, h = cv2.boundingRect(c)
       return (x, w)
+    def fill_holes(img, threshold=80, white=True, fill_hole=4, iteration=12):
+      ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+      thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+      kernel = np.ones((fill_hole, fill_hole), np.uint8)
+      thresh = cv2.morphologyEx(binaryImage, cv2.MORPH_ERODE, kernel, iterations=iteration)
+      return thresh
     count = 0
     file = self.original_image
     file_bing = '.'.join(file.split('.')[:-1]) + '_bing.' + file.split('.')[-1]
     file_img = '.'.join(file.split('.')[:-1]) + '_img.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    if self.fill_holes:
+      img = fill_holes(img, threshold=80, white=True, fill_hole=4, iteration=12)
     oh, ow = img.shape
     bimg = img.copy()
     bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
@@ -2030,6 +2065,8 @@ class Page:
     # _contours.sort(key=_ordering_contours)
     contours = _contours
     contours = union(list(contours))
+    if self.fill_holes:
+      img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
     for contour in contours:
       rect = cv2.minAreaRect(contour)
       box = np.int0(cv2.boxPoints(rect))

@@ -391,6 +391,16 @@ class Sormani():
     for page_pool in self:
       page_pool.change_contrast(contrast=self.contrast, force=self.force)
     self.force = selfforce
+  def convert_ScaleAbs(self, alpha=1.2, beta=0, limit=0):
+    if not len(self.elements):
+      return
+    for page_pool in self:
+      page_pool.convert_ScaleAbs(alpha=alpha, beta=beta, limit=limit)
+  def fill_holes(self, threshold=100, white=True, fill_hole=4, iteration=16):
+    if not len(self.elements):
+      return
+    for page_pool in self:
+      page_pool.fill_holes(threshold=threshold, white=white, fill_hole=fill_hole, iteration=iteration)
   def change_threshold(self, limit = None, color = 255, inversion=False):
     if not len(self.elements):
       return
@@ -417,7 +427,7 @@ class Sormani():
     for page_pool in self:
       page_pool.change_colors(limit=limit, color=color, inversion=inversion)
     self.force = selfforce
-  def improve_images(self, limit=None, color=255, inversion=False, threshold="b9", debug=False):
+  def improve_images(self, limit=100, color=255, inversion=False, threshold="b9", debug=False):
     if not len(self.elements):
       return
     selfforce = self.force
@@ -1056,12 +1066,12 @@ class Sormani():
     for page_pool in self:
       count += page_pool.rotate_frames(limit, threshold, angle)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def rotate_final_frames(self, limit=100, threshold=32, angle=None, color=248):
+  def rotate_final_frames(self, limit=100, threshold=32, angle=None, color=248, fill_holes=False):
     start_time = time.time()
     print(f'Start rotate final frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_final_frames(limit, threshold, angle, color)
+      count += page_pool.rotate_final_frames(limit, threshold, angle, color, fill_holes)
     print(
       f'End rotate {count} final frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def set_fotogrammi_folders(self, model_path = 'best_model_DenseNet201'):

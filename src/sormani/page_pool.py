@@ -261,6 +261,47 @@ class Page_pool(list):
     i = page.change_contrast()
     with global_count_contrast.get_lock():
       global_count_contrast.value += i
+  def convert_ScaleAbs(self, alpha=1.0, beta=0, limit=0):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      if self.date is not None:
+        print(f'Start converting the scaleabs of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(
+          f'Start converting the scaleabs of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.alpha = alpha
+        page.beta = beta
+        page.limit = limit
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._convert_ScaleAbs, self)
+      print(f'The {sum(count)} pages converted the scaleabs of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no files to converting the scaleabs for \'{self.newspaper_name}\'.')
+  def _convert_ScaleAbs(self, page):
+    return page.convert_ScaleAbs()
+  def fill_holes(self, threshold=100, white=True, fill_hole=4, iteration=16):
+    if len(self):
+      start_time = time.time()
+      dir_name = self.filedir.split('/')[-1]
+      if self.date is not None:
+        print(f'Start filling hole of \'{self.newspaper_name}\' ({dir_name}) of {str(self.date.strftime("%d/%m/%Y"))} at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      else:
+        print(
+          f'Start filling hole of \'{self.newspaper_name}\' ({dir_name}) at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
+      for page in self:
+        page.threshold = threshold
+        page.white = white
+        page.fill_hole = fill_hole
+        page.iteration = iteration
+      with Pool(processes=N_PROCESSES) as mp_pool:
+        count = mp_pool.map(self._fill_white_holes, self)
+      print(f'The {sum(count)} pages filled holes of \'{self.newspaper_name}\' ({dir_name}) ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
+    else:
+      print(f'Warning: There is no hole to fill for \'{self.newspaper_name}\'.')
+  def _fill_white_holes(self, page):
+    return page.fill_holes()
   def change_threshold(self, limit = 50, color = 255, inversion = False):
     if len(self):
       start_time = time.time()
@@ -997,13 +1038,14 @@ class Page_pool(list):
     return count
   def _rotate_frames(self, page):
     return page.rotate_frames()
-  def rotate_final_frames(self, limit, threshold, angle, color):
+  def rotate_final_frames(self, limit, threshold, angle, color, fill_holes):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.angle = angle
       page.color = color
+      page.fill_holes = fill_holes
     with Pool(processes=N_PROCESSES) as mp_pool:
       counts = mp_pool.map(self._rotate_final_frames, self)
     for i in counts:

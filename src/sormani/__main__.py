@@ -56,10 +56,19 @@ if __name__ == '__main__':
   # sormani.bobine_delete_copies()
   # sormani.delete_not_valid(valid=(12000, 8000))
 
-  sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=125)
-  sormani.rotate_final_frames(threshold=100)
+  # sormani.improve_images(limit=250, color=128, inversion=False, threshold="b0")
+
+  # sormani.convert_ScaleAbs(alpha=1.2, beta=0, limit=100)
+  # sormani.convert_ScaleAbs(alpha=0.01, beta=0, limit=-40)
+
+  sormani.rotate_final_frames(threshold=100, fill_holes=True)
   sormani.remove_dark_border(exlude=[100,100,100,100])
-  sormani.rotate_final_frames(threshold=100)
+  sormani.clean_images(threshold=60, thresh_threshold=50, min_threshold=50)
+
+  # sormani.rotate_final_frames(threshold=100)
+  # sormani.remove_dark_border()
+  # sormani.convert_ScaleAbs(alpha=1.2, beta=0, limit=100)
+  # sormani.convert_ScaleAbs(alpha=0.01, beta=0, limit=-40)
 
   # sormani.cut_at_written_part(threshold=180)
   # sormani.divide_at_written_part(var_limit=50, ofset=96, x_ofset=750, threshold=100)
