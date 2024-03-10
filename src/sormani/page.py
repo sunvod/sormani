@@ -33,7 +33,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class Page:
-  def __init__(self, file_name, date, newspaper, isins, ins_n, original_image, pdf_path, jpg_path, txt_path, ais, is_bobina):
+  def __init__(self, file_name, date, newspaper, isins, ins_n, original_image, pdf_path, jpg_path, txt_path, ais, type):
     self.original_file_name = file_name
     self.file_name = file_name
     self.original_image = original_image
@@ -46,7 +46,7 @@ class Page:
     self.isins = isins
     self.ins_n = ins_n
     self.newspaper = Newspaper.create(newspaper.name, original_image, newspaper.newspaper_base, date, newspaper.year, newspaper.number)
-    if is_bobina:
+    if type == BOBINA:
       file = pdf_path.split('/')[-1]
       ofset = int(file.split('-')[0])
       limiti = self.newspaper.get_start(ofset)
@@ -62,6 +62,15 @@ class Page:
         pdf_path = os.path.join('/'.join(pdf_path.split('/')[:-1]), path_name)
         jpg_path = os.path.join('/'.join(jpg_path.split('/')[:-1]), path_name)
         txt_path = os.path.join('/'.join(txt_path.split('/')[:-1]), path_name)
+    if type == BOBINA:
+      file = pdf_path.split('/')[-1]
+      ofset = int(file.split('-')[0])
+      limiti = self.newspaper.get_start(ofset)
+      if limiti is not None and len(limiti) <= 2:
+        path_name = limiti[0] + ' ' + limiti[1]
+        pdf_path = os.path.join('/'.join(pdf_path.split('/')[:-1]), path_name)
+        jpg_path = os.path.join('/'.join(jpg_path.split('/')[:-1]), path_name)
+        txt_path = os.path.join('/'.join(txt_path.split('/')[:-1]), path_name)
     self.pdf_path = pdf_path
     self.pdf_file_name = os.path.join(self.pdf_path, 'pdf', self.file_name) + '.pdf'
     self.jpg_path = jpg_path
@@ -70,7 +79,7 @@ class Page:
     self.original_txt_file_name = self.txt_file_name
     self.conversions = []
     self.page_control = -1
-    self.is_bobina = is_bobina
+    self.type = type
     self.isdivided = False
     self.prediction = None
     self.ais = ais
@@ -665,7 +674,7 @@ class Page:
   def isAlreadySeen(self):
     l = len(self.newspaper.name)
     f = self.file_name
-    if self.is_bobina:
+    if self.type:
       return f[:4].isdigit()
     else:
       return f[: l] == self.newspaper.name.replace(' ', '_') and \
@@ -688,7 +697,7 @@ class Page:
       os.rename(self.pdf_file_name, self.pdf_file_name + '.2')
       pdf_merger = PdfFileMerger()
       pdf_merger.append(file_in)
-      if self.is_bobina:
+      if self.type:
         date = self.newspaper.get_start(self.ofset + 1)
         pdf_merger.addMetadata({
           '/Keywords': 'Nome del periodico:' + self.newspaper.name

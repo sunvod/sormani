@@ -32,14 +32,14 @@ if __name__ == '__main__':
 
   for name in newspapers:
     sormani = Sormani(name,
-                      # years=[1950],
-                      days=[2],
+                      years=[741],
+                      # days=[2341],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                       force=True,
                       checkimages=False,
-                      is_bobina=True)
+                      type=FICHES)
 
     # sormani.create_all_images()
     # sormani.set_all_images_names(force_rename=True)
@@ -56,14 +56,15 @@ if __name__ == '__main__':
   # sormani.bobine_delete_copies()
   # sormani.delete_not_valid(valid=(12000, 8000))
 
-  # sormani.improve_images(limit=250, color=128, inversion=False, threshold="b0")
+
 
   # sormani.convert_ScaleAbs(alpha=1.2, beta=0, limit=100)
   # sormani.convert_ScaleAbs(alpha=0.01, beta=0, limit=-40)
 
   sormani.rotate_final_frames(threshold=100, fill_holes=True)
   sormani.remove_dark_border(exlude=[100,100,100,100])
-  sormani.clean_images(threshold=60, thresh_threshold=50, min_threshold=50)
+  # sormani.clean_images(threshold=60, thresh_threshold=50, min_threshold=50)
+  # sormani.improve_images(limit=250, color=128, inversion=False, threshold="60")
 
   # sormani.rotate_final_frames(threshold=100)
   # sormani.remove_dark_border()
@@ -114,7 +115,7 @@ if __name__ == '__main__':
   #                   # days=[x for x in range(17,32)],
   #                   days=[40],
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
   # # La Domenica Del Corriere
   # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=50)
   # # sormani.remove_dark_border()
@@ -131,7 +132,7 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   checkimages=False,
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
   #
   # sormani.set_grayscale()
 
@@ -141,7 +142,7 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   days=[40],
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
 
   # sormani.create_all_images(convert=False)
 
@@ -160,7 +161,7 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   checkimages=False,
   #                   # force=True,
-  #                   is_bobina=True)
+  #                   type=True)
 
   # sormani.create_all_images(ocr = False)
   # sormani.add_pdf_metadata()
@@ -175,7 +176,7 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   checkimages=False,
-  #                   is_bobina=True)
+  #                   type=True)
 
   # sormani.create_all_images(ocr = False)
   # sormani.remove_dark_border(valid=[True,True,True,True])
@@ -216,7 +217,7 @@ if __name__ == '__main__':
   #                   # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
   #                   days=[1,2,3],
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
 # Riviste storiche
 #   sormani.clean_images(threshold=180)
 # sormani.remove_dark_border()
@@ -232,7 +233,7 @@ if __name__ == '__main__':
   # sormani = Sormani('Sfera',
   #                   days=None,
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
   # # Riviste storiche
   # sormani.create_all_images(ocr = False)
 
@@ -241,7 +242,7 @@ if __name__ == '__main__':
   #                   # days=[x for x in range(17,32)],
   #                   days=[1],
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
   # La Domenica Del Corriere
   # sormani.clean_images(threshold=100, thresh_threshold=50, min_threshold=120,  final_threshold=220)
   # sormani.cut_at_written_part(threshold=200)
@@ -255,7 +256,7 @@ if __name__ == '__main__':
   #                   # days=[x for x in range(17,32)],
   #                   days=[1],
   #                   force=True,
-  #                   is_bobina=True)
+  #                   type=True)
   # Scenario
   # sormani.clean_images(threshold=200)
   # sormani.cut_at_written_part(threshold=200)

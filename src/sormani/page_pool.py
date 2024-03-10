@@ -398,7 +398,7 @@ class Page_pool(list):
     return count
   def _add_pdf_metadata(self, page):
     return page.add_pdf_metadata()
-  def divide_image(self, is_bobina = False):
+  def divide_image(self, type = NEWSPAPER):
     flag = False
     for page in self:
       image = Image.open(page.original_image)
@@ -415,7 +415,7 @@ class Page_pool(list):
           raise ValueError(error)
     pages = []
     for page in self:
-      page.is_bobina = is_bobina
+      page.type = type
       page.filedir = self.filedir
       file_name_no_ext = Path(page.original_image).stem
       file_path_no_ext = os.path.join(self.filedir, file_name_no_ext)

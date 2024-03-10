@@ -20,6 +20,9 @@ from ocrmypdf.cli import plugins_only_parser, get_parser
 warnings.filterwarnings("ignore")
 
 DEBUG = False
+NEWSPAPER = 0
+BOBINA = 1
+FICHES = 2
 # DEBUG = True
 MULTIPROCESSING = True
 # MULTIPROCESSING = False

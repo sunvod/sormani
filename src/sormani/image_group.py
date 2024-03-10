@@ -19,15 +19,15 @@ warnings.filterwarnings("ignore")
 
 class Images_group():
 
-  def __init__(self,  newspaper_base, newspaper_name, filedir, files, is_bobina):
+  def __init__(self, newspaper_base, newspaper_name, filedir, files, type):
     self.newspaper_name = newspaper_name
     self.filedir = filedir
     self.files = files
-    self.is_bobina = is_bobina
+    self.type = type
     # self.new_root = new_root
     year = ''.join(filter(str.isdigit, filedir.split('/')[-3]))
     i = -2
-    if not is_bobina:
+    if not type:
       if not len(year):
         year = ''.join(filter(str.isdigit, filedir.split('/')[-2]))
         month = ''.join(filter(str.isdigit, filedir.split('/')[-1]))
@@ -52,7 +52,7 @@ class Images_group():
     else:
       self.date = None
       month = None
-    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month, is_bobina=is_bobina)
+    self.newspaper = Newspaper.create(self.newspaper_name, os.path.join(filedir, files[0]), newspaper_base, self.date, month = month, type=type)
   def is_image(self, filedir, file):
     try:
       img = cv2.imread(os.path.join(filedir, file), cv2.IMREAD_UNCHANGED)
@@ -69,9 +69,9 @@ class Images_group():
       img = img[:,:,:3]
       cv2.imwrite(os.path.join(filedir, file), img)
     return True
-  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages, is_bobina=False):
+  def get_page_pool(self, newspaper_name, new_root, ext, image_path, path_exist, force, thresholding, ais, checkimages, type=NEWSPAPER):
     page_pool = Page_pool(newspaper_name, self.filedir, self.filedir.split('/')[-1], new_root, self.date, force, thresholding, ais)
-    page_pool.isins = not self.filedir.split('/')[-1].isdigit() if not is_bobina else False
+    page_pool.isins = not self.filedir.split('/')[-1].isdigit() if not type else False
     if page_pool.isins:
       n = (self.filedir.split('/')[-1]).split()[-1]
       if n.isdigit():
@@ -102,7 +102,7 @@ class Images_group():
       if pathlib.Path(file).suffix == '.' + ext:
         if checkimages and not self.is_image(self.filedir, file):
           continue
-        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, page_pool.ins_n, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais, is_bobina)
+        page = Page(Path(file).stem, self.date, self.newspaper, page_pool.isins, page_pool.ins_n, os.path.join(self.filedir, file), dir_path, dir_path, txt_path, ais, type)
         ai = ais.get_model(PAGE)
         model = ai.model if ai is not None else None
         use_ai = ai.use if ai is not None else False

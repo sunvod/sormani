@@ -10,6 +10,7 @@ from PIL import Image, ImageOps
 import pytesseract
 from pathlib import Path
 import tensorflow as tf
+from system import *
 
 from src.sormani.system import MONTHS, exec_ocrmypdf, CONTRAST, STORAGE_DL, STORAGE_BASE
 
@@ -83,8 +84,8 @@ class Newspaper_crop_parameters():
     self.bottom = bottom
 class Newspaper():
   @staticmethod
-  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None, is_bobina=False):
-    if date is None and month is None and not is_bobina:
+  def create(name, file_path, newspaper_base = None, date = None, year = None, month = None, number = None, type=NEWSPAPER):
+    if date is None and month is None and not type:
       file_name = Path(file_path).stem
       year = ''.join(filter(str.isdigit, file_name.split('_')[-4])) if date is not None else None
       month = MONTHS.index(file_name.split('_')[-3]) + 1 if date is not None else None
@@ -205,7 +206,7 @@ class Newspaper():
     newspaper.n_page = None
     newspaper.use_ai = False
     newspaper._is_first_page = None
-    newspaper.is_bobina = is_bobina
+    newspaper.type = type
     return newspaper
   def get_page_position(self):
     return ['top']
@@ -3175,45 +3176,45 @@ class Fiches(Newspaper):
   @staticmethod
   def get_start(ofset):
     if ofset == 1:
-      return ('1901','01','--','1901','06','--')
+      return ('741', '2339')
     elif ofset == 2:
-      return ('1901', '07', '--', '1903', '11', '--')
+      return ('741', '2341')
     elif ofset == 3:
-      return ('1903', '12', '--', '1904', '12', '--')
+      return ('741', '2342')
     elif ofset == 4:
-      return ('1905', '01', '--', '1905', '12', '--')
+      return ('741', '2362')
     elif ofset == 5:
-      return ('1906', '01', '--', '1907', '04', '--')
+      return ('741', '2363')
     elif ofset == 6:
-      return ('1907', '05', '--', '1908', '09', '--')
+      return ('741', '2364')
     elif ofset == 7:
-      return ('1908', '10', '--', '1910', '04', '--')
+      return ('741', '2365')
     elif ofset == 8:
-      return ('1910', '05', '--', '1911', '10', '--')
+      return ('741', '2411')
     elif ofset == 9:
-      return ('1911', '11', '--', '1913', '06', '--')
+      return ('741', '2412')
     elif ofset == 10:
-      return ('1913', '07', '--', '1914', '12', '--')
+      return ('741', '2413')
     elif ofset == 11:
-      return ('1915', '01', '--', '1916', '06', '--')
+      return ('741', '2414')
     elif ofset == 12:
-      return ('1916', '07', '--', '1917', '12', '--')
+      return ('741', '2415')
     elif ofset == 13:
-      return ('1918', '01', '--', '1919', '06', '--')
+      return ('741', '2431')
     elif ofset == 14:
-      return ('1919', '07', '--', '1920', '12', '--')
+      return ('741', '2442')
     elif ofset == 15:
-      return ('1921', '01', '--', '1922', '09', '--')
+      return ('741', '2443')
     elif ofset == 16:
-      return ('1922', '10', '--', '1924', '06', '--')
+      return ('741', '2444')
     elif ofset == 17:
-      return ('1924', '07', '--', '1926', '03', '--')
+      return ('741', '2561')
     elif ofset == 18:
-      return ('1926', '04', '--', '1927', '12', '--')
+      return ('741', '2563')
     elif ofset == 19:
-      return ('1928', '01', '--', '1929', '08', '--')
+      return ('741', '2564')
     elif ofset == 20:
-      return ('1929', '09', '--', '1930', '12', '--')
+      return ('741', '2565')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)

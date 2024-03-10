@@ -4,11 +4,6 @@ import datetime
 import pathlib
 import re
 import os
-import shutil
-import cv2
-import gc
-import numpy as np
-from PIL.Image import DecompressionBombError
 
 from src.sormani.AI import ISFIRSTPAGE, AIs, PAGE
 from src.sormani.newspaper import Newspaper
@@ -52,7 +47,7 @@ class Sormani():
                rename_folders=True,
                model_path=None,
                ais=[],
-               is_bobina=False):
+               type=0):
     if years is not None and isinstance(years, list) and not len(years):
       error = 'Non è stato indicato l\'anno di estrazione. L\'esecuzione terminerà.'
       raise OSError(error)
@@ -71,7 +66,7 @@ class Sormani():
       else:
         newspaper_names = NEWSPAPERS_2016
         rename_only = True
-    if is_bobina:
+    if type == BOBINA:
       months = None
       years = None
     if not isinstance(years, list):
@@ -107,7 +102,7 @@ class Sormani():
                        rename_folders,
                        model_path,
                        ais,
-                       is_bobina)
+                       type)
     if ais is not None:
       self.ais = AIs(self.newspaper_name, ais)
     self.set_elements()
@@ -132,7 +127,7 @@ class Sormani():
             rename_folders,
             model_path,
             ais,
-            is_bobina):
+            type):
     self.newspaper_name = newspaper_name
     self.root = root
     self.i = 0
@@ -143,8 +138,8 @@ class Sormani():
     if not os.path.exists(new_root):
       print(f'{newspaper_name} non esiste.')
       return self.elements
-    if is_bobina:
-      self.complete_root = new_root
+    self.complete_root = new_root
+    if type == BOBINA:
       if day is not None:
         filedir, dirs, files = next(os.walk(new_root))
         dirs.sort()
@@ -155,6 +150,12 @@ class Sormani():
             new_root = os.path.join(new_root, _day)
             break
         self.complete_root = new_root
+    elif type == FICHES:
+      new_root = os.path.join(new_root, str(year))
+      self.complete_root = new_root
+      if day is not None:
+        new_root = os.path.join(new_root, self.add_zero(day))
+        self.complete_root = new_root
     elif year is not None:
       new_root = os.path.join(new_root, str(year))
       self.complete_root = new_root
@@ -164,12 +165,14 @@ class Sormani():
         if day is not None:
           new_root = os.path.join(new_root, self.add_zero(day))
           self.complete_root = new_root
-    assert is_bobina or year is not None, "Year must be indicated"
+    assert type != NEWSPAPER or year is not None, "Year must be indicated"
     self.dir_name = self.complete_root.split('/')[-1] if self.dir_name == '' else self.dir_name + ',' + self.complete_root.split('/')[-1]
     self.new_root = new_root
     if rename_folders:
-      if is_bobina:
+      if type == BOBINA:
         self.rename_folders_bobine()
+      elif type == FICHES:
+        self.rename_folders_fiches()
       else:
         self.rename_folders()
     self.ext = ext
@@ -184,7 +187,7 @@ class Sormani():
     self.checkimages = checkimages
     self.roots.append(self.new_root)
     self.model_path = model_path
-    self.is_bobina = is_bobina
+    self.type = type
   def __len__(self):
     return len(self.elements)
   def __iter__(self):
@@ -204,7 +207,7 @@ class Sormani():
                                                         self.thresholding,
                                                         self.ais,
                                                         self.checkimages,
-                                                        is_bobina=self.is_bobina)
+                                                        type=self.type)
         if len(page_pool):
           if page_pool.isAlreadySeen():
             page_pool.set_pages_already_seen()
@@ -301,7 +304,7 @@ class Sormani():
       filedirs.sort()
       for filedir, files in filedirs:
         if not filedir in _filedirs:
-          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, self.is_bobina))
+          self.elements.append(Images_group(os.path.join(self.root, self.image_path, self.newspaper_name), self.newspaper_name, filedir, files, self.type))
           _filedirs.append(filedir)
   def _get_elements(self, n):
     # n = e[:5]
@@ -353,7 +356,7 @@ class Sormani():
     for page_pool in self:
       if not len(page_pool):
         continue
-      if self.is_bobina:
+      if self.type:
         parts = page_pool.filedir.split('/')
         name = parts[-2]
         period = parts[-1].split('-')[1][1:]
@@ -450,7 +453,7 @@ class Sormani():
                              thresh_threshold=thresh_threshold,
                              min_threshold=min_threshold)
     self.force = selfforce
-  def divide_image(self, is_bobina = False):
+  def divide_image(self, type = NEWSPAPER):
     if not len(self.elements):
       return
     global global_count
@@ -461,7 +464,7 @@ class Sormani():
     #   mp_pool.map(self.divide_image, self.elements)
     count = 0
     for page_pool in self:
-      n = page_pool.divide_image(is_bobina)
+      n = page_pool.divide_image(type)
       if n:
         count += n
         i = self.pages_pool.index(page_pool)
@@ -841,7 +844,6 @@ class Sormani():
           if old_folder != new_folder:
             try:
               os.rename(old_folder, new_folder)
-              pass
             except:
               error = 'La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).'
               raise OSError(error)
@@ -869,9 +871,32 @@ class Sormani():
             if dir != new_folder:
               try:
                 os.rename(os.path.join(filedir, dir), os.path.join(filedir, new_folder))
-                pass
               except:
                 pass
+  def rename_folders_fiches(self):
+    number = 1
+    for one_root in [self.new_root]:
+      for filedir, dirs, files in os.walk(one_root):
+        dirs.sort()
+        for ofset, dir in enumerate(dirs):
+          _, _, fs = next(os.walk(os.path.join(filedir, dir)))
+          if not len(fs):
+            continue
+          old_folder = os.path.join(filedir, dir)
+          limiti = Newspaper.get_start_static(self.newspaper_name, ofset + 1)
+          if limiti is not None:
+            new_folder = os.path.join(filedir, limiti[1])
+          else:
+            new_folder = os.path.join(filedir, str(ofset + 1))
+          s = old_folder.split(' ')[-1]
+          if s[0] == 'P' or s[0:2] == 'OT':
+            new_folder += ' ' + old_folder.split(' ')[-1]
+          try:
+            os.rename(old_folder, new_folder)
+          except:
+            error = 'La directory \'' + new_folder + '\' non può essere modificata (probabilmente non è vuota).'
+            raise OSError(error)
+          number += 1
   def set_GPUs(self):
     try:
       from numba import cuda
