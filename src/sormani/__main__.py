@@ -1,6 +1,9 @@
 from src.sormani.sormani import *
 from src.sormani.AI import *
 
+# import pdfminer
+# print(pdfminer.__version__)
+# exit()
 
 newspapers = [
   # 'Il Verri',
@@ -33,7 +36,7 @@ if __name__ == '__main__':
   for name in newspapers:
     sormani = Sormani(name,
                       years=[741],
-                      # days=[2341],
+                      days=[2341],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
@@ -46,6 +49,7 @@ if __name__ == '__main__':
     # sormani.add_pdf_metadata()
     # sormani.rotate_frames()
 
+  sormani.create_all_images()
   # sormani.set_bobine_merge_images(n_images=3)
   # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
   # sormani.remove_dark_border(valid=[True,True,True,True])
@@ -61,8 +65,8 @@ if __name__ == '__main__':
   # sormani.convert_ScaleAbs(alpha=1.2, beta=0, limit=100)
   # sormani.convert_ScaleAbs(alpha=0.01, beta=0, limit=-40)
 
-  sormani.rotate_final_frames(threshold=100, fill_holes=True)
-  sormani.remove_dark_border(exlude=[100,100,100,100])
+  # sormani.rotate_final_frames(threshold=100, fill_holes=True)
+  # sormani.remove_dark_border(exlude=[100,100,100,100])
   # sormani.clean_images(threshold=60, thresh_threshold=50, min_threshold=50)
   # sormani.improve_images(limit=250, color=128, inversion=False, threshold="60")
 
