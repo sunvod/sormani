@@ -106,9 +106,10 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   _parser, options, plugin_manager = get_parser_options_plugins(args=[input_file, output_file])
   options.input_file = input_file
   options.output_file = output_file
+  options.image_dpi = image_dpi
   options.quiet = True
-  options.languages = ['ita']
-  options.color_conversion_strategy = 'Gray'
+  # options.languages = ['ita']
+  options.color_conversion_strategy = 'RGB'
   log = logging.getLogger('ocrmypdf')
   with suppress(AttributeError, PermissionError):
     os.nice(5)
@@ -138,9 +139,9 @@ def exec_ocrmypdf(input_file, output_file='temp.pdf', sidecar_file='temp.txt', i
   if exit_code == ExitCode.child_process_error or not os.path.isfile(output_file):
     image = Image.open(input_file)
     image.save(output_file, "PDF", resolution=70.0)
-    print(f'Warning: \'{Path(output_file).stem}\' non ha l\'OCR\n')
+    print(f'Warning: \'{Path(output_file).stem}\' non ha l\'OCR (Code error: ' + str(exit_code) + ')\n')
     with portalocker.Lock('sormani.log', timeout=120) as sormani_log:
-      sormani_log.write('No OCR: ' + Path(output_file).stem  + '\n')
+      sormani_log.write('No OCR: ' + Path(output_file).stem  + '(Code error: ' + str(exit_code) + ')\n')
   # ocrmypdf.ocr(input_file, output_file, language='ita')
 
 

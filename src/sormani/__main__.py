@@ -28,21 +28,23 @@ newspapers = [
   # 'Questo e Altro',
   # 'Santelia Artecrazia',
   # 'Tesoretto',
-  'Fiches'
+  # 'Fiches',
+  'Libero'
 ]
 
 if __name__ == '__main__':
 
   for name in newspapers:
     sormani = Sormani(name,
-                      years=[741],
-                      days=[2341],
+                      # years=[741],
+                      years=[2017],
+                      # days=[2341],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                       force=True,
-                      checkimages=False,
-                      type=FICHES)
+                      # type=FICHES,
+                      checkimages=False)
 
     # sormani.create_all_images()
     # sormani.set_all_images_names(force_rename=True)
