@@ -29,7 +29,7 @@ newspapers = [
   # 'Santelia Artecrazia',
   # 'Tesoretto',
   # 'Fiches',
-  'Libero'
+  'Cliniche'
 ]
 
 if __name__ == '__main__':
@@ -37,13 +37,13 @@ if __name__ == '__main__':
   for name in newspapers:
     sormani = Sormani(name,
                       # years=[741],
-                      years=[2017],
-                      # days=[2341],
+                      # years=[2017],
+                      # days=[1],
                       # days=[x for x in range(3,31)],
                       # ais=[AI('best_model_DenseNet201_firstpage_3', ISFIRSTPAGE, use=True, save=True)],
                       # ais=[AI('best_model_isfirstpage_DenseNet201_2', ISFIRSTPAGE, use=False)],
                       force=True,
-                      # type=FICHES,
+                      type=BOBINE,
                       checkimages=False)
 
     # sormani.create_all_images()
@@ -51,8 +51,13 @@ if __name__ == '__main__':
     # sormani.add_pdf_metadata()
     # sormani.rotate_frames()
 
-  sormani.create_all_images()
+  # sormani.create_all_images()
   # sormani.set_bobine_merge_images(n_images=3)
+  sormani.set_bobine_merge_images()
+  # sormani.set_bobine_select_images()
+  # sormani.rotate_frames(threshold=50)
+  # sormani.bobine_delete_copies()
+
   # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
   # sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()

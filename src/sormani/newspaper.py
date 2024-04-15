@@ -199,6 +199,8 @@ class Newspaper():
       newspaper = Tesoretto(newspaper_base, file_path, date, year, number)
     elif name == 'Fiches':
       newspaper = Fiches(newspaper_base, file_path, date, year, number)
+    elif name == 'Cliniche':
+      newspaper = Cliniche(newspaper_base, file_path, date, year, number)
     else:
       error = "Error: \'" + name + "\' is not defined in this application."
       raise ValueError(error)
@@ -284,6 +286,8 @@ class Newspaper():
       parameters = Tesoretto.get_start(ofset)
     elif name == 'Fiches':
       parameters = Fiches.get_start(ofset)
+    elif name == 'Cliniche':
+      parameters = Cliniche.get_start(ofset)
     else:
       parameters = None
     return parameters
@@ -3215,6 +3219,39 @@ class Fiches(Newspaper):
       return ('741', '2564')
     elif ofset == 20:
       return ('741', '2565')
+  def get_whole_page_location(self, image):
+    w, h = image.size
+    whole = (0, 0, w, 700)
+    return whole
+  def set_n_pages(self, page_pool, n_pages, use_ai=False):
+    l = n_pages
+    count_zero = 0
+    for n_page, page in enumerate(page_pool):
+      page.newspaper.n_pages = n_pages
+      page.newspaper.n_real_pages = len(page_pool)
+      page.newspaper.n_page = n_page
+  def get_limits(self):
+    return (8800, 6000, 1500, 1000)
+  def get_limits_select_images(self):
+    return (5000, 100000, 3000, 100000)
+  @staticmethod
+  def get_parameters():
+    return None
+
+class Cliniche(Newspaper):
+  def __init__(self, newspaper_base, file_path, date, year, number):
+    self.init_year = 45
+    self.year_change = None
+    Newspaper.__init__(self, newspaper_base, 'Cliniche', file_path, date, year, number, init_page = 3)
+    self.contrast = 50
+  def get_number(self):
+    return None
+  def get_head(self):
+    return None, None
+  @staticmethod
+  def get_start(ofset):
+    if ofset == 1:
+      return ('1391', '1529')
   def get_whole_page_location(self, image):
     w, h = image.size
     whole = (0, 0, w, 700)
