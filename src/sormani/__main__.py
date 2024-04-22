@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
   for name in newspapers:
     sormani = Sormani(name,
-                      # years=[741],
+                      # months=[1],
                       # years=[2017],
                       # days=[1],
                       # days=[x for x in range(3,31)],
@@ -53,13 +53,13 @@ if __name__ == '__main__':
 
   # sormani.create_all_images()
   # sormani.set_bobine_merge_images(n_images=3)
-  sormani.set_bobine_merge_images()
+  # sormani.set_bobine_merge_images()
   # sormani.set_bobine_select_images()
-  # sormani.rotate_frames(threshold=50)
+  # sormani.rotate_frames(threshold=50, max_angle=45.0, rotate = cv2.ROTATE_90_CLOCKWISE)
   # sormani.bobine_delete_copies()
 
   # sormani.set_bobine_select_images(delete_copies=True, remove_border=False, rotate_images=False, threshold = 150)
-  # sormani.remove_dark_border(valid=[True,True,True,True])
+  sormani.remove_dark_border(valid=[True,True,True,True])
   # sormani.bobine_delete_copies()
   # sormani.rotate_frames(threshold=240)
   # sormani.rotate_frames(threshold=threshold)

@@ -1165,10 +1165,12 @@ class Page:
     file_ning = '.'.join(file.split('.')[:-1]) + '_ning.' + file.split('.')[-1]
     file_thresh = '.'.join(file.split('.')[:-1]) + '_thresh.' + file.split('.')[-1]
     img = cv2.imread(file, cv2.IMREAD_COLOR)
-    with open(file, 'rb') as f:
-      buffer = np.frombuffer(f.read(), dtype=np.uint8)
-    # Decodifica l'immagine dal buffer di memoria
-    img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+    if img is None:
+      return
+    # with open(file, 'rb') as f:
+    #   buffer = np.frombuffer(f.read(), dtype=np.uint8)
+    # # Decodifica l'immagine dal buffer di memoria
+    # img = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
     if self.angle is not None:
       img = rotate_image(img, self.angle)
       self.save_with_dpi(file, img)
@@ -1180,6 +1182,7 @@ class Page:
     # Questo riempie i buchi bianchi
     fill_hole = 8
     invert_fill_hole = False
+    thresh = cv2.cvtColor(thresh, cv2.COLOR_BGR2GRAY)
     if invert_fill_hole:
       thresh, binaryImage = cv2.threshold(thresh, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     else:
@@ -1201,7 +1204,8 @@ class Page:
       thresh = 255 - thresh
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     bimg = img.copy()
-    bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
+    if bimg.shape[2] == 1:
+      bimg = cv2.cvtColor(bimg, cv2.COLOR_GRAY2RGB)
     books = []
     rect = None
     for contour in contours:
@@ -1219,11 +1223,13 @@ class Page:
       angle = rect[2]
       if angle < 45:
         angle = 90 + angle
-      if angle > 85 and (angle < 89.9 or angle > 90.1):
+      if angle > (90 - self.max_angle) and (angle < 89.9 or angle > 90.1):
         angle = angle - 90
-        if angle < 5.0:
+        if angle < self.max_angle:
           img = rotate_image(img, angle)
         count += 1
+      if self.rotate is not None:
+        img = cv2.rotate(img, self.rotate)
       if DEBUG:
         cv2.imwrite(file_ning, img)
         cv2.imwrite(file_bing, bimg)

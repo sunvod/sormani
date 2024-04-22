@@ -3266,7 +3266,7 @@ class Cliniche(Newspaper):
   def get_limits(self):
     return (8800, 6000, 1500, 1000)
   def get_limits_select_images(self):
-    return (5000, 100000, 3000, 100000)
+    return (1000, 100000, 1000, 100000)
   @staticmethod
   def get_parameters():
     return None

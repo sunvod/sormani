@@ -978,7 +978,7 @@ class Page_pool(list):
       hash = imagehash.average_hash(Image.fromarray(img))
       hash2 = imagehash.average_hash(Image.fromarray(img2))
       score, _ = structural_similarity(img, img2, full=True)
-      if DEBUG:
+      if DEBUG and file3 is not None:
         print(score, abs(hash - hash2), os.path.basename(file3), os.path.basename(file))
       if score > SCORECUTOFF or abs(hash - hash2) <= HASHCUTOFF:
         if not DEBUG:
@@ -1025,12 +1025,14 @@ class Page_pool(list):
           os.remove(file)
           count += 1
     return count
-  def rotate_frames(self, limit=4000, threshold=200, angle=None):
+  def rotate_frames(self, limit=1000, threshold=200, angle=None, max_angle=5.0, rotate = None):
     count = 0
     for page in self:
       page.limit = limit
       page.threshold = threshold
       page.angle = angle
+      page.max_angle = max_angle
+      page.rotate = rotate
     with Pool(processes=N_PROCESSES) as mp_pool:
       counts = mp_pool.map(self._rotate_frames, self)
     for i in counts:

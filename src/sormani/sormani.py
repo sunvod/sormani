@@ -996,7 +996,7 @@ class Sormani():
         self.pages_pool[i] = None
     self.set_elements()
     print(f'Merging {count} frames ends at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
-  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 100, remove_border=True, delete_copies=True, rotate_images=True ):
+  def set_bobine_select_images(self, remove_merge=True, debug=False, threshold = 100, remove_border=True, delete_copies=True, rotate_images=False):
     start_time = time.time()
     print(f'Extracting frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
@@ -1084,12 +1084,12 @@ class Sormani():
       # self.set_elements()
     else:
       print(f'No removing fixed frames is needed for \'{self.newspaper_name}\'.')
-  def rotate_frames(self, limit=4000, threshold=210, angle=None):
+  def rotate_frames(self, limit=1000, threshold=210, angle=None, max_angle=5.0, rotate=None):
     start_time = time.time()
     print(f'Start rotate frames of \'{self.newspaper_name}\' at {str(datetime.datetime.now().strftime("%H:%M:%S"))}')
     count = 0
     for page_pool in self:
-      count += page_pool.rotate_frames(limit, threshold, angle)
+      count += page_pool.rotate_frames(limit, threshold, angle, max_angle, rotate)
     print(f'End rotate {count} frames at {str(datetime.datetime.now().strftime("%H:%M:%S"))} and takes {round(time.time() - start_time)} seconds.')
   def rotate_final_frames(self, limit=100, threshold=32, angle=None, color=248, fill_holes=False):
     start_time = time.time()
